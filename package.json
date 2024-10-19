@@ -19,6 +19,7 @@
     "@types/hpp": "^0.2.6",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.7.5",
+    "@types/validator": "^13.12.2",
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
     "concurrently": "^9.0.1",
