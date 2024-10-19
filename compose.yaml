@@ -1,6 +1,4 @@
-
 services:
-
   mongo:
     image: mongo
     restart: unless-stopped
@@ -10,15 +8,14 @@ services:
     networks:
       - backend-net
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
       interval: 20m
       timeout: 5s
       retries: 5
       start_period: 45s
     # Uncomment Only If You Want To access the mongodb instance from your machine
-    # ports: 
+    # ports:
     #   - 27017:27017
-      
 
   mongo-express:
     image: mongo-express
@@ -29,7 +26,7 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_DB_USER}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_DB_PASSWORD}
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_DB_USER}:${MONGO_DB_PASSWORD}@mongo:27017/
-      ME_CONFIG_BASICAUTH: "false"
+      ME_CONFIG_BASICAUTH: 'false'
     networks:
       - backend-net
     depends_on:
@@ -42,9 +39,9 @@ services:
       context: .
       dockerfile: dev.Dockerfile
     ports:
-      - "${PORT:-3000}:3000"
+      - '${PORT:-3000}:3000'
     volumes:
-      - .:/home/node/app
+      - .:/app
       - /home/node/app/node_modules
     environment:
       - NODE_ENV=${NODE_ENV:-development}
