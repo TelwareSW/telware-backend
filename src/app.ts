@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
+import redis from './config/redis';
 
 dotenv.config();
 const app = express();
@@ -23,8 +24,7 @@ app.use(helmet());
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message:
-    'Too many requests from the same IP! Please try again later in an hour',
+  message: 'Too many requests from the same IP! Please try again later in an hour',
 });
 app.use('/api', limiter);
 
