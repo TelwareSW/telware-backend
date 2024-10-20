@@ -1,4 +1,5 @@
 import app from './app';
+import client from './config/redis';
 
 // TODO: Database Configurations
 
