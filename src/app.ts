@@ -8,7 +8,6 @@ import dotenv from 'dotenv';
 
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
-import redis from './config/redis';
 
 dotenv.config();
 const app = express();
