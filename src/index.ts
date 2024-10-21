@@ -1,3 +1,4 @@
 import '@errors/uncaughtExceptionHandler';
-import './server';
+import '@base/server';
+import '@errors/terminationHandler'
 import '@errors/unhandledRejectionHandler';

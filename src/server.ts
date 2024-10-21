@@ -1,16 +1,8 @@
-import mongoose from 'mongoose';
-import app from './app';
-import './config/redis';
+import app from '@base/app';
+import mongoDBConnection from '@config/mongoDB';
+import '@config/redis';
 
-mongoose
-  .connect(process.env.MONGO_DB_URL as string)
-  .then(() => {
-    console.log('Connected successfuly to MongoDB server !');
-  })
-  .catch((err) => {
-    console.log('Failed to connect to database :(');
-    console.log(err);
-  });
+mongoDBConnection(process.env.MONGO_DB_DOCKER_URL as string);
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const server = app.listen(port, () => {
