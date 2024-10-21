@@ -25,7 +25,7 @@
     "class-methods-use-this": "off",
     "lines-between-class-members": "off",
     "prefer-destructuring": ["error", { "object": true, "array": false }],
-    "no-unused-vars": ["error", { "argsIgnorePattern": "req|res|next|val" }],
+    "no-unused-vars": ["error", { "argsIgnorePattern": "req|res|next|val|client" }],
     "node/no-missing-import": "off",
     "node/no-unsupported-features/es-syntax": [
       "error",
