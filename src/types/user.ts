@@ -3,6 +3,7 @@ import IStory from './story';
 
 interface IUser extends Document {
   username: string;
+  phoneNumber: string;
   screenName: string;
   email: string;
   phoneNumber: string;

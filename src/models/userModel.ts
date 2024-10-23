@@ -22,6 +22,17 @@ const userSchema = new mongoose.Schema<IUser>(
         message: 'Username can contain only letters, numbers and underscore',
       },
     },
+    phoneNumber: {
+      type: String,
+      required: [true, 'Phone number is required'],
+      unique: true,
+      validate: {
+        validator(v: string) {
+          return /^[0-9]{10,15}$/.test(v); // Check if phoneNumber is of length 10 to 15, and only numbers.
+        },
+        message: 'Phone number must be between 10 and 15 digits and contain only numbers',
+      },
+    },
     screenName: {
       type: String,
       default: '',
