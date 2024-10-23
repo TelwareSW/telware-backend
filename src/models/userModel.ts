@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
 import IUser from '@base/types/user';
 import storySchema from '@base/models/storySchema';
 
@@ -30,6 +31,15 @@ const userSchema = new mongoose.Schema<IUser>(
       unique: true,
       lowercase: true,
     },
+    phoneNumber: {
+      type: String,
+      validate: [
+        validator.isMobilePhone,
+        'please provide a valid phone number',
+      ],
+      required: [true, 'phone number is required'],
+      unique: true,
+    },
     password: {
       type: String,
       required: [true, 'A password is required'],
@@ -52,7 +62,7 @@ const userSchema = new mongoose.Schema<IUser>(
     status: {
       type: String,
       enum: ['online', 'connected', 'offline'],
-      default: 'offline'
+      default: 'offline',
     },
     isAdmin: {
       type: Boolean,
@@ -66,7 +76,7 @@ const userSchema = new mongoose.Schema<IUser>(
     accountStatus: {
       type: String,
       enum: ['active', 'unverified', 'deactivated', 'banned'],
-      default: 'unverified'
+      default: 'unverified',
     },
     maxFileSize: {
       type: Number,
@@ -122,6 +132,7 @@ const userSchema = new mongoose.Schema<IUser>(
         },
       },
     ],
+    refreshToken: String,
   },
   {
     toJSON: { virtuals: true },
@@ -130,6 +141,21 @@ const userSchema = new mongoose.Schema<IUser>(
 );
 
 //TODO: Add index
+
+userSchema.methods.isCorrectPassword = async function (
+  candidatePass: string,
+  userPassword: string
+): Promise<boolean> {
+  const result = await bcrypt.compare(candidatePass, userPassword);
+  return result;
+};
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  this.passwordConfirm = undefined;
+  next();
+});
 
 const User = mongoose.model<IUser>('User', userSchema);
 export default User;

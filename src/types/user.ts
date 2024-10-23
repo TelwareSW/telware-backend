@@ -5,6 +5,7 @@ interface IUser extends Document {
   username: string;
   screenName: string;
   email: string;
+  phoneNumber: string;
   password: string;
   passwordConfirm: string | undefined;
   photo: string | undefined;
@@ -22,6 +23,7 @@ interface IUser extends Document {
   stories: IStory[];
   blockedUsers: Types.ObjectId[];
   chats: Types.ObjectId[];
+  refreshToken: string;
 }
 
 export default IUser;
