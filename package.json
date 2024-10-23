@@ -67,6 +67,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.2",
     "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2",
     "redis": "^4.7.0",
     "request": "^2.88.2",
     "validator": "^13.12.0"

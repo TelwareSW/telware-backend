@@ -2,17 +2,23 @@ import catchAsync from '@base/utils/catchAsync';
 import User from '@base/models/userModel';
 import { Request, Response, NextFunction } from 'express';
 import generateUsername from '@utils/generateUsername';
-import verifyReCaptcha from '@base/utils/verifyReCaptcha';
+import {
+  verifyReCaptcha,
+  IReCaptchaResponse,
+} from '@base/utils/verifyReCaptcha';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, phoneNumber, password, passwordConfirm, recaptchaResponse } =
       req.body;
 
-    if (!verifyReCaptcha(recaptchaResponse, res))
+    const reCaptchaMessageResponse: IReCaptchaResponse =
+      await verifyReCaptcha(recaptchaResponse);
+
+    if (reCaptchaMessageResponse.response === 400)
       res.status(400).json({
         status: 'fail',
-        message: 'failed to verify that you are a human',
+        message: reCaptchaMessageResponse.message,
       });
 
     const username: string = await generateUsername();
@@ -27,7 +33,7 @@ export const signup = catchAsync(
 
     res.status(201).json({
       status: 'success',
-      message: 'User is created. Please verify your account',
+      message: `${reCaptchaMessageResponse.message} and User is created successfuly. Please verify your account`,
       data: {},
     });
   }
