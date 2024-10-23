@@ -61,6 +61,86 @@ const userController = {
       data: {},
     });
   }),
+  updatePhoneNumber: catchAsync(async (req: Request, res: Response) => {
+    const { phoneNumber } = req.body;
+
+    //TODO: change this to get the current logged in user.
+    const user = await User.findByIdAndUpdate(
+      '6718035409b1d3b2f3a0ebbb',
+      { phoneNumber },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User phoneNumber updated successfuly',
+      data: {},
+    });
+  }),
+  updateEmail: catchAsync(async (req: Request, res: Response) => {
+    const { email } = req.body;
+
+    //TODO: change this to get the current logged in user.
+    const user = await User.findByIdAndUpdate(
+      '6718035409b1d3b2f3a0ebbb',
+      { email },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User email updated successfuly',
+      data: {},
+    });
+  }),
+  updateUsername: catchAsync(async (req: Request, res: Response) => {
+    const { username } = req.body;
+
+    //TODO: change this to get the current logged in user.
+    const user = await User.findByIdAndUpdate(
+      '6718035409b1d3b2f3a0ebbb',
+      { username },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User username updated successfuly',
+      data: {},
+    });
+  }),
+  updateScreenName: catchAsync(async (req: Request, res: Response) => {
+    const { screenName } = req.body;
+
+    //TODO: change this to get the current logged in user.
+    const user = await User.findByIdAndUpdate(
+      '6718035409b1d3b2f3a0ebbb',
+      { screenName },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User screenName updated successfuly',
+      data: {},
+    });
+  }),
 };
 
 export default userController;
