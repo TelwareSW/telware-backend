@@ -3,8 +3,14 @@ import User from '@base/models/userModel';
 import { Request, Response, NextFunction } from 'express';
 import sendConfirmationCodeEmail from '@base/utils/email';
 import AppError from '@base/errors/AppError';
-import { generateUsername, verifyReCaptcha } from '@base/services/authService';
+import {
+  generateUsername,
+  isCorrectVerificationCode,
+  signToken,
+  verifyReCaptcha,
+} from '@base/services/authService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
+import { ObjectId } from 'mongoose';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -30,12 +36,6 @@ export const signup = catchAsync(
     res.status(201).json({
       status: 'success',
       message: `${reCaptchaMessageResponse.message} and User is created successfuly. Please verify your account`,
-      data: {},
-    });
-
-    res.status(201).json({
-      status: 'success',
-      message: `User is created successfuly. Please verify your account`,
       data: {},
     });
   }
@@ -72,6 +72,43 @@ export const sendConfirmationCode = catchAsync(
       status: 'success',
       message: 'verification email sent',
       data: {},
+    });
+  }
+);
+
+export const verifyEmail = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, verificationCode } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return next(new AppError('Provide your email', 400));
+    if (!verificationCode)
+      return next(new AppError('provide your verification code', 400));
+
+    const verified: boolean = await isCorrectVerificationCode(
+      user,
+      verificationCode
+    );
+    if (!verified)
+      return next(new AppError('verification code is not correct', 400));
+
+    const token = signToken(
+      user._id as ObjectId,
+      process.env.ACCESS_TOKEN_SECRET as string,
+      process.env.ACCESS_EXPIRES_IN as string
+    );
+    user.emailVerificationCode = undefined;
+    user.emailVerificationCodeExpires = undefined;
+    user.accountStatus = 'active';
+    user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Account got verified successfully',
+      data: {
+        user,
+        token,
+      },
     });
   }
 );

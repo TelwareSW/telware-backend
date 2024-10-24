@@ -3,6 +3,8 @@ import { CookieOptions, Response } from 'express';
 import { ObjectId } from 'mongoose';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import User from '@base/models/userModel';
+import IUser from '@base/types/user';
+import crypto from 'crypto';
 
 export const generateUsername = async (): Promise<string> => {
   let username: string;
@@ -58,4 +60,22 @@ export const verifyReCaptcha = async (
   if (!verificationResponseData.success)
     return { message: 'reCaptcha verification failed', response: 400 };
   return { message: 'recaptcha is verified', response: 200 };
+};
+
+export const isCorrectVerificationCode = async (
+  user: IUser,
+  verificationCode: string
+): Promise<boolean> => {
+  const hashedCode = crypto
+    .createHash('sha256')
+    .update(verificationCode)
+    .digest('hex');
+
+  if (
+    hashedCode !== user.emailVerificationCode ||
+    (user.emailVerificationCodeExpires &&
+      Date.now() > user.emailVerificationCodeExpires)
+  )
+    return false;
+  return true;
 };
