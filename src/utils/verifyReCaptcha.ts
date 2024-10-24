@@ -1,4 +1,5 @@
 //TODO: to be tested
+
 export interface IReCaptchaResponse {
   message: string;
   response: number;
@@ -19,3 +20,5 @@ export const verifyReCaptcha = async (
     return { message: 'reCaptcha verification failed', response: 400 };
   return { message: 'recaptcha is verified', response: 200 };
 };
+
+export default verifyReCaptcha;
