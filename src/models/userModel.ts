@@ -3,6 +3,8 @@ import validator from 'validator';
 import bcrypt from 'bcrypt';
 import IUser from '@base/types/user';
 import storySchema from '@base/models/storySchema';
+import generateConfirmationCode from '@base/utils/generateConfirmationCode';
+import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -132,6 +134,8 @@ const userSchema = new mongoose.Schema<IUser>(
         },
       },
     ],
+    emailVerificationCode: String,
+    emailVerificationCodeExpires: Number,
     refreshToken: String,
   },
   {
@@ -156,6 +160,17 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.methods.generateSaveConfirmationCode = function (): string {
+  const confirmationCode: string = generateConfirmationCode();
+  this.emailVerificationCode = crypto
+    .createHash('sha256')
+    .update(confirmationCode)
+    .digest('hex');
+  this.emailVerificationCodeExpires =
+    Date.now() + Number(process.env.VERIFICATION_CODE_EXPIRES_IN) * 60 * 1000;
+  return confirmationCode;
+};
 
 const User = mongoose.model<IUser>('User', userSchema);
 export default User;

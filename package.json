@@ -54,10 +54,12 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
+    "@types/nodemailer": "^6.4.16",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-mongo-sanitize": "^2.2.0",
@@ -68,6 +70,7 @@
     "mongoose": "^8.7.2",
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.15",
     "redis": "^4.7.0",
     "request": "^2.88.2",
     "validator": "^13.12.0"

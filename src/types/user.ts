@@ -24,6 +24,9 @@ interface IUser extends Document {
   blockedUsers: Types.ObjectId[];
   chats: Types.ObjectId[];
   refreshToken: string;
+  emailVerificationCode: string | undefined;
+  emailVerificationCodeExpires: number | undefined;
+  generateSaveConfirmationCode: () => string;
 }
 
 export default IUser;
