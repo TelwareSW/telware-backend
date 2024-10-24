@@ -1,6 +1,21 @@
 import { sign } from 'jsonwebtoken';
 import { CookieOptions, Response } from 'express';
 import { ObjectId } from 'mongoose';
+import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
+import User from '@base/models/userModel';
+
+export const generateUsername = async (): Promise<string> => {
+  let username: string;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    username = btoa(Math.random().toString(36).substring(2, 17));
+    username = username.replace(/[^a-zA-Z0-9]/g, '');
+    // eslint-disable-next-line no-await-in-loop
+    const user = await User.findOne({ username });
+    if (!user) return username;
+  }
+};
 
 export const signToken = (
   id: ObjectId,
@@ -27,4 +42,20 @@ export const storeCookie = (
     cookieOptions.secure = true;
   }
   res.cookie(cookieName, token, cookieOptions);
+};
+
+export const verifyReCaptcha = async (
+  recaptchaResponse: string
+): Promise<IReCaptchaResponse> => {
+  if (!recaptchaResponse)
+    return { message: 'please validate the recaptcha', response: 400 };
+
+  const verificationURL: string = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${recaptchaResponse}`;
+  const verificationResponse = await fetch(verificationURL, {
+    method: 'POST',
+  });
+  const verificationResponseData = await verificationResponse.json();
+  if (!verificationResponseData.success)
+    return { message: 'reCaptcha verification failed', response: 400 };
+  return { message: 'recaptcha is verified', response: 200 };
 };
