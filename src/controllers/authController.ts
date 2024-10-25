@@ -1,6 +1,6 @@
+import { Request, Response, NextFunction } from 'express';
 import catchAsync from '@base/utils/catchAsync';
 import User from '@base/models/userModel';
-import { Request, Response, NextFunction } from 'express';
 import sendConfirmationCodeEmail from '@base/utils/email';
 import AppError from '@base/errors/AppError';
 import {
@@ -148,6 +148,34 @@ export const verifyEmail = catchAsync(
       data: {
         user,
         token,
+      },
+    });
+  }
+);
+
+export const googleCallback = catchAsync(
+  async (req: any, res: Response, next: NextFunction) => {
+    console.log(req.user);
+    res.status(200).json({
+      status: 'success',
+      message: 'User logged in successfully with google',
+      data: {
+        user: req.user,
+        accessToken: req.authInfo.accessToken,
+      },
+    });
+  }
+);
+
+export const githubCallback = catchAsync(
+  async (req: any, res: Response, next: NextFunction) => {
+    console.log(req.user);
+    res.status(200).json({
+      status: 'success',
+      message: 'User logged in successfully with gihub',
+      data: {
+        user: req.user,
+        accessToken: req.authInfo.accessToken,
       },
     });
   }
