@@ -1,7 +1,8 @@
 import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import passport from 'passport';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
@@ -23,11 +24,20 @@ const corsOptions = {
   credentials: true,
 };
 
+app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 app.use(cors(corsOptions));
-app.use(cookieParser());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET as string,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV === 'production' },
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 const limiter = rateLimit({
   max: 100,

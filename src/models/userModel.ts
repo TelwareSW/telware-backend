@@ -7,6 +7,15 @@ import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema<IUser>(
   {
+    provider: {
+      type: String,
+      enum: ['local', 'google', 'facebook', 'github'],
+      default: 'local',
+    },
+    providerId: {
+      type: String,
+      unique: true,
+    },
     username: {
       type: String,
       required: [true, 'Username is required'],
@@ -36,7 +45,6 @@ const userSchema = new mongoose.Schema<IUser>(
       type: String,
       validate: [validator.isMobilePhone, 'please provide a valid phone number'],
       required: [true, 'phone number is required'],
-      unique: true,
     },
     password: {
       type: String,
@@ -154,7 +162,7 @@ const userSchema = new mongoose.Schema<IUser>(
 //TODO: Add index
 
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
   next();
