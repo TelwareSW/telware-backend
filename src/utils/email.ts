@@ -1,5 +1,4 @@
 import IUser from '@base/types/user';
-import { NextFunction } from 'express';
 import nodemailer from 'nodemailer';
 import { MailOptions } from 'nodemailer/lib/json-transport';
 
@@ -147,8 +146,7 @@ const sendEmail = async (options: any) => {
 
 const sendConfirmationCodeEmail = async (
   user: IUser,
-  verificationCode: string,
-  next: NextFunction
+  verificationCode: string
 ) => {
   const { email } = user;
   const message: string = formConfirmationMessage(email, verificationCode);

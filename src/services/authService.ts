@@ -6,6 +6,21 @@ import User from '@base/models/userModel';
 import IUser from '@base/types/user';
 import crypto from 'crypto';
 
+export const validateBeforeLogin = async (
+  email: string,
+  password: string
+): Promise<string> => {
+  if (!email || !password) return 'missing email or password';
+
+  const user = await User.findOne({ email }).select('+password');
+  if (user && user.accountStatus === 'unverified')
+    return 'please verify your email first to be able to login';
+  if (user && !(await user.isCorrectPassword(password)))
+    return 'wrong email or password';
+
+  return 'validated';
+};
+
 export const generateUsername = async (): Promise<string> => {
   let username: string;
 
