@@ -146,20 +146,19 @@ const userSchema = new mongoose.Schema<IUser>(
 
 //TODO: Add index
 
-userSchema.methods.isCorrectPassword = async function (
-  candidatePass: string,
-  userPassword: string
-): Promise<boolean> {
-  const result = await bcrypt.compare(candidatePass, userPassword);
-  return result;
-};
-
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.methods.isCorrectPassword = async function (
+  candidatePass: string
+): Promise<boolean> {
+  const result = await bcrypt.compare(candidatePass, this.password);
+  return result;
+};
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {
   const confirmationCode: string = generateConfirmationCode();

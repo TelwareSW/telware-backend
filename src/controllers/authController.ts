@@ -7,21 +7,22 @@ import {
   generateUsername,
   isCorrectVerificationCode,
   signToken,
-  verifyReCaptcha,
+  storeCookie,
+  validateBeforeLogin,
+  // verifyReCaptcha,
 } from '@base/services/authService';
-import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
+// import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, phoneNumber, password, passwordConfirm, recaptchaResponse } =
-      req.body;
+    const { email, phoneNumber, password, passwordConfirm } = req.body;
 
-    const reCaptchaMessageResponse: IReCaptchaResponse =
-      await verifyReCaptcha(recaptchaResponse);
+    // const reCaptchaMessageResponse: IReCaptchaResponse =
+    //   await verifyReCaptcha(recaptchaResponse);
 
-    if (reCaptchaMessageResponse.response === 400)
-      return next(new AppError(reCaptchaMessageResponse.message, 400));
+    // if (reCaptchaMessageResponse.response === 400)
+    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 
@@ -35,8 +36,49 @@ export const signup = catchAsync(
 
     res.status(201).json({
       status: 'success',
-      message: `${reCaptchaMessageResponse.message} and User is created successfuly. Please verify your account`,
+      message: ` User is created successfuly. Please verify your account`,
       data: {},
+    });
+
+    // res.status(201).json({
+    //   status: 'success',
+    //   message: `${reCaptchaMessageResponse.message} and User is created successfuly. Please verify your account`,
+    //   data: {},
+    // });
+  }
+);
+
+export const login = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user)
+      return next(
+        new AppError('No user is found with this email address', 400)
+      );
+
+    const message: string = await validateBeforeLogin(email, password);
+    if (message !== 'validated') return next(new AppError(message, 400));
+
+    const token = signToken(
+      user._id as ObjectId,
+      process.env.ACCESS_TOKEN_SECRET as string,
+      process.env.ACCESS_EXPIRES_IN as string
+    );
+    storeCookie(
+      res,
+      process.env.ACCESS_COOKIE_EXPIRES_IN as string,
+      token,
+      'accessToken'
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'logged in successfully',
+      data: {
+        user,
+        token,
+      },
     });
   }
 );
@@ -53,6 +95,9 @@ export const sendConfirmationCode = catchAsync(
         )
       );
 
+    if (user.accountStatus !== 'unverified')
+      return next(new AppError('your account is already verified!', 400));
+
     if (
       user.emailVerificationCodeExpires &&
       Date.now() < user.emailVerificationCodeExpires
@@ -66,7 +111,7 @@ export const sendConfirmationCode = catchAsync(
 
     const verificationCode = user.generateSaveConfirmationCode();
     await user.save({ validateBeforeSave: false });
-    await sendConfirmationCodeEmail(user, verificationCode, next);
+    await sendConfirmationCodeEmail(user, verificationCode);
 
     res.status(200).json({
       status: 'success',
