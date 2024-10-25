@@ -16,11 +16,11 @@ interface IUser extends Document {
   accountStatus: string;
   maxFileSize: number;
   automaticDownloadEnable: boolean;
-  lastSeenPrivacy: String;
-  readReceiptsEnablePrivacy: String;
-  storiesPrivacy: String;
-  picturePrivacy: String;
-  invitePermessionsPrivacy: String;
+  lastSeenPrivacy: string;
+  readReceiptsEnablePrivacy: boolean;
+  storiesPrivacy: string;
+  picturePrivacy: string;
+  invitePermessionsPrivacy: string;
   stories: IStory[];
   blockedUsers: Types.ObjectId[];
   chats: Types.ObjectId[];
@@ -28,6 +28,8 @@ interface IUser extends Document {
   emailVerificationCode: string | undefined;
   emailVerificationCodeExpires: number | undefined;
   generateSaveConfirmationCode: () => string;
+  // eslint-disable-next-line no-unused-vars
+  isCorrectPassword: (candidatePass: string) => Promise<boolean>;
 }
 
 export default IUser;
