@@ -24,7 +24,7 @@ const globalErrorHandler = (
   else if (process.env.NODE_ENV === 'production') {
     const error = structuredClone(err);
 
-    // TODO: Handle all the errors here
+    //TODO: Handle all the errors here
 
     sendProdError(error, res);
   }

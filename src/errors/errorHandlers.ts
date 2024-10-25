@@ -2,8 +2,6 @@ import { Response } from 'express';
 import AppError from './AppError';
 
 export const sendDevError = (err: AppError, res: Response) => {
-  console.log("in")
-  console.log(err.message)
   res.status(err.statusCode).json({
     status: err.status,
     name: err.name,

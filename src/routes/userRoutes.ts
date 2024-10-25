@@ -4,6 +4,7 @@ import { block, switchReadRecieptsState, getBlockedUsers, unblock,changeStoriesP
 
 const router = express.Router();
 
+
 router.get('/block', getBlockedUsers);
 router.post('/block/:id', block);
 router.patch('/privacy/read-receipts', switchReadRecieptsState);

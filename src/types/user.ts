@@ -18,7 +18,7 @@ interface IUser extends Document {
   lastSeenPrivacy: String;
   readReceiptsEnablePrivacy: String;
   storiesPrivacy: String;
-  picturePrivacy: String;
+  picturePrivacy:String;
   invitePermessionsPrivacy: String;
   stories: IStory[];
   blockedUsers: Types.ObjectId[];

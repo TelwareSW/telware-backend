@@ -7,7 +7,7 @@ dotenv.config();
 
 const importData = async () => {
   try {
-    console.log('🌱 Seeding Database...');
+    console.log('🌱 Seeding Database....');
     await mongoDBConnection(process.env.MONGO_DB_LOCALHOST_URL as string);
     const users = importUserData();
     await Promise.all([users]);

@@ -177,7 +177,7 @@ export const changeProfilePicturePrivacy = catchAsync(
       status: 'success',
       data: {
         picturePrivacy: user.picturePrivacy,
-      },
+       },
     });
   }
 );
