@@ -22,6 +22,7 @@ interface IUser extends Document {
   invitePermessionsPrivacy: String;
   stories: IStory[];
   blockedUsers: Types.ObjectId[];
+  contacts: Types.ObjectId[];
   chats: Types.ObjectId[];
   refreshToken: string;
 }
