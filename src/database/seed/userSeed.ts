@@ -6,12 +6,17 @@ const users = JSON.parse(
   fs.readFileSync(`${__dirname}/json/users.json`, 'utf-8')
 );
 
-const createRandomUser = () => ({
-  email: faker.internet.email(),
-  username: faker.internet.userName(),
-  phoneNumber: faker.phone.number(),
-  password: faker.internet.password(),
-});
+const createRandomUser = () => {
+  const password = faker.internet.password({ length: 12, memorable: true });
+
+  return {
+    email: faker.internet.email(),
+    username: faker.internet.userName().replace(/[.\-/\\]/g, ''),
+    phoneNumber: faker.phone.number({style:"international"}),
+    password,
+    passwordConfirm: password,
+  };
+};
 
 const fakerUsers = faker.helpers.multiple(createRandomUser, {
   count: 20,
@@ -19,13 +24,22 @@ const fakerUsers = faker.helpers.multiple(createRandomUser, {
 
 const importUserData = async () => {
   try {
-    // TODO: make this create complete users
-    await User.create({ ...users, ...fakerUsers });
+    const allUsers = [...users, ...fakerUsers];
 
-    console.log('Users data is seeded successfully!');
+    console.log('Users to be seeded:', JSON.stringify(allUsers, null, 2));
+
+    allUsers.forEach(user => {
+      if (user.password !== user.passwordConfirm) {
+        throw new Error(`Password and password confirm do not match for user ${  user.username}`);
+      }
+    });
+
+    await User.create(allUsers);
+
+    console.log('Users data seeded successfully!');
   } catch (err) {
-    console.log('Failed to seed users data :(');
-    console.log(err);
+    console.error('Failed to seed users data :(');
+    console.error(err);
   }
 };
 

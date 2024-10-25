@@ -23,6 +23,7 @@ interface IUser extends Document {
   invitePermessionsPrivacy: string;
   stories: IStory[];
   blockedUsers: Types.ObjectId[];
+  contacts: Types.ObjectId[];
   chats: Types.ObjectId[];
   refreshToken: string;
   emailVerificationCode: string | undefined;
