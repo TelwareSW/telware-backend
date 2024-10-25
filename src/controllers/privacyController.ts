@@ -7,11 +7,14 @@ import AppError from '@errors/AppError';
 export const getBlockedUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // const userId = req.user.id; // Blocker ID
-    const userId ='671a7aad6d8b2991d75dfa12';
+    const userId = '671a7aad6d8b2991d75dfa12';
 
-    const user = await User.findById(userId).populate('blockedUsers', 'username email');
+    const user = await User.findById(userId).populate(
+      'blockedUsers',
+      'username email'
+    );
     if (!user) {
-      return next(new AppError('User not found',400));
+      return next(new AppError('User not found', 400));
     }
 
     res.status(200).json({
@@ -25,26 +28,26 @@ export const getBlockedUsers = catchAsync(
 
 export const block = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log("Request Params:", req.params); 
+    console.log('Request Params:', req.params);
     // const userId = req.user.id; // Blocker ID
     const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
     const targetUserId = req.params.id; // User ID to block
 
     if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
       console.log('Invalid ID');
-      return next(new AppError('Invalid user ID',400));
+      return next(new AppError('Invalid user ID', 400));
     }
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { $addToSet: { blockedUsers: targetUserId } }, 
+      { $addToSet: { blockedUsers: targetUserId } },
       { new: true, runValidators: true }
     );
 
     if (!user) {
       console.log('User not found');
 
-      return next(new AppError('User not found',400));
+      return next(new AppError('User not found', 400));
     }
 
     res.status(200).json({
@@ -63,7 +66,7 @@ export const unblock = catchAsync(
     const targetUserId = req.params.id; // User ID to unblock
 
     if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
-      return next(new AppError('Invalid user ID',400));
+      return next(new AppError('Invalid user ID', 400));
     }
 
     const user = await User.findByIdAndUpdate(
@@ -73,7 +76,7 @@ export const unblock = catchAsync(
     );
 
     if (!user) {
-      return next(new AppError('User not found',400));
+      return next(new AppError('User not found', 400));
     }
 
     res.status(200).json({
@@ -94,7 +97,7 @@ export const switchReadRecieptsState = catchAsync(
     }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $set: { readReceiptsEnablePrivacy: user.readReceiptsEnablePrivacy === "true" ? "false" : "true"} },
+      { $set: { readReceiptsEnablePrivacy: !user.readReceiptsEnablePrivacy } },
       { new: true, runValidators: true }
     );
     if (!updatedUser) {
@@ -112,14 +115,22 @@ export const switchReadRecieptsState = catchAsync(
 export const changeStoriesPrivacy = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
-    const {privacy} = req.body;
-    if (privacy !== "contacts" && privacy !== "everyone" 
-      && privacy !== "nobody") {
-      return next(new AppError('Invalid privacy option. Choose contacts, everyone, or nobody.', 400));
+    const { privacy } = req.body;
+    if (
+      privacy !== 'contacts' &&
+      privacy !== 'everyone' &&
+      privacy !== 'nobody'
+    ) {
+      return next(
+        new AppError(
+          'Invalid privacy option. Choose contacts, everyone, or nobody.',
+          400
+        )
+      );
     }
     const user = await User.findByIdAndUpdate(
       userId,
-      { $set: { storiesPrivacy:privacy } },
+      { $set: { storiesPrivacy: privacy } },
       { new: true, runValidators: true }
     );
     if (!user) {
@@ -136,14 +147,22 @@ export const changeStoriesPrivacy = catchAsync(
 export const changeLastSeenPrivacy = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
-    const {privacy} = req.body;
-    if (privacy !== "contacts" && privacy !== "everyone" 
-      && privacy !== "nobody") {
-      return next(new AppError('Invalid privacy option. Choose contacts, everyone, or nobody.', 400));
+    const { privacy } = req.body;
+    if (
+      privacy !== 'contacts' &&
+      privacy !== 'everyone' &&
+      privacy !== 'nobody'
+    ) {
+      return next(
+        new AppError(
+          'Invalid privacy option. Choose contacts, everyone, or nobody.',
+          400
+        )
+      );
     }
     const user = await User.findByIdAndUpdate(
       userId,
-      { $set: { lastSeenPrivacy:privacy } },
+      { $set: { lastSeenPrivacy: privacy } },
       { new: true, runValidators: true }
     );
     if (!user) {
@@ -160,10 +179,18 @@ export const changeLastSeenPrivacy = catchAsync(
 export const changeProfilePicturePrivacy = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
-    const {privacy} = req.body;
-    if (privacy !== "contacts" && privacy !== "everyone" 
-      && privacy !== "nobody") {
-      return next(new AppError('Invalid privacy option. Choose contacts, everyone, or nobody.', 400));
+    const { privacy } = req.body;
+    if (
+      privacy !== 'contacts' &&
+      privacy !== 'everyone' &&
+      privacy !== 'nobody'
+    ) {
+      return next(
+        new AppError(
+          'Invalid privacy option. Choose contacts, everyone, or nobody.',
+          400
+        )
+      );
     }
     const user = await User.findByIdAndUpdate(
       userId,
@@ -177,7 +204,7 @@ export const changeProfilePicturePrivacy = catchAsync(
       status: 'success',
       data: {
         picturePrivacy: user.picturePrivacy,
-       },
+      },
     });
   }
 );
@@ -185,7 +212,7 @@ export const changeInvitePermessionsePrivacy = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
     const invitePermission = req.body.permission;
-    
+
     const user = await User.findByIdAndUpdate(
       userId,
       { $set: { invitePermessionsPrivacy: invitePermission } },
