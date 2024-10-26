@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import IUser from '@base/types/user';
-import storySchema from '@base/models/storySchema';
 import generateConfirmationCode from '@base/utils/generateConfirmationCode';
 import crypto from 'crypto';
 
@@ -109,7 +108,12 @@ const userSchema = new mongoose.Schema<IUser>(
       enum: ['everyone', 'admins'],
       default: 'everyone',
     },
-    stories: [storySchema],
+    stories: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: 'Story',
+      },
+    ],
     blockedUsers: [
       {
         type: mongoose.Types.ObjectId,
