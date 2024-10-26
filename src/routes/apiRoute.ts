@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import authRouter from '@routes/authRoutes';
-import userRouter from '@routes/userRoutes';
-import storyRouter from '@routes/storyRoutes';
+import authRouter from '@routes/authRoute';
+import userRouter from '@routes/userRoute';
+import storyRouter from '@base/routes/storyRoute';
 
 const apiRouter = Router();
 

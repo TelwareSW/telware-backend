@@ -1,4 +1,4 @@
-import { viewStory } from '@base/controllers/storyController';
+import { viewStory } from '@controllers/storyController';
 import { Router } from 'express';
 
 const router = Router();
