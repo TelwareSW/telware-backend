@@ -35,10 +35,7 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     phoneNumber: {
       type: String,
-      validate: [
-        validator.isMobilePhone,
-        'please provide a valid phone number',
-      ],
+      validate: [validator.isMobilePhone, 'please provide a valid phone number'],
       required: [true, 'phone number is required'],
       unique: true,
     },
@@ -159,19 +156,14 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-userSchema.methods.isCorrectPassword = async function (
-  candidatePass: string
-): Promise<boolean> {
+userSchema.methods.isCorrectPassword = async function (candidatePass: string): Promise<boolean> {
   const result = await bcrypt.compare(candidatePass, this.password);
   return result;
 };
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {
   const confirmationCode: string = generateConfirmationCode();
-  this.emailVerificationCode = crypto
-    .createHash('sha256')
-    .update(confirmationCode)
-    .digest('hex');
+  this.emailVerificationCode = crypto.createHash('sha256').update(confirmationCode).digest('hex');
   this.emailVerificationCodeExpires =
     Date.now() + Number(process.env.VERIFICATION_CODE_EXPIRES_IN) * 60 * 1000;
   return confirmationCode;
