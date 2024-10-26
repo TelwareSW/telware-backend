@@ -7,12 +7,14 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
+import RedisStore from 'connect-redis';
 import dotenv from 'dotenv';
 
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
 import apiRouter from '@routes/apiRoute';
 import path from 'path';
+import redisClient from '@config/redis';
 
 dotenv.config();
 const app = express();
@@ -30,12 +32,18 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
+    store: new RedisStore({ client: redisClient }),
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' },
+    cookie: {
+      maxAge: parseInt(process.env.ACCESS_EXPIRES_IN as string, 10) * 60 * 1000,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 

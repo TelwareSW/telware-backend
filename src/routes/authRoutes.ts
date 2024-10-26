@@ -1,4 +1,4 @@
-import express from 'express';
+import { Router } from 'express';
 import passport from 'passport';
 import {
   signup,
@@ -7,8 +7,9 @@ import {
   login,
   githubCallback
 } from '@controllers/authController';
+import oauthRouter from '@routes/oauthRoutes';
 
-const router = express.Router();
+const router = Router();
 
 router.post('/signup', signup);
 router.post('/send-confirmation', sendConfirmationCode);
@@ -32,4 +33,6 @@ router.get(
   passport.authenticate('github'),
   githubCallback
 );
+router.use('/oauth', oauthRouter);
+
 export default router;

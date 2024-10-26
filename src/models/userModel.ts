@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import IUser from '@base/types/user';
-import generateConfirmationCode from '@base/utils/generateConfirmationCode';
+import generateConfirmationCode from '@utils/generateConfirmationCode';
+import { generateUsername } from '@services/authService';
 import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema<IUser>(
@@ -165,6 +166,7 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
+  this.username = await generateUsername();
   next();
 });
 

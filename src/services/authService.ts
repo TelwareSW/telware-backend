@@ -2,8 +2,8 @@ import { sign } from 'jsonwebtoken';
 import { CookieOptions, Response } from 'express';
 import { ObjectId } from 'mongoose';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
-import User from '@base/models/userModel';
 import IUser from '@base/types/user';
+import User from '@base/models/userModel';
 import crypto from 'crypto';
 
 export const validateBeforeLogin = async (
@@ -93,4 +93,37 @@ export const isCorrectVerificationCode = async (
   )
     return false;
   return true;
+};
+
+export const createOAuthUser = async (
+  profile: any,
+  additionalData: any
+): Promise<any> => {
+  const user = await User.findOne({ providerId: profile.id });
+  if (user) return user;
+
+  console.log('new user');
+
+  const { phoneNumber } = additionalData;
+  let { email } = additionalData;
+
+  const photo = profile.photos ? profile.photos[0].value : undefined;
+  if (!email) {
+    email = profile.emails ? profile.emails[0].value : undefined;
+  }
+
+  const username = await generateUsername();
+
+  const newUser: IUser = new User({
+    provider: profile.provider,
+    providerId: profile.id,
+    screenName: profile.displayName,
+    accountStatus: 'active',
+    email,
+    photo,
+    phoneNumber,
+    username,
+  });
+  await newUser.save({ validateBeforeSave: false });
+  return newUser;
 };
