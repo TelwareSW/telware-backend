@@ -20,7 +20,7 @@ interface IUser extends Document {
   storiesPrivacy: string;
   picturePrivacy: string;
   invitePermessionsPrivacy: string;
-  stories: IStory[];
+  stories: Types.ObjectId[];
   blockedUsers: Types.ObjectId[];
   contacts: Types.ObjectId[];
   chats: Types.ObjectId[];
