@@ -1,4 +1,5 @@
-import express from 'express';
+import { Router } from 'express';
+import upload from '@base/config/file_uploads';
 import {
   block,
   switchReadRecieptsState,
@@ -19,8 +20,9 @@ import {
   updateScreenName,
   updateUsername,
 } from '@controllers/userController';
+import { getCurrentUserStory, postStory } from '@base/controllers/storyController';
 
-const router = express.Router();
+const router = Router();
 
 // User routes
 router.get('/', getAllUsers);
@@ -41,5 +43,11 @@ router.patch('/privacy/last-seen', changeLastSeenPrivacy);
 router.patch('/privacy/profile-picture', changeProfilePicturePrivacy);
 router.patch('/privacy/invite-permissions', changeInvitePermessionsePrivacy);
 router.delete('/block/:id', unblock);
+
+// Stories routes
+router.get('/me/stories', getCurrentUserStory);
+router.post('/me/stories', upload.single('file'), postStory);
+router.delete('/me/stories/:storyId');
+router.get('/:userId/stories');
 
 export default router;

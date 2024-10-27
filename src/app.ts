@@ -26,12 +26,12 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use('/static', express.static('public'));
 
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message:
-    'Too many requests from the same IP! Please try again later in an hour',
+  message: 'Too many requests from the same IP! Please try again later in an hour',
 });
 app.use('/api', limiter);
 
