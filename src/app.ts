@@ -8,7 +8,6 @@ import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import RedisStore from 'connect-redis';
-import dotenv from 'dotenv';
 
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
@@ -26,7 +25,6 @@ declare module 'express-session' {
   }
 }
 
-dotenv.config();
 const app = express();
 
 const allowedOrigins = ['*'];

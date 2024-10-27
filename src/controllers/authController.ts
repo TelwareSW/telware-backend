@@ -303,7 +303,7 @@ export const refresh = catchAsync(
     if (!refreshToken)
       return next(new AppError('Please provide a valid refresh token', 400));
 
-    createTokens(req.session.user._id as ObjectId, req);
+    createTokens(req.session.user._id as ObjectId, req, false);
 
     res.status(200).json({
       status: 'success',

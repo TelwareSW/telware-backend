@@ -34,7 +34,11 @@ export const generateUsername = async (): Promise<string> => {
   }
 };
 
-export const createTokens = (id: ObjectId, req: Request) => {
+export const createTokens = (
+  id: ObjectId,
+  req: Request,
+  refresh: boolean = true
+) => {
   const accessToken = jwt.sign(
     { id },
     process.env.ACCESS_TOKEN_SECRET as string,
@@ -42,6 +46,10 @@ export const createTokens = (id: ObjectId, req: Request) => {
       expiresIn: process.env.ACCESS_EXPIRES_IN as string,
     }
   );
+  req.session.accessToken = accessToken;
+
+  if (!refresh) return;
+
   const refreshToken = jwt.sign(
     { id },
     process.env.REFRESH_TOKEN_SECRET as string,
@@ -49,7 +57,6 @@ export const createTokens = (id: ObjectId, req: Request) => {
       expiresIn: process.env.REFRESH_EXPIRES_IN as string,
     }
   );
-  req.session.accessToken = accessToken;
   req.session.refreshToken = refreshToken;
 };
 
