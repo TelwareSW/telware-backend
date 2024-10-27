@@ -11,6 +11,7 @@ import dotenv from 'dotenv';
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
 import apiRouter from '@routes/apiRoute';
+import path from 'path';
 
 dotenv.config();
 const app = express();
@@ -26,7 +27,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use('/static', express.static('public'));
+app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 
 const limiter = rateLimit({
   max: 100,
