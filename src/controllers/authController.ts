@@ -6,11 +6,10 @@ import sendConfirmationCodeEmail from '@utils/email';
 import AppError from '@errors/AppError';
 import {
   isCorrectVerificationCode,
-  signToken,
-  storeCookie,
+  createTokens,
   validateBeforeLogin,
   verifyReCaptcha,
-  createOAuthUser
+  createOAuthUser,
 } from '@services/authService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
@@ -53,24 +52,14 @@ export const login = catchAsync(
     const message: string = await validateBeforeLogin(email, password);
     if (message !== 'validated') return next(new AppError(message, 400));
 
-    const token = signToken(
-      user._id as ObjectId,
-      process.env.ACCESS_TOKEN_SECRET as string,
-      process.env.ACCESS_EXPIRES_IN as string
-    );
-    storeCookie(
-      res,
-      process.env.ACCESS_COOKIE_EXPIRES_IN as string,
-      token,
-      'accessToken'
-    );
+    createTokens(user._id as ObjectId, req);
 
     res.status(200).json({
       status: 'success',
       message: 'logged in successfully',
       data: {
         user,
-        token,
+        sessionId: req.sessionID,
       },
     });
   }
@@ -130,11 +119,7 @@ export const verifyEmail = catchAsync(
     if (!verified)
       return next(new AppError('verification code is not correct', 400));
 
-    const token = signToken(
-      user._id as ObjectId,
-      process.env.ACCESS_TOKEN_SECRET as string,
-      process.env.ACCESS_EXPIRES_IN as string
-    );
+    createTokens(user._id as ObjectId, req);
     user.emailVerificationCode = undefined;
     user.emailVerificationCodeExpires = undefined;
     user.accountStatus = 'active';
@@ -145,7 +130,7 @@ export const verifyEmail = catchAsync(
       message: 'Account got verified successfully',
       data: {
         user,
-        token,
+        sessionId: req.sessionID,
       },
     });
   }
@@ -153,12 +138,14 @@ export const verifyEmail = catchAsync(
 
 export const oAuthCallback = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
+    createTokens(req.user._id as ObjectId, req);
+
     res.status(200).json({
       status: 'success',
       message: 'User logged in successfully',
       data: {
         user: req.user,
-        accessToken: req.authInfo.accessToken,
+        sessionId: req.sessionID,
       },
     });
   }
@@ -166,12 +153,12 @@ export const oAuthCallback = catchAsync(
 
 export const googleLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.params;
+    const { code } = req.params;
     const tokenResponse = await axios.post(
       'https://oauth2.googleapis.com/token',
       {
         params: {
-          code: token,
+          code,
           client_id: process.env.GOOGLE_CLIENT_ID,
           client_secret: process.env.GOOGLE_CLIENT_SECRET,
           redirect_uri: 'postmessage',
@@ -180,22 +167,21 @@ export const googleLogin = catchAsync(
       }
     );
 
-    const { accessToken } = tokenResponse.data;
-    if (!accessToken) {
+    if (!tokenResponse.data.accessToken) {
       return next(new AppError('Failed to get access token from Google', 400));
     }
 
     const profile = await axios.get(
       'https://www.googleapis.com/oauth2/v2/userinfo',
       {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${tokenResponse.data.accessToken}` },
       }
     );
 
     const peopleResponse = await axios.get(
       'https://people.googleapis.com/v1/people/me?personFields=phoneNumbers',
       {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${tokenResponse.data.accessToken}` },
       }
     );
     const phoneNumber = peopleResponse.data.phoneNumbers
@@ -205,12 +191,14 @@ export const googleLogin = catchAsync(
     console.log(profile.data);
     const user = await createOAuthUser(profile.data, { phoneNumber });
 
+    createTokens(user._id as ObjectId, req);
+
     res.status(200).json({
       status: 'success',
       message: 'User logged in successfully',
       data: {
         user,
-        accessToken,
+        sessionId: req.sessionID,
       },
     });
   }
@@ -218,33 +206,32 @@ export const googleLogin = catchAsync(
 
 export const githubLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.params;
+    const { code } = req.params;
     const tokenResponse = await axios.post(
       'https://github.com/login/oauth/accessToken',
       {
         params: {
-          code: token,
+          code,
           client_id: process.env.GITHUB_CLIENT_ID,
           client_secret: process.env.GITHUB_CLIENT_SECRET,
         },
         headers: { Accept: 'application/json' },
       }
     );
-    const { accessToken } = tokenResponse.data;
 
-    if (!accessToken) {
+    if (!tokenResponse.data.accessToken) {
       return next(new AppError('Failed to get access token from GitHub', 400));
     }
 
     const profile = await axios.get('https://api.github.com/user', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: `Bearer ${tokenResponse.data.accessToken}` },
     });
 
     const emailResponse = await axios.get(
       'https://api.github.com/user/emails',
       {
         headers: {
-          Authorization: `token ${accessToken}`,
+          Authorization: `token ${tokenResponse.data.accessToken}`,
         },
       }
     );
@@ -255,12 +242,14 @@ export const githubLogin = catchAsync(
     console.log(profile.data);
     const user = await createOAuthUser(profile.data, { email });
 
+    createTokens(user._id as ObjectId, req);
+
     res.status(200).json({
       status: 'success',
       message: 'User logged in successfully',
       data: {
         user,
-        accessToken,
+        sessionId: req.sessionID,
       },
     });
   }
@@ -268,39 +257,58 @@ export const githubLogin = catchAsync(
 
 export const facebookLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.params;
+    const { code } = req.params;
     const tokenResponse = await axios.get(
       'https://graph.facebook.com/v12.0/oauth/access_token',
       {
         params: {
           client_id: process.env.FACEBOOK_CLIENT_ID,
           client_secret: process.env.FACEBOOK_CLIENT_SECRET,
-          code: token,
+          code,
         },
       }
     );
-    const { accessToken } = tokenResponse.data;
 
-    if (!accessToken) {
-      return next(new AppError('Failed to get access token from GitHub', 400));
+    if (!tokenResponse.data.accessToken) {
+      return next(
+        new AppError('Failed to get access token from Facebook', 400)
+      );
     }
 
     const profile = await axios.get('https://graph.facebook.com/me', {
       params: {
-        accessToken,
+        access_token: tokenResponse.data.accessToken,
       },
     });
 
     console.log(profile.data);
     const user = await createOAuthUser(profile.data, {});
 
+    createTokens(user._id as ObjectId, req);
+
     res.status(200).json({
       status: 'success',
       message: 'User logged in successfully',
       data: {
         user,
-        accessToken,
+        sessionId: req.sessionID,
       },
+    });
+  }
+);
+
+export const refresh = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { refreshToken } = req.session;
+    if (!refreshToken)
+      return next(new AppError('Please provide a valid refresh token', 400));
+
+    createTokens(req.session.user._id as ObjectId, req);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token refreshed successfully',
+      data: null,
     });
   }
 );

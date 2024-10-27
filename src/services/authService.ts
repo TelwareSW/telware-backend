@@ -1,10 +1,10 @@
-import { sign } from 'jsonwebtoken';
-import { CookieOptions, Response } from 'express';
+import { CookieOptions, Response, Request } from 'express';
 import { ObjectId } from 'mongoose';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import IUser from '@base/types/user';
 import User from '@base/models/userModel';
-import crypto from 'crypto';
 
 export const validateBeforeLogin = async (
   email: string,
@@ -34,14 +34,24 @@ export const generateUsername = async (): Promise<string> => {
   }
 };
 
-export const signToken = (
-  id: ObjectId,
-  TOKEN_SECRET: string,
-  TOKEN_EXPIRES_IN: string
-) =>
-  sign({ id }, TOKEN_SECRET, {
-    expiresIn: TOKEN_EXPIRES_IN,
-  });
+export const createTokens = (id: ObjectId, req: Request) => {
+  const accessToken = jwt.sign(
+    { id },
+    process.env.ACCESS_TOKEN_SECRET as string,
+    {
+      expiresIn: process.env.ACCESS_EXPIRES_IN as string,
+    }
+  );
+  const refreshToken = jwt.sign(
+    { id },
+    process.env.REFRESH_TOKEN_SECRET as string,
+    {
+      expiresIn: process.env.REFRESH_EXPIRES_IN as string,
+    }
+  );
+  req.session.accessToken = accessToken;
+  req.session.refreshToken = refreshToken;
+};
 
 export const storeCookie = (
   res: Response,
