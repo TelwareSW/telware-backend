@@ -15,6 +15,16 @@ import globalErrorHandler from '@errors/globalErrorHandler';
 import apiRouter from '@routes/apiRoute';
 import path from 'path';
 import redisClient from '@config/redis';
+import { createSessionFromHeaders } from '@middlewares/authMiddleware';
+
+declare module 'express-session' {
+  // eslint-disable-next-line no-unused-vars
+  interface Session {
+    accessToken?: string;
+    refreshToken?: string;
+    user?: any;
+  }
+}
 
 dotenv.config();
 const app = express();
@@ -43,6 +53,7 @@ app.use(
     },
   })
 );
+app.use(createSessionFromHeaders);
 
 app.use(passport.initialize());
 app.use(passport.session());
