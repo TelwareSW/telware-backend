@@ -99,11 +99,23 @@ passport.use(
       clientID: process.env.FACEBOOK_CLIENT_ID as string,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
       callbackURL: '/api/v1/auth/oauth/facebook/redirect',
+      scope: ['public_profile', 'email'],
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        const restOfProfile = await axios.get('https://graph.facebook.com/me', {
+          params: {
+            fields: 'email,picture',
+            access_token: accessToken,
+          },
+        });
+
         console.log(profile);
-        const user: IUser = await createOAuthUser(profile, {});
+        console.log(restOfProfile.data);
+        const user: IUser = await createOAuthUser(profile, {
+          email: restOfProfile.data.email,
+          photo: restOfProfile.data.picture.data.url,
+        });
         done(null, user);
       } catch (error) {
         console.log(error);

@@ -33,6 +33,8 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
 };
+const maxAge =
+  parseInt(process.env.REFRESH_EXPIRES_IN as string, 10) * 24 * 60 * 60 * 1000;
 
 app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 app.use(cors(corsOptions));
@@ -45,7 +47,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: parseInt(process.env.ACCESS_EXPIRES_IN as string, 10) * 60 * 1000,
+      maxAge,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
     },

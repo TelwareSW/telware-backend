@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 import catchAsync from '@utils/catchAsync';
 import User from '@models/userModel';
 import sendConfirmationCodeEmail from '@utils/email';
@@ -9,6 +10,7 @@ import {
   createTokens,
   validateBeforeLogin,
   verifyReCaptcha,
+  generateUsername,
   createOAuthUser,
 } from '@services/authService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
@@ -25,8 +27,10 @@ export const signup = catchAsync(
     if (reCaptchaMessageResponse.response === 400)
       return next(new AppError(reCaptchaMessageResponse.message, 400));
 
+    const username = await generateUsername();
     await User.create({
       email,
+      username,
       phoneNumber,
       password,
       passwordConfirm,
@@ -277,12 +281,16 @@ export const facebookLogin = catchAsync(
 
     const profile = await axios.get('https://graph.facebook.com/me', {
       params: {
+        fields: 'id,name,email,picture',
         access_token: tokenResponse.data.accessToken,
       },
     });
 
     console.log(profile.data);
-    const user = await createOAuthUser(profile.data, {});
+    const user = await createOAuthUser(profile.data, {
+      email: profile.data.email,
+      photo: profile.data.picture.data.url,
+    });
 
     createTokens(user._id as ObjectId, req);
 
@@ -302,7 +310,10 @@ export const refresh = catchAsync(
     const { refreshToken } = req.session;
     if (!refreshToken)
       return next(new AppError('Please provide a valid refresh token', 400));
-
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string
+    ) as jwt.JwtPayload;
     createTokens(req.session.user._id as ObjectId, req, false);
 
     res.status(200).json({

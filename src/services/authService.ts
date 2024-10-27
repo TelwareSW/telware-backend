@@ -122,9 +122,11 @@ export const createOAuthUser = async (
   console.log('new user');
 
   const { phoneNumber } = additionalData;
-  let { email } = additionalData;
+  let { email, photo } = additionalData;
 
-  const photo = profile.photos ? profile.photos[0].value : undefined;
+  if (!photo) {
+    photo = profile.photos ? profile.photos[0].value : undefined;
+  }
   if (!email) {
     email = profile.emails ? profile.emails[0].value : undefined;
   }

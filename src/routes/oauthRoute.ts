@@ -30,7 +30,7 @@ router.get('/github/redirect', passport.authenticate('github'), oAuthCallback);
 router.get(
   '/facebook',
   passport.authenticate('facebook', {
-    scope: ['email'],
+    scope: ['public_profile', 'email'],
   })
 );
 router.get(
