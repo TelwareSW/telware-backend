@@ -28,7 +28,7 @@ export const protect = catchAsync(
 
     const decodedPayload = jwt.verify(
       accessToken,
-      process.env.TOKEN_SECRET as string
+      process.env.ACCESS_TOKEN_SECRET as string
     ) as jwt.JwtPayload;
     const currentUser = await User.findById(decodedPayload.id);
     if (!currentUser) {
