@@ -312,3 +312,13 @@ export const refresh = catchAsync(
     });
   }
 );
+
+export const isLoggedIn = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).json({
+      status: 'success',
+      message: 'User is logged in',
+      data: null,
+    });
+  }
+);
