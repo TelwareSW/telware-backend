@@ -10,6 +10,7 @@ const storySchema = new mongoose.Schema<IStory>(
     },
     caption: {
       type: String,
+      default: '',
     },
     timestamp: {
       type: Date,
