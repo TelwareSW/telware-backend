@@ -5,7 +5,7 @@ import crypto from 'crypto';
 // Define storage for uploaded files
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), 'src/public/uploads'));
+    cb(null, path.join(process.cwd(), 'src/public/media'));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = crypto.randomBytes(8).toString('hex');
