@@ -20,7 +20,7 @@ import {
   updateScreenName,
   updateUsername,
 } from '@controllers/userController';
-import { getCurrentUserStory, postStory } from '@base/controllers/storyController';
+import { deleteStory, getCurrentUserStory, postStory } from '@base/controllers/storyController';
 
 const router = Router();
 
@@ -47,7 +47,7 @@ router.delete('/block/:id', unblock);
 // Stories routes
 router.get('/me/stories', getCurrentUserStory);
 router.post('/me/stories', upload.single('file'), postStory);
-router.delete('/me/stories/:storyId');
+router.delete('/me/stories/:storyId', deleteStory);
 router.get('/:userId/stories');
 
 export default router;
