@@ -27,6 +27,18 @@ router.get(
 );
 router.get('/github/redirect', passport.authenticate('github'), oAuthCallback);
 
+router.get(
+  '/facebook',
+  passport.authenticate('facebook', {
+    scope: ['email'],
+  })
+);
+router.get(
+  '/facebook/redirect',
+  passport.authenticate('facebook'),
+  oAuthCallback
+);
+
 router.post('/google/:code', googleLogin);
 router.post('/github/:code', githubLogin);
 router.post('/facebook/:code', facebookLogin);
