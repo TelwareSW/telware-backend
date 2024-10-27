@@ -6,7 +6,23 @@ import catchAsync from '@base/utils/catchAsync';
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 
-export const getCurrentUserStory = catchAsync(async (req: Request, res: Response) => { });
+export const getCurrentUserStory = catchAsync(async (req: Request, res: Response) => {
+  //const userId = req.user.id;   //TODO: use this to get the authenticated user id and use it below
+
+  const user = await User.findById('6718035409b1d3b2f3a0ebbb').populate('stories');
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Stories retrieved successfuly',
+    data: {
+      stories: user.stories,
+    },
+  });
+});
 export const postStory = catchAsync(async (req: Request, res: Response) => {
   const { caption } = req.body;
   //const userId = req.user.id;   //TODO: use this to get the authenticated user id and use it below
@@ -59,5 +75,21 @@ export const deleteStory = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const getStory = catchAsync(async (req: Request, res: Response) => { });
+export const getStory = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  //TODO: HANDLE STORY PRIVACY OF THE USER.
+  const user = await User.findById(userId).populate('stories', 'id content caption timestamp');
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Stories retrieved successfuly',
+    data: {
+      stories: user.stories,
+    },
+  });
+});
 export const viewStory = catchAsync(async (req: Request, res: Response) => { });
