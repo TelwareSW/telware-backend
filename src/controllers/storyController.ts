@@ -92,4 +92,19 @@ export const getStory = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
-export const viewStory = catchAsync(async (req: Request, res: Response) => { });
+export const viewStory = catchAsync(async (req: Request, res: Response) => {
+  const { storyId } = req.params;
+  const userId = '6718035409b1d3b2f3a0ebbb'; //TODO: replace the hardcoded id with the authenticated user id.
+
+  await Story.findByIdAndUpdate(
+    storyId,
+    { $addToSet: { views: userId } },
+    { new: true, runValidators: true }
+  );
+
+  res.status(201).json({
+    status: 'success',
+    message: 'User viewed the story successfuly',
+    data: {},
+  });
+});
