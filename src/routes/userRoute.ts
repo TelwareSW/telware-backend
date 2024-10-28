@@ -1,11 +1,7 @@
 import { Router } from 'express';
 import upload from '@base/config/fileUploads';
 import privacyRouter from '@routes/privacyRoute';
-import {
-  block,
-  getBlockedUsers,
-  unblock,
-} from '@controllers/privacyController';
+import { block, getBlockedUsers, unblock } from '@controllers/privacyController';
 import {
   getAllUsers,
   getUser,
@@ -26,6 +22,17 @@ const router = Router();
 
 router.use('/privacy', privacyRouter);
 
+// Stories routes
+router.get('/stories', getCurrentUserStory);
+router.post('/stories', upload.single('file'), postStory);
+router.delete('/stories/:storyId', deleteStory);
+router.get('/:userId/stories', getStory);
+
+// Block settings
+router.get('/block', getBlockedUsers);
+router.post('/block/:id', block);
+router.delete('/block/:id', unblock);
+
 // User routes
 router.get('/', getAllUsers);
 router.get('/me', getUser);
@@ -35,16 +42,5 @@ router.patch('/phone', updatePhoneNumber);
 router.patch('/email', updateEmail);
 router.patch('/username', updateUsername);
 router.patch('/screen-name', updateScreenName);
-
-// Block settings
-router.get('/block', getBlockedUsers);
-router.post('/block/:id', block);
-router.delete('/block/:id', unblock);
-
-// Stories routes
-router.get('/me/stories', getCurrentUserStory);
-router.post('/me/stories', upload.single('file'), postStory);
-router.delete('/me/stories/:storyId', deleteStory);
-router.get('/:userId/stories', getStory);
 
 export default router;
