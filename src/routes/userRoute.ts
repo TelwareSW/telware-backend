@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import upload from '@config/file_uploads';
+import upload from '@base/config/fileUploads';
 import privacyRouter from '@routes/privacyRoute';
 import {
   block,

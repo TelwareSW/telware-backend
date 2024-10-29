@@ -1,5 +1,4 @@
 import { Document, Types } from 'mongoose';
-import IStory from './story';
 
 interface IUser extends Document {
   provider: string;
@@ -26,12 +25,15 @@ interface IUser extends Document {
   blockedUsers: Types.ObjectId[];
   contacts: Types.ObjectId[];
   chats: Types.ObjectId[];
-  refreshToken: string;
+  changedPasswordAt: Date | undefined;
   emailVerificationCode: string | undefined;
   emailVerificationCodeExpires: number | undefined;
+  resetPasswordToken: string | undefined;
+  resetPasswordExpires: number | undefined;
   generateSaveConfirmationCode: () => string;
   // eslint-disable-next-line no-unused-vars
   isCorrectPassword: (candidatePass: string) => Promise<boolean>;
+  createResetPasswordToken: () => string;
 }
 
 export default IUser;

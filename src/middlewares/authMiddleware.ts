@@ -44,14 +44,7 @@ export const protect = catchAsync(
     //   );
     // }
 
-    req.session.user = currentUser;
+    req.user = currentUser;
     next();
   }
 );
-
-export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.user || req.session.user.isAdmin) {
-    return next(new AppError('You are forbidden to get here!', 403));
-  }
-  next();
-};
