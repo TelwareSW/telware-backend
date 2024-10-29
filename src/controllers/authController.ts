@@ -9,12 +9,14 @@ import {
   isCorrectVerificationCode,
   createTokens,
   validateBeforeLogin,
+  sendEmailVerificationCode,
   verifyReCaptcha,
   generateUsername,
   createOAuthUser,
 } from '@services/authService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
+import IUser from '@base/types/user';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -27,8 +29,9 @@ export const signup = catchAsync(
     if (reCaptchaMessageResponse.response === 400)
       return next(new AppError(reCaptchaMessageResponse.message, 400));
 
-    const username = await generateUsername();
-    await User.create({
+    const username: string = await generateUsername();
+
+    const user: IUser = await User.create({
       email,
       username,
       phoneNumber,
@@ -36,9 +39,12 @@ export const signup = catchAsync(
       passwordConfirm,
     });
 
-    res.status(201).json({
+    const errorState = { errorCaught: true };
+    await sendEmailVerificationCode(user, next, errorState);
+    if (errorState.errorCaught) return;
+    return res.status(200).json({
       status: 'success',
-      message: `${reCaptchaMessageResponse.message} and User is created successfuly. Please verify your account`,
+      message: 'Verification email sent',
       data: {},
     });
   }
@@ -72,34 +78,11 @@ export const login = catchAsync(
 export const sendConfirmationCode = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user)
-      return next(
-        new AppError(
-          'please register first to be able to verify your email!',
-          400
-        )
-      );
-
-    if (user.accountStatus !== 'unverified')
-      return next(new AppError('your account is already verified!', 400));
-
-    if (
-      user.emailVerificationCodeExpires &&
-      Date.now() < user.emailVerificationCodeExpires
-    )
-      return next(
-        new AppError(
-          'A verification email is already sent, you can ask for another after this one expires',
-          400
-        )
-      );
-
-    const verificationCode = user.generateSaveConfirmationCode();
-    await user.save({ validateBeforeSave: false });
-    await sendConfirmationCodeEmail(user, verificationCode);
-
-    res.status(200).json({
+    const user: IUser = (await User.findOne({ email })) as IUser;
+    const errorState = { errorCaught: true };
+    sendEmailVerificationCode(user, next, errorState);
+    if (errorState.errorCaught) return;
+    return res.status(200).json({
       status: 'success',
       message: 'verification email sent',
       data: {},

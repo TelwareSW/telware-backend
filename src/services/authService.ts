@@ -1,10 +1,13 @@
-import { CookieOptions, Response, Request } from 'express';
+import { CookieOptions, Response, Request, NextFunction } from 'express';
 import { ObjectId } from 'mongoose';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
+import User from '@models/userModel';
 import IUser from '@base/types/user';
-import User from '@base/models/userModel';
+import crypto from 'crypto';
+import sendConfirmationCodeEmail from '@base/utils/email';
+import AppError from '@base/errors/AppError';
 
 export const validateBeforeLogin = async (
   email: string,
@@ -110,6 +113,38 @@ export const isCorrectVerificationCode = async (
   )
     return false;
   return true;
+};
+
+export const sendEmailVerificationCode = async (
+  user: IUser | undefined,
+  next: NextFunction,
+  errorState: any
+) => {
+  if (!user)
+    return next(
+      new AppError(
+        'please register first to be able to verify your email!',
+        400
+      )
+    );
+
+  if (user.accountStatus !== 'unverified')
+    return next(new AppError('your account is already verified!', 400));
+
+  if (
+    user.emailVerificationCodeExpires &&
+    Date.now() < user.emailVerificationCodeExpires
+  )
+    return next(
+      new AppError(
+        'A verification email is already sent, you can ask for another after this one expires',
+        400
+      )
+    );
+  const verificationCode = user.generateSaveConfirmationCode();
+  await user.save({ validateBeforeSave: false });
+  await sendConfirmationCodeEmail(user, verificationCode);
+  errorState.errorCaught = false;
 };
 
 export const createOAuthUser = async (
