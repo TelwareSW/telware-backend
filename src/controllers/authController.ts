@@ -1,33 +1,33 @@
-import catchAsync from '@base/utils/catchAsync';
-import User from '@base/models/userModel';
+import catchAsync from '@utils/catchAsync';
+import User from '@models/userModel';
 import { Request, Response, NextFunction } from 'express';
-import sendConfirmationCodeEmail from '@base/utils/email';
-import AppError from '@base/errors/AppError';
+import AppError from '@errors/AppError';
 import {
   generateUsername,
   isCorrectVerificationCode,
   signToken,
   storeCookie,
   validateBeforeLogin,
-  verifyReCaptcha,
-} from '@base/services/authService';
-import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
+  sendEmailVerificationCode,
+  // verifyReCaptcha,
+} from '@services/authService';
+// import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
+import IUser from '@base/types/user';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, phoneNumber, password, passwordConfirm, recaptchaResponse } =
-      req.body;
+    const { email, phoneNumber, password, passwordConfirm } = req.body;
 
-    const reCaptchaMessageResponse: IReCaptchaResponse =
-      await verifyReCaptcha(recaptchaResponse);
+    // const reCaptchaMessageResponse: IReCaptchaResponse =
+    //   await verifyReCaptcha(recaptchaResponse);
 
-    if (reCaptchaMessageResponse.response === 400)
-      return next(new AppError(reCaptchaMessageResponse.message, 400));
+    // if (reCaptchaMessageResponse.response === 400)
+    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 
-    await User.create({
+    const user: IUser = await User.create({
       username,
       email,
       phoneNumber,
@@ -35,9 +35,12 @@ export const signup = catchAsync(
       passwordConfirm,
     });
 
-    res.status(201).json({
+    const errorState = { errorCaught: true };
+    await sendEmailVerificationCode(user, next, errorState);
+    if (errorState.errorCaught) return;
+    return res.status(200).json({
       status: 'success',
-      message: `${reCaptchaMessageResponse.message} and User is created successfuly. Please verify your account`,
+      message: 'Verification email sent',
       data: {},
     });
   }
@@ -81,34 +84,11 @@ export const login = catchAsync(
 export const sendConfirmationCode = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user)
-      return next(
-        new AppError(
-          'please register first to be able to verify your email!',
-          400
-        )
-      );
-
-    if (user.accountStatus !== 'unverified')
-      return next(new AppError('your account is already verified!', 400));
-
-    if (
-      user.emailVerificationCodeExpires &&
-      Date.now() < user.emailVerificationCodeExpires
-    )
-      return next(
-        new AppError(
-          'A verification email is already sent, you can ask for another after this one expires',
-          400
-        )
-      );
-
-    const verificationCode = user.generateSaveConfirmationCode();
-    await user.save({ validateBeforeSave: false });
-    await sendConfirmationCodeEmail(user, verificationCode);
-
-    res.status(200).json({
+    const user: IUser = (await User.findOne({ email })) as IUser;
+    const errorState = { errorCaught: true };
+    sendEmailVerificationCode(user, next, errorState);
+    if (errorState.errorCaught) return;
+    return res.status(200).json({
       status: 'success',
       message: 'verification email sent',
       data: {},
