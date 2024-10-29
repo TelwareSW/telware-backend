@@ -2,6 +2,7 @@ import AppError from '@base/errors/AppError';
 import User from '@base/models/userModel';
 import catchAsync from '@base/utils/catchAsync';
 import { Request, Response } from 'express';
+import deletePictureFile from '@base/services/userService';
 
 interface GetUser extends Request {
   params: {
@@ -143,6 +144,54 @@ export const updateScreenName = catchAsync(async (req: Request, res: Response) =
   return res.status(200).json({
     status: 'success',
     message: 'User screenName updated successfuly',
+    data: {},
+  });
+});
+
+export const updatePicture = catchAsync(async (req: Request, res: Response) => {
+  const userId = '6718035409b1d3b2f3a0ebbb'; //TODO: change this to get the current logged in user.
+
+  if (!req.file) {
+    throw new AppError('An error occured while uploading the story', 500);
+  }
+
+  await deletePictureFile(userId);
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { photo: req.file.filename },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  return res.status(201).json({
+    status: 'success',
+    message: 'User profile picture updated successfuly',
+    data: {},
+  });
+});
+
+export const deletePicture = catchAsync(async (req: Request, res: Response) => {
+  const userId = '6718035409b1d3b2f3a0ebbb'; //TODO: change this to get the current logged in user.
+
+  await deletePictureFile(userId);
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { photo: '' },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'User profile picture deleted successfuly',
     data: {},
   });
 });

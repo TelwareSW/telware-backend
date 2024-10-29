@@ -67,7 +67,10 @@ const userSchema = new mongoose.Schema<IUser>(
         message: 'passwords are not the same',
       },
     },
-    photo: String,
+    photo: {
+      type: String,
+      default: '',
+    },
     status: {
       type: String,
       enum: ['online', 'connected', 'offline'],

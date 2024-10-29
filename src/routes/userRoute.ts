@@ -3,11 +3,13 @@ import upload from '@base/config/fileUploads';
 import privacyRouter from '@routes/privacyRoute';
 import { block, getBlockedUsers, unblock } from '@controllers/privacyController';
 import {
+  deletePicture,
   getAllUsers,
   getUser,
   updateBio,
   updateEmail,
   updatePhoneNumber,
+  updatePicture,
   updateScreenName,
   updateUsername,
 } from '@controllers/userController';
@@ -42,5 +44,8 @@ router.patch('/phone', updatePhoneNumber);
 router.patch('/email', updateEmail);
 router.patch('/username', updateUsername);
 router.patch('/screen-name', updateScreenName);
+// router.post('/picture');
+router.patch('/picture', upload.single('file'), updatePicture);
+router.delete('/picture', deletePicture);
 
 export default router;
