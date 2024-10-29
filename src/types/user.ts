@@ -2,11 +2,13 @@ import { Document, Types } from 'mongoose';
 import IStory from './story';
 
 interface IUser extends Document {
+  provider: string;
+  providerId: string | undefined;
   username: string;
   screenName: string;
   email: string;
-  phoneNumber: string;
-  password: string;
+  phoneNumber: string | undefined;
+  password: string | undefined;
   passwordConfirm: string | undefined;
   photo: string | undefined;
   status: string;
@@ -20,7 +22,7 @@ interface IUser extends Document {
   storiesPrivacy: string;
   picturePrivacy: string;
   invitePermessionsPrivacy: string;
-  stories: IStory[];
+  stories: Types.ObjectId[];
   blockedUsers: Types.ObjectId[];
   contacts: Types.ObjectId[];
   chats: Types.ObjectId[];

@@ -10,137 +10,139 @@ interface GetUser extends Request {
   //TODO: add a user here that would contain the user data.
 }
 
-const userController = {
-  getUser: catchAsync(async (req: GetUser, res: Response) => {
-    const { id } = req.params;
+export const getUser = catchAsync(async (req: GetUser, res: Response) => {
+  const { id } = req.params;
 
-    let user;
-    if (id) user = await User.findById(id, 'username screenName email photo status bio');
-    else user = await User.findById(1); //TODO: edit the id passed here to be the authenticated user id
+  let user;
+  if (id) user = await User.findById(id, 'username screenName email photo status bio');
+  else user = await User.findById(1); //TODO: edit the id passed here to be the authenticated user id
 
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'User retrieved successfuly',
-      data: {
-        user,
-      },
-    });
-  }),
-  getAllUsers: catchAsync(async (req: Request, res: Response) => {
-    const users = await User.find({}, 'username screenName email photo status bio');
+  return res.status(200).json({
+    status: 'success',
+    message: 'User retrieved successfuly',
+    data: {
+      user,
+    },
+  });
+});
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'Users retrieved successfuly',
-      data: {
-        users,
-      },
-    });
-  }),
-  updateBio: catchAsync(async (req: Request, res: Response) => {
-    const { bio } = req.body;
+export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  const users = await User.find({}, 'username screenName email photo status bio');
 
-    //TODO: change this to get the current logged in user.
-    const user = await User.findByIdAndUpdate(
-      '6718035409b1d3b2f3a0ebbb',
-      { bio },
-      { new: true, runValidators: true }
-    );
+  return res.status(200).json({
+    status: 'success',
+    message: 'Users retrieved successfuly',
+    data: {
+      users,
+    },
+  });
+});
 
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
+export const updateBio = catchAsync(async (req: Request, res: Response) => {
+  const { bio } = req.body;
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'User bio updated successfuly',
-      data: {},
-    });
-  }),
-  updatePhoneNumber: catchAsync(async (req: Request, res: Response) => {
-    const { phoneNumber } = req.body;
+  //TODO: change this to get the current logged in user.
+  const user = await User.findByIdAndUpdate(
+    '6718035409b1d3b2f3a0ebbb',
+    { bio },
+    { new: true, runValidators: true }
+  );
 
-    //TODO: change this to get the current logged in user.
-    const user = await User.findByIdAndUpdate(
-      '6718035409b1d3b2f3a0ebbb',
-      { phoneNumber },
-      { new: true, runValidators: true }
-    );
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
 
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
+  return res.status(200).json({
+    status: 'success',
+    message: 'User bio updated successfuly',
+    data: {},
+  });
+});
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'User phoneNumber updated successfuly',
-      data: {},
-    });
-  }),
-  updateEmail: catchAsync(async (req: Request, res: Response) => {
-    const { email } = req.body;
+export const updatePhoneNumber = catchAsync(async (req: Request, res: Response) => {
+  const { phoneNumber } = req.body;
 
-    //TODO: change this to get the current logged in user.
-    const user = await User.findByIdAndUpdate(
-      '6718035409b1d3b2f3a0ebbb',
-      { email },
-      { new: true, runValidators: true }
-    );
+  //TODO: change this to get the current logged in user.
+  const user = await User.findByIdAndUpdate(
+    '6718035409b1d3b2f3a0ebbb',
+    { phoneNumber },
+    { new: true, runValidators: true }
+  );
 
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'User email updated successfuly',
-      data: {},
-    });
-  }),
-  updateUsername: catchAsync(async (req: Request, res: Response) => {
-    const { username } = req.body;
+  return res.status(200).json({
+    status: 'success',
+    message: 'User phoneNumber updated successfuly',
+    data: {},
+  });
+});
 
-    //TODO: change this to get the current logged in user.
-    const user = await User.findByIdAndUpdate(
-      '6718035409b1d3b2f3a0ebbb',
-      { username },
-      { new: true, runValidators: true }
-    );
+export const updateEmail = catchAsync(async (req: Request, res: Response) => {
+  const { email } = req.body;
 
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
+  //TODO: change this to get the current logged in user.
+  const user = await User.findByIdAndUpdate(
+    '6718035409b1d3b2f3a0ebbb',
+    { email },
+    { new: true, runValidators: true }
+  );
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'User username updated successfuly',
-      data: {},
-    });
-  }),
-  updateScreenName: catchAsync(async (req: Request, res: Response) => {
-    const { screenName } = req.body;
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
 
-    //TODO: change this to get the current logged in user.
-    const user = await User.findByIdAndUpdate(
-      '6718035409b1d3b2f3a0ebbb',
-      { screenName },
-      { new: true, runValidators: true }
-    );
+  return res.status(200).json({
+    status: 'success',
+    message: 'User email updated successfuly',
+    data: {},
+  });
+});
 
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
+export const updateUsername = catchAsync(async (req: Request, res: Response) => {
+  const { username } = req.body;
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'User screenName updated successfuly',
-      data: {},
-    });
-  }),
-};
+  //TODO: change this to get the current logged in user.
+  const user = await User.findByIdAndUpdate(
+    '6718035409b1d3b2f3a0ebbb',
+    { username },
+    { new: true, runValidators: true }
+  );
 
-export default userController;
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'User username updated successfuly',
+    data: {},
+  });
+});
+
+export const updateScreenName = catchAsync(async (req: Request, res: Response) => {
+  const { screenName } = req.body;
+
+  //TODO: change this to get the current logged in user.
+  const user = await User.findByIdAndUpdate(
+    '6718035409b1d3b2f3a0ebbb',
+    { screenName },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'User screenName updated successfuly',
+    data: {},
+  });
+});

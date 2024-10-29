@@ -2,12 +2,20 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import IUser from '@base/types/user';
-import storySchema from '@base/models/storySchema';
-import generateConfirmationCode from '@base/utils/generateConfirmationCode';
+import generateConfirmationCode from '@utils/generateConfirmationCode';
 import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema<IUser>(
   {
+    provider: {
+      type: String,
+      enum: ['local', 'google', 'facebook', 'github'],
+      default: 'local',
+    },
+    providerId: {
+      type: String,
+      unique: true,
+    },
     username: {
       type: String,
       required: [true, 'Username is required'],
@@ -35,12 +43,8 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     phoneNumber: {
       type: String,
-      validate: [
-        validator.isMobilePhone,
-        'please provide a valid phone number',
-      ],
+      validate: [validator.isMobilePhone, 'please provide a valid phone number'],
       required: [true, 'phone number is required'],
-      unique: true,
     },
     password: {
       type: String,
@@ -112,7 +116,12 @@ const userSchema = new mongoose.Schema<IUser>(
       enum: ['everyone', 'admins'],
       default: 'everyone',
     },
-    stories: [storySchema],
+    stories: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: 'Story',
+      },
+    ],
     blockedUsers: [
       {
         type: mongoose.Types.ObjectId,
@@ -153,25 +162,20 @@ const userSchema = new mongoose.Schema<IUser>(
 //TODO: Add index
 
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
   next();
 });
 
-userSchema.methods.isCorrectPassword = async function (
-  candidatePass: string
-): Promise<boolean> {
+userSchema.methods.isCorrectPassword = async function (candidatePass: string): Promise<boolean> {
   const result = await bcrypt.compare(candidatePass, this.password);
   return result;
 };
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {
   const confirmationCode: string = generateConfirmationCode();
-  this.emailVerificationCode = crypto
-    .createHash('sha256')
-    .update(confirmationCode)
-    .digest('hex');
+  this.emailVerificationCode = crypto.createHash('sha256').update(confirmationCode).digest('hex');
   this.emailVerificationCodeExpires =
     Date.now() + Number(process.env.VERIFICATION_CODE_EXPIRES_IN) * 60 * 1000;
   return confirmationCode;

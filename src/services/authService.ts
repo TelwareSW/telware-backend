@@ -1,6 +1,7 @@
-import { sign } from 'jsonwebtoken';
-import { CookieOptions, NextFunction, Response } from 'express';
+import { CookieOptions, Response, Request, NextFunction } from 'express';
 import { ObjectId } from 'mongoose';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import User from '@models/userModel';
 import IUser from '@base/types/user';
@@ -36,14 +37,31 @@ export const generateUsername = async (): Promise<string> => {
   }
 };
 
-export const signToken = (
+export const createTokens = (
   id: ObjectId,
-  TOKEN_SECRET: string,
-  TOKEN_EXPIRES_IN: string
-) =>
-  sign({ id }, TOKEN_SECRET, {
-    expiresIn: TOKEN_EXPIRES_IN,
-  });
+  req: Request,
+  refresh: boolean = true
+) => {
+  const accessToken = jwt.sign(
+    { id },
+    process.env.ACCESS_TOKEN_SECRET as string,
+    {
+      expiresIn: process.env.ACCESS_EXPIRES_IN as string,
+    }
+  );
+  req.session.accessToken = accessToken;
+
+  if (!refresh) return;
+
+  const refreshToken = jwt.sign(
+    { id },
+    process.env.REFRESH_TOKEN_SECRET as string,
+    {
+      expiresIn: process.env.REFRESH_EXPIRES_IN as string,
+    }
+  );
+  req.session.refreshToken = refreshToken;
+};
 
 export const storeCookie = (
   res: Response,
@@ -127,4 +145,39 @@ export const sendEmailVerificationCode = async (
   await user.save({ validateBeforeSave: false });
   await sendConfirmationCodeEmail(user, verificationCode);
   errorState.errorCaught = false;
+};
+
+export const createOAuthUser = async (
+  profile: any,
+  additionalData: any
+): Promise<any> => {
+  const user = await User.findOne({ providerId: profile.id });
+  if (user) return user;
+
+  console.log('new user');
+
+  const { phoneNumber } = additionalData;
+  let { email, photo } = additionalData;
+
+  if (!photo) {
+    photo = profile.photos ? profile.photos[0].value : undefined;
+  }
+  if (!email) {
+    email = profile.emails ? profile.emails[0].value : undefined;
+  }
+
+  const username = await generateUsername();
+
+  const newUser: IUser = new User({
+    provider: profile.provider,
+    providerId: profile.id,
+    screenName: profile.displayName,
+    accountStatus: 'active',
+    email,
+    photo,
+    phoneNumber,
+    username,
+  });
+  await newUser.save({ validateBeforeSave: false });
+  return newUser;
 };

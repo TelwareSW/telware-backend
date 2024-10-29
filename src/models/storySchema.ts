@@ -1,23 +1,33 @@
-import mongoose from 'mongoose';
+import mongoose, { mongo } from 'mongoose';
 import IStory from '@base/types/story';
+import { type } from 'os';
 
-export default new mongoose.Schema<IStory>(
+const storySchema = new mongoose.Schema<IStory>(
   {
     content: {
       type: String,
       required: [true, 'story must have content'],
     },
+    caption: {
+      type: String,
+      default: '',
+    },
     timestamp: {
       type: Date,
       default: Date.now,
     },
-    duration: {
-      type: Number,
-      default: 24 * 60 * 60,
-    },
+    views: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );
+
+const Story = mongoose.model<IStory>('Story', storySchema);
+export default Story;

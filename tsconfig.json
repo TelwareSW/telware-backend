@@ -35,6 +35,7 @@
       "@controllers/*": ["src/controllers/*"],
       "@database/*": ["src/database/*"],
       "@errors/*": ["src/errors/*"],
+      "@middlewares/*": ["src/middlewares/*"],
       "@models/*": ["src/models/*"],
       "@routes/*": ["src/routes/*"],
       "@services/*": ["src/services/*"],
