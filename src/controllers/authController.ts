@@ -9,21 +9,22 @@ import {
   storeCookie,
   validateBeforeLogin,
   sendEmailVerificationCode,
-  // verifyReCaptcha,
+  verifyReCaptcha,
 } from '@services/authService';
-// import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
+import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
 import IUser from '@base/types/user';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, phoneNumber, password, passwordConfirm } = req.body;
+    const { email, phoneNumber, password, passwordConfirm, recaptchaResponse } =
+      req.body;
 
-    // const reCaptchaMessageResponse: IReCaptchaResponse =
-    //   await verifyReCaptcha(recaptchaResponse);
+    const reCaptchaMessageResponse: IReCaptchaResponse =
+      await verifyReCaptcha(recaptchaResponse);
 
-    // if (reCaptchaMessageResponse.response === 400)
-    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
+    if (reCaptchaMessageResponse.response === 400)
+      return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 
