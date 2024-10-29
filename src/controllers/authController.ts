@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import catchAsync from '@utils/catchAsync';
 import User from '@models/userModel';
-import sendConfirmationCodeEmail from '@utils/email';
 import AppError from '@errors/AppError';
 import {
   isCorrectVerificationCode,
@@ -13,6 +13,7 @@ import {
   verifyReCaptcha,
   generateUsername,
   createOAuthUser,
+  sendResetPasswordEmail,
 } from '@services/authService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
@@ -289,7 +290,7 @@ export const facebookLogin = catchAsync(
 );
 
 export const refresh = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
     const { refreshToken } = req.session;
     if (!refreshToken)
       return next(new AppError('Please provide a valid refresh token', 400));
@@ -297,12 +298,12 @@ export const refresh = catchAsync(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET as string
     ) as jwt.JwtPayload;
-    createTokens(req.session.user._id as ObjectId, req, false);
+    createTokens(req.user._id as ObjectId, req, false);
 
     res.status(200).json({
       status: 'success',
       message: 'Token refreshed successfully',
-      data: null,
+      data: {},
     });
   }
 );
@@ -312,7 +313,73 @@ export const isLoggedIn = catchAsync(
     res.status(200).json({
       status: 'success',
       message: 'User is logged in',
-      data: null,
+      data: {},
+    });
+  }
+);
+
+export const forgotPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(new AppError('No user found with this email', 404));
+    }
+
+    const resetPasswordToken = user.createResetPasswordToken();
+    await user.save({ validateBeforeSave: false });
+
+    const resetURL = `${req.protocol}://${req.get(
+      'host'
+    )}/passwordreset/${resetPasswordToken}`;
+
+    try {
+      await sendResetPasswordEmail(resetURL, user.email);
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Reset instructions is sent to your email',
+        data: {},
+      });
+    } catch (err) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return next(
+        new AppError(
+          'An error accured while sending the email. Try again later!',
+          500
+        )
+      );
+    }
+  }
+);
+
+export const resetPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { token } = req.params;
+    const { password, passwordConfirm } = req.body;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+    if (!user) {
+      return next(new AppError('Token is invalid or expired', 400));
+    }
+
+    user.password = password;
+    user.passwordConfirm = passwordConfirm;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    user.changedPasswordAt = new Date(Date.now() - 1000);
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password reset successfully',
+      data: {},
     });
   }
 );

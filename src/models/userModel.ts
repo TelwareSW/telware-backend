@@ -43,7 +43,10 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     phoneNumber: {
       type: String,
-      validate: [validator.isMobilePhone, 'please provide a valid phone number'],
+      validate: [
+        validator.isMobilePhone,
+        'please provide a valid phone number',
+      ],
       required: [true, 'phone number is required'],
     },
     password: {
@@ -149,9 +152,11 @@ const userSchema = new mongoose.Schema<IUser>(
         },
       },
     ],
+    changedPasswordAt: Date,
     emailVerificationCode: String,
     emailVerificationCodeExpires: Number,
-    refreshToken: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Number,
   },
   {
     toJSON: { virtuals: true },
@@ -168,17 +173,37 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-userSchema.methods.isCorrectPassword = async function (candidatePass: string): Promise<boolean> {
+userSchema.methods.isCorrectPassword = async function (
+  candidatePass: string
+): Promise<boolean> {
   const result = await bcrypt.compare(candidatePass, this.password);
   return result;
 };
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {
   const confirmationCode: string = generateConfirmationCode();
-  this.emailVerificationCode = crypto.createHash('sha256').update(confirmationCode).digest('hex');
+  this.emailVerificationCode = crypto
+    .createHash('sha256')
+    .update(confirmationCode)
+    .digest('hex');
   this.emailVerificationCodeExpires =
     Date.now() + Number(process.env.VERIFICATION_CODE_EXPIRES_IN) * 60 * 1000;
   return confirmationCode;
+};
+
+userSchema.methods.createResetPasswordToken = function (): string {
+  const resetPasswordToken = crypto.randomBytes(32).toString('hex');
+
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetPasswordToken)
+    .digest('hex');
+
+  this.resetPasswordExpires =
+    Date.now() +
+    parseInt(process.env.RESET_TOKEN_EXPIRES_IN as string, 10) * 60 * 1000;
+
+  return resetPasswordToken;
 };
 
 const User = mongoose.model<IUser>('User', userSchema);

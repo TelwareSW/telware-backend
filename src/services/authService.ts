@@ -1,13 +1,17 @@
 import { CookieOptions, Response, Request, NextFunction } from 'express';
 import { ObjectId } from 'mongoose';
-import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import User from '@models/userModel';
 import IUser from '@base/types/user';
 import crypto from 'crypto';
-import sendConfirmationCodeEmail from '@base/utils/email';
-import AppError from '@base/errors/AppError';
+import sendEmail from '@utils/email';
+import {
+  formConfirmationMessage,
+  formConfirmationMessageHtml,
+  fromResetPasswordMessage,
+} from '@utils/emailMessages';
+import AppError from '@errors/AppError';
 
 export const validateBeforeLogin = async (
   email: string,
@@ -115,6 +119,24 @@ export const isCorrectVerificationCode = async (
   return true;
 };
 
+export const sendConfirmationCodeEmail = async (
+  user: IUser,
+  verificationCode: string
+) => {
+  const { email } = user;
+  const message: string = formConfirmationMessage(email, verificationCode);
+  const htmlMessage: string = formConfirmationMessageHtml(
+    email,
+    verificationCode
+  );
+  await sendEmail({
+    email,
+    subject: 'Verify your Email Address for Telware',
+    message,
+    htmlMessage,
+  });
+};
+
 export const sendEmailVerificationCode = async (
   user: IUser | undefined,
   next: NextFunction,
@@ -145,6 +167,18 @@ export const sendEmailVerificationCode = async (
   await user.save({ validateBeforeSave: false });
   await sendConfirmationCodeEmail(user, verificationCode);
   errorState.errorCaught = false;
+};
+
+export const sendResetPasswordEmail = async (
+  resetURL: string,
+  email: string
+) => {
+  const message: string = fromResetPasswordMessage(email, resetURL);
+  await sendEmail({
+    email,
+    subject: 'Reset your Password for Telware',
+    message,
+  });
 };
 
 export const createOAuthUser = async (
@@ -180,4 +214,10 @@ export const createOAuthUser = async (
   });
   await newUser.save({ validateBeforeSave: false });
   return newUser;
+};
+
+export const generateSessionKey = (req: Request): string => {
+  const userId = req.session.userId ? req.session.userId : '';
+  const randomId = Math.random().toString(36).substring(2);
+  return `session:${userId}:${randomId}`;
 };
