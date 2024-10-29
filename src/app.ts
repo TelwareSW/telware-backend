@@ -15,13 +15,14 @@ import apiRouter from '@routes/apiRoute';
 import path from 'path';
 import redisClient from '@config/redis';
 import { createSessionFromHeaders } from '@middlewares/authMiddleware';
+import { generateSessionKey } from '@services/authService';
 
 declare module 'express-session' {
   // eslint-disable-next-line no-unused-vars
   interface Session {
     accessToken?: string;
     refreshToken?: string;
-    user?: any;
+    userId?: any;
   }
 }
 
@@ -46,6 +47,7 @@ app.use(
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: false,
+    genid: generateSessionKey,
     cookie: {
       maxAge,
       httpOnly: true,
