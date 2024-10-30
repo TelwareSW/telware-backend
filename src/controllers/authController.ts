@@ -59,14 +59,13 @@ export const login = catchAsync(
     const user = await User.findOne({ email });
     if (!user)
       return next(
-        new AppError('No user is found with this email address', 400)
+        new AppError('No user is found with this email address', 404)
       );
 
     const message: string = await validateBeforeLogin(email, password);
     if (message !== 'validated') return next(new AppError(message, 400));
 
     createTokens(user._id as ObjectId, req);
-
     res.status(200).json({
       status: 'success',
       message: 'logged in successfully',
@@ -100,13 +99,22 @@ export const verifyEmail = catchAsync(
     const user = await User.findOne({ email });
     if (!user)
       return next(
-        new AppError('You need to register before verifying your email', 400)
+        new AppError('You need to register before verifying your email', 404)
       );
     if (user.accountStatus !== 'unverified')
       return next(new AppError('your account is already verified', 400));
     if (!verificationCode)
       return next(new AppError('Provide your verification code', 400));
-
+    if (
+      user.emailVerificationCodeExpires &&
+      user.emailVerificationCodeExpires > Date.now()
+    )
+      return next(
+        new AppError(
+          'verification code expired, you can ask for a new one',
+          400
+        )
+      );
     const verified: boolean = await isCorrectVerificationCode(
       user,
       verificationCode
@@ -141,12 +149,12 @@ export const verifyEmail = catchAsync(
 export const oAuthCallback = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
     createTokens(req.user._id as ObjectId, req);
-
+    const { user } = req;
     res.status(200).json({
       status: 'success',
       message: 'User logged in successfully',
       data: {
-        user: req.user,
+        user,
         sessionId: req.sessionID,
       },
     });
@@ -476,7 +484,7 @@ export const changePassword = catchAsync(
     res.status(200).json({
       status: 'success',
       message: 'password changed successfully',
-      user,
+      data: {},
     });
   }
 );
