@@ -3,20 +3,19 @@ import User from '@base/models/userModel';
 import catchAsync from '@base/utils/catchAsync';
 import { Request, Response } from 'express';
 import deletePictureFile from '@base/services/userService';
+import mongoose from 'mongoose';
 
 interface GetUser extends Request {
   params: {
-    id?: string;
+    userId?: string;
   };
   //TODO: add a user here that would contain the user data.
 }
 
-export const getUser = catchAsync(async (req: GetUser, res: Response) => {
-  const { id } = req.params;
+export const getCurrentUser = catchAsync(async (req: GetUser, res: Response) => {
+  const userId = '6718035409b1d3b2f3a0ebbb'; //TODO: change this to get the current logged in user.
 
-  let user;
-  if (id) user = await User.findById(id, 'username screenName email photo status bio');
-  else user = await User.findById(1); //TODO: edit the id passed here to be the authenticated user id
+  const user = await User.findById(userId);
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
@@ -27,6 +26,32 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
     message: 'User retrieved successfuly',
     data: {
       user,
+    },
+  });
+});
+
+export const getUser = catchAsync(async (req: GetUser, res: Response) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  const fieldsToGet = ['username', 'screenName', 'email', 'status', 'bio'];
+
+  //TODO: if privacy is contacts, check if auth user exists in that user contacts
+  if (user.picturePrivacy === 'everyone' || user.picturePrivacy === 'contacts') {
+    fieldsToGet.push('photo');
+  }
+
+  const userData = await User.findById(userId, fieldsToGet.join(' '));
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'User retrieved successfuly',
+    data: {
+      user: userData,
     },
   });
 });
