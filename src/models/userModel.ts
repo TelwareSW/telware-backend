@@ -192,10 +192,9 @@ userSchema.methods.isCorrectPassword = async function (
 };
 
 userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
-  console.log(this.changedPasswordAt, tokenIssuedAt);
   if (
     this.changedPasswordAt &&
-    this.changedPasswordAt.getTime() > tokenIssuedAt
+    this.changedPasswordAt.getTime() / 1000 > tokenIssuedAt
   )
     return true;
   return false;
