@@ -6,6 +6,7 @@ import User from '@models/userModel';
 import IUser from '@base/types/user';
 import crypto from 'crypto';
 import sendEmail from '@utils/email';
+import redisClient from '@config/redis';
 import {
   formConfirmationMessage,
   formConfirmationMessageHtml,
@@ -65,6 +66,7 @@ export const createTokens = (
     }
   );
   req.session.refreshToken = refreshToken;
+  redisClient.sAdd(`user:${id}:sessions`, req.sessionID);
 };
 
 export const storeCookie = (
@@ -216,8 +218,5 @@ export const createOAuthUser = async (
   return newUser;
 };
 
-export const generateSessionKey = (req: Request): string => {
-  const userId = req.session.userId ? req.session.userId : '';
-  const randomId = Math.random().toString(36).substring(2);
-  return `session:${userId}:${randomId}`;
-};
+export const getAllSessionsByUserId = async (userId: ObjectId) =>
+  redisClient.sMembers(`user:${userId}:sessions`);

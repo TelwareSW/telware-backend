@@ -8,6 +8,9 @@ import {
   isLoggedIn,
   forgotPassword,
   resetPassword,
+  logout,
+  logoutOthers,
+  logoutAll,
 } from '@controllers/authController';
 import {protect} from '@middlewares/authMiddleware';
 import oauthRouter from '@base/routes/oauthRoute';
@@ -25,5 +28,9 @@ router.get('/me', protect, isLoggedIn);
 
 router.post('/password/forget', forgotPassword);
 router.post('/password/reset/:token', resetPassword);
+
+router.post('/logout', protect, logout);
+router.post('/logout/all', protect, logoutAll);
+router.post('/logout/others', protect, logoutOthers);
 
 export default router;

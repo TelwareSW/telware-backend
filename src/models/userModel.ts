@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     providerId: {
       type: String,
-      unique: true,
+      // unique: true,
     },
     username: {
       type: String,
