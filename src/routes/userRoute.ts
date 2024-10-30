@@ -5,6 +5,7 @@ import { block, getBlockedUsers, unblock } from '@controllers/privacyController'
 import {
   deletePicture,
   getAllUsers,
+  getCurrentUser,
   getUser,
   updateBio,
   updateEmail,
@@ -37,8 +38,8 @@ router.delete('/block/:id', unblock);
 
 // User routes
 router.get('/', getAllUsers);
-router.get('/me', getUser);
-router.get('/:id', getUser);
+router.get('/me', getCurrentUser);
+router.get('/:userId', getUser);
 router.patch('/bio', updateBio);
 router.patch('/phone', updatePhoneNumber);
 router.patch('/email', updateEmail);
