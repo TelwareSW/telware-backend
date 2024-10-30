@@ -62,9 +62,14 @@ const userSchema = new mongoose.Schema<IUser>(
       select: false,
       validate: {
         validator(passwordConfirm: String): boolean {
-          return passwordConfirm === this.password;
+          this.matchedPasswords = passwordConfirm === this.password;
+          return this.matchedPasswords;
         },
         message: 'passwords are not the same',
+      },
+      matchedPasswords: {
+        type: Boolean,
+        default: false,
       },
     },
     photo: {
@@ -176,10 +181,18 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', function (next) {
+  if (this.provider === 'local') {
+    this.providerId = this._id as string;
+  }
+  next();
+});
+
 userSchema.methods.isCorrectPassword = async function (
   candidatePass: string
 ): Promise<boolean> {
   const result = await bcrypt.compare(candidatePass, this.password);
+  if (result) this.matchedPasswords = true;
   return result;
 };
 
