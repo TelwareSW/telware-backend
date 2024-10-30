@@ -96,11 +96,16 @@ export const sendConfirmationCode = catchAsync(
 export const verifyEmail = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, verificationCode } = req.body;
+    if (!email) return next(new AppError('Provide your email', 400));
     const user = await User.findOne({ email });
-
-    if (!user) return next(new AppError('Provide your email', 400));
+    if (!user)
+      return next(
+        new AppError('You need to register before verifying your email', 400)
+      );
+    if (user.accountStatus !== 'unverified')
+      return next(new AppError('your account is already verified', 400));
     if (!verificationCode)
-      return next(new AppError('provide your verification code', 400));
+      return next(new AppError('Provide your verification code', 400));
 
     const verified: boolean = await isCorrectVerificationCode(
       user,
@@ -108,18 +113,25 @@ export const verifyEmail = catchAsync(
     );
     if (!verified)
       return next(new AppError('verification code is not correct', 400));
-
     createTokens(user._id as ObjectId, req);
     user.emailVerificationCode = undefined;
     user.emailVerificationCodeExpires = undefined;
     user.accountStatus = 'active';
     user.save();
 
+    const { username, screenName, photo, status, bio } = user;
     res.status(200).json({
       status: 'success',
       message: 'Account got verified successfully',
       data: {
-        user,
+        user: {
+          username,
+          screenName,
+          email,
+          photo,
+          status,
+          bio,
+        },
         sessionId: req.sessionID,
       },
     });
@@ -178,7 +190,6 @@ export const googleLogin = catchAsync(
       ? peopleResponse.data.phoneNumbers[0].value
       : undefined;
 
-    console.log(profile.data);
     const user = await createOAuthUser(profile.data, { phoneNumber });
 
     createTokens(user._id as ObjectId, req);
@@ -229,7 +240,6 @@ export const githubLogin = catchAsync(
       (em: any) => em.primary && em.verified
     )?.email;
 
-    console.log(profile.data);
     const user = await createOAuthUser(profile.data, { email });
 
     createTokens(user._id as ObjectId, req);
@@ -272,7 +282,6 @@ export const facebookLogin = catchAsync(
       },
     });
 
-    console.log(profile.data);
     const user = await createOAuthUser(profile.data, {
       email: profile.data.email,
       photo: profile.data.picture.data.url,
@@ -448,6 +457,26 @@ export const logoutOthers = catchAsync(
       status: 'success',
       message: 'All Other Sessions logged out successfully',
       data: {},
+    });
+  }
+);
+
+export const changePassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user as IUser;
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+    if (!(await user.isCorrectPassword(oldPassword))) {
+      return next(new AppError('Wrong password', 400));
+    }
+    user.password = newPassword;
+    user.passwordConfirm = confirmNewPassword;
+    user.changedPasswordAt = new Date(Date.now() - 1000);
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'password changed successfully',
+      user,
     });
   }
 );

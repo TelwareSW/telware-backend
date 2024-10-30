@@ -147,13 +147,13 @@ export const sendEmailVerificationCode = async (
   if (!user)
     return next(
       new AppError(
-        'please register first to be able to verify your email!',
+        'Please register first to be able to verify your email!',
         400
       )
     );
 
   if (user.accountStatus !== 'unverified')
-    return next(new AppError('your account is already verified!', 400));
+    return next(new AppError('Your account is already verified!', 400));
 
   if (
     user.emailVerificationCodeExpires &&
@@ -189,8 +189,6 @@ export const createOAuthUser = async (
 ): Promise<any> => {
   const user = await User.findOne({ providerId: profile.id });
   if (user) return user;
-
-  console.log('new user');
 
   const { phoneNumber } = additionalData;
   let { email, photo } = additionalData;
