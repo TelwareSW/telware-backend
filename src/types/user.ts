@@ -2,7 +2,7 @@ import { Document, Types } from 'mongoose';
 
 interface IUser extends Document {
   provider: string;
-  providerId: string | undefined;
+  providerId: string;
   username: string;
   screenName: string;
   email: string;
@@ -34,6 +34,7 @@ interface IUser extends Document {
   // eslint-disable-next-line no-unused-vars
   isCorrectPassword: (candidatePass: string) => Promise<boolean>;
   createResetPasswordToken: () => string;
+  matchedPasswords: boolean | undefined;
 }
 
 export default IUser;
