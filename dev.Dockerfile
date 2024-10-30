@@ -1,4 +1,4 @@
-FROM node:20.18.0-alpine 
+FROM node:latest 
 
 RUN mkdir /app
 
@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci
+RUN npm install
 
 COPY . .
 
