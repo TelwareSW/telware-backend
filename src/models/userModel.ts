@@ -200,6 +200,13 @@ userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
   return false;
 };
 
+//FIX: fix this function
+userSchema.methods.selectFields = function (): void {
+  this.select(
+    '-__v -provider -providerId -password -isAdmin -stories -blockedUsers -contacts -chats -changedPasswordAt -emailVerificationCode -emailVerificationCodeExpires -resetPasswordToken -resetPasswordExpires'
+  );
+};
+
 userSchema.methods.generateSaveConfirmationCode = function (): string {
   const confirmationCode: string = generateConfirmationCode();
   this.emailVerificationCode = crypto

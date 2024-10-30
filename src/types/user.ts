@@ -36,6 +36,7 @@ interface IUser extends Document {
   // eslint-disable-next-line no-unused-vars
   passwordChanged: (tokenIssuedAt: number) => boolean;
   createResetPasswordToken: () => string;
+  selectFields: () => void;
 }
 
 export default IUser;
