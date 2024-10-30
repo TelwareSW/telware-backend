@@ -14,10 +14,12 @@ import {
   generateUsername,
   createOAuthUser,
   sendResetPasswordEmail,
+  getAllSessionsByUserId,
 } from '@services/authService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
 import IUser from '@base/types/user';
+import redisClient from '@base/config/redis';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -379,6 +381,72 @@ export const resetPassword = catchAsync(
     res.status(200).json({
       status: 'success',
       message: 'Password reset successfully',
+      data: {},
+    });
+  }
+);
+
+export const logout = catchAsync(
+  async (req: any, res: Response, next: NextFunction) => {
+    req.session.destroy((err: any) => {
+      if (err) return next(new AppError('Failed to logout session', 500));
+    });
+    res.status(204).json({
+      status: 'success',
+      message: 'User logged out successfully',
+      data: {},
+    });
+  }
+);
+
+export const logoutAll = catchAsync(
+  async (req: any, res: Response, next: NextFunction) => {
+    const sessionIds = await getAllSessionsByUserId(req.user._id);
+
+    const promises = sessionIds.map(
+      (sessionId) =>
+        new Promise((resolve, reject) => {
+          req.sessionStore.destroy(sessionId, (error: Error) => {
+            if (error) return reject(error);
+            resolve(undefined);
+          });
+        })
+    );
+
+    await Promise.all(promises);
+    redisClient.del(`user:${req.user._id}:sessions`);
+
+    res.status(204).json({
+      status: 'success',
+      message: 'All Sessions logged out successfully',
+      data: {},
+    });
+  }
+);
+
+export const logoutOthers = catchAsync(
+  async (req: any, res: Response, next: NextFunction) => {
+    const sessionIds = (await getAllSessionsByUserId(req.user._id)).filter(
+      (sessionId) => sessionId !== req.sessionID
+    );
+
+    const promises = sessionIds.map(
+      (sessionId) =>
+        new Promise((resolve, reject) => {
+          req.sessionStore.destroy(sessionId, (error: Error) => {
+            if (error) return reject(error);
+            resolve(undefined);
+          });
+        })
+    );
+
+    await Promise.all(promises);
+    redisClient.del(`user:${req.user._id}:sessions`);
+    redisClient.sAdd(`user:${req.user._id}:sessions`, req.sessionID);
+
+    res.status(204).json({
+      status: 'success',
+      message: 'All Other Sessions logged out successfully',
       data: {},
     });
   }

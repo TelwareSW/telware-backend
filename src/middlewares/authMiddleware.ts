@@ -9,7 +9,7 @@ export const createSessionFromHeaders = (
   res: Response,
   next: NextFunction
 ) => {
-  const sessionId = req.headers['x-session-token'] as string;
+  const sessionId = req.header('X-Session-Token') as string;
   if (sessionId) {
     req.sessionID = sessionId;
   }
