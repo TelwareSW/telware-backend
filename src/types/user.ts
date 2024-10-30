@@ -33,8 +33,9 @@ interface IUser extends Document {
   generateSaveConfirmationCode: () => string;
   // eslint-disable-next-line no-unused-vars
   isCorrectPassword: (candidatePass: string) => Promise<boolean>;
+  // eslint-disable-next-line no-unused-vars
+  passwordChanged: (tokenIssuedAt: number) => boolean;
   createResetPasswordToken: () => string;
-  matchedPasswords: boolean | undefined;
 }
 
 export default IUser;

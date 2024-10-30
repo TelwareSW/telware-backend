@@ -62,14 +62,9 @@ const userSchema = new mongoose.Schema<IUser>(
       select: false,
       validate: {
         validator(passwordConfirm: String): boolean {
-          this.matchedPasswords = passwordConfirm === this.password;
-          return this.matchedPasswords;
+          return passwordConfirm === this.password;
         },
         message: 'passwords are not the same',
-      },
-      matchedPasswords: {
-        type: Boolean,
-        default: false,
       },
     },
     photo: {
@@ -194,6 +189,16 @@ userSchema.methods.isCorrectPassword = async function (
   const result = await bcrypt.compare(candidatePass, this.password);
   if (result) this.matchedPasswords = true;
   return result;
+};
+
+userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
+  console.log(this.changedPasswordAt, tokenIssuedAt);
+  if (
+    this.changedPasswordAt &&
+    this.changedPasswordAt.getTime() > tokenIssuedAt
+  )
+    return true;
+  return false;
 };
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {

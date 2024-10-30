@@ -30,19 +30,20 @@ export const protect = catchAsync(
       accessToken,
       process.env.ACCESS_TOKEN_SECRET as string
     ) as jwt.JwtPayload;
-    const currentUser = await User.findById(decodedPayload.id);
+    const currentUser = await User.findById(decodedPayload.id).select(
+      '+password'
+    );
     if (!currentUser) {
       return next(
         new AppError('User has been deleted!! You can not log in', 401)
       );
     }
 
-    // TODO: Implement this method in the user model
-    // if (currentUser.changedPassword(decodedPayload.iat)) {
-    //   return next(
-    //     new AppError('User has changed password!! Log in again.', 401)
-    //   );
-    // }
+    if (currentUser.passwordChanged(decodedPayload.iat as number)) {
+      return next(
+        new AppError('User has changed password!! Log in again.', 401)
+      );
+    }
 
     req.user = currentUser;
     next();
