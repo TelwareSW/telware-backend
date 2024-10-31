@@ -23,7 +23,7 @@ import redisClient from '@config/redis';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, phoneNumber, password, passwordConfirm, recaptchaResponse } =
+    const { email, phoneNumber, password, passwordConfirm, reCaptchaResponse } =
       req.body;
 
     if (
@@ -31,15 +31,15 @@ export const signup = catchAsync(
       !phoneNumber ||
       !password ||
       !passwordConfirm ||
-      !recaptchaResponse
+      !reCaptchaResponse
     )
       return next(new AppError('Please provide all required fields', 400));
 
     const reCaptchaMessageResponse: IReCaptchaResponse =
-      await verifyReCaptcha(recaptchaResponse);
+      await verifyReCaptcha(reCaptchaResponse);
 
-    // if (reCaptchaMessageResponse.response === 400)
-    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
+    if (reCaptchaMessageResponse.response === 400)
+      return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 

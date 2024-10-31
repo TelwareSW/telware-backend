@@ -8,3 +8,4 @@ npm-debug.log
 .env
 .aws
 OAuth
+public
