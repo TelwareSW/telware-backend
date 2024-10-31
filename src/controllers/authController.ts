@@ -38,8 +38,8 @@ export const signup = catchAsync(
     const reCaptchaMessageResponse: IReCaptchaResponse =
       await verifyReCaptcha(reCaptchaResponse);
 
-    // if (reCaptchaMessageResponse.response === 400)
-    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
+    if (reCaptchaMessageResponse.response === 400)
+      return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 
