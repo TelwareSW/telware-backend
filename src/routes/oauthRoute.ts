@@ -4,7 +4,6 @@ import {
   oAuthCallback,
   googleLogin,
   githubLogin,
-  facebookLogin,
 } from '@controllers/authController';
 
 const router = Router();
@@ -27,20 +26,7 @@ router.get(
 );
 router.get('/github/redirect', passport.authenticate('github'), oAuthCallback);
 
-router.get(
-  '/facebook',
-  passport.authenticate('facebook', {
-    scope: ['public_profile', 'email'],
-  })
-);
-router.get(
-  '/facebook/redirect',
-  passport.authenticate('facebook'),
-  oAuthCallback
-);
-
 router.post('/google/:code', googleLogin);
 router.post('/github/:code', githubLogin);
-router.post('/facebook/:code', facebookLogin);
 
 export default router;

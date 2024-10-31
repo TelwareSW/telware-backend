@@ -1,9 +1,9 @@
 module.exports = {
-  async up(db, client) {
+  async up(db, _client) {
     await db.collection('users').updateMany({}, { $set: { phoneNumber: '' } });
   },
 
-  async down(db, client) {
+  async down(db, _client) {
     await db.collection('users').updateMany({}, { $unset: { fieldName: '' } });
   },
 };

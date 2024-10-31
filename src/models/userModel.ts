@@ -9,12 +9,12 @@ const userSchema = new mongoose.Schema<IUser>(
   {
     provider: {
       type: String,
-      enum: ['local', 'google', 'facebook', 'github'],
+      enum: ['local', 'google', 'github'],
       default: 'local',
     },
     providerId: {
       type: String,
-      // unique: true,
+      unique: true,
     },
     username: {
       type: String,
@@ -36,18 +36,50 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     email: {
       type: String,
-      validate: [validator.isEmail, 'please provide a valid email'],
-      required: [true, 'email is required'],
-      unique: true,
+      validate: [
+        {
+          validator(email: string): boolean {
+            return validator.isEmail(email);
+          },
+          message: 'please provide a valid email',
+        },
+        {
+          async validator(email: string): Promise<boolean> {
+            if (this.provider === 'local') {
+              const existingUser = await mongoose.models.User.findOne({
+                email,
+              });
+              return !existingUser;
+            }
+            return true;
+          },
+          message: 'Email already exists',
+        },
+      ],
       lowercase: true,
     },
     phoneNumber: {
       type: String,
       validate: [
-        validator.isMobilePhone,
-        'please provide a valid phone number',
+        {
+          validator(phoneNumber: string): boolean {
+            return validator.isMobilePhone(phoneNumber);
+          },
+          message: 'please provide a valid phone number',
+        },
+        {
+          async validator(phoneNumber: string): Promise<boolean> {
+            if (this.provider === 'local') {
+              const existingUser = await mongoose.models.User.findOne({
+                phoneNumber,
+              });
+              return !existingUser;
+            }
+            return true;
+          },
+          message: 'Phone already exists',
+        },
       ],
-      required: [true, 'phone number is required'],
     },
     password: {
       type: String,
@@ -155,11 +187,11 @@ const userSchema = new mongoose.Schema<IUser>(
         },
       },
     ],
-    changedPasswordAt: Date,
-    emailVerificationCode: String,
-    emailVerificationCodeExpires: Number,
-    resetPasswordToken: String,
-    resetPasswordExpires: Number,
+    changedPasswordAt: { type: Date, select: false },
+    emailVerificationCode: { type: String, select: false },
+    emailVerificationCodeExpires: { type: Number, select: false },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: String, select: false },
   },
   {
     toJSON: { virtuals: true },

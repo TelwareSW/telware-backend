@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import upload from '@base/config/fileUploads';
 import privacyRouter from '@routes/privacyRoute';
-import { block, getBlockedUsers, unblock } from '@controllers/privacyController';
+import {
+  block,
+  getBlockedUsers,
+  unblock,
+} from '@controllers/privacyController';
 import {
   deletePicture,
   getAllUsers,
@@ -29,7 +33,6 @@ router.use('/privacy', privacyRouter);
 router.get('/stories', getCurrentUserStory);
 router.post('/stories', upload.single('file'), postStory);
 router.delete('/stories/:storyId', deleteStory);
-router.get('/:userId/stories', getStory);
 
 // Block settings
 router.get('/block', getBlockedUsers);
@@ -39,14 +42,16 @@ router.delete('/block/:id', unblock);
 // User routes
 router.get('/', getAllUsers);
 router.get('/me', getCurrentUser);
-router.get('/:userId', getUser);
 router.patch('/bio', updateBio);
 router.patch('/phone', updatePhoneNumber);
 router.patch('/email', updateEmail);
 router.patch('/username', updateUsername);
 router.patch('/screen-name', updateScreenName);
-// router.post('/picture');
 router.patch('/picture', upload.single('file'), updatePicture);
 router.delete('/picture', deletePicture);
+
+// conflicting routes
+router.get('/:userId', getUser);
+router.get('/:userId/stories', getStory);
 
 export default router;
