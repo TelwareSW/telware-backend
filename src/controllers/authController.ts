@@ -91,9 +91,9 @@ export const sendConfirmationCode = catchAsync(
     const { email } = req.body;
     const user: IUser = (await User.findOne({ email })) as IUser;
     const errorState = { errorCaught: true };
-    sendEmailVerificationCode(user, next, errorState);
+    await sendEmailVerificationCode(user, next, errorState);
     if (errorState.errorCaught) return;
-    return res.status(200).json({
+    res.status(200).json({
       status: 'success',
       message: 'verification email sent',
       data: {},
