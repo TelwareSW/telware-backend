@@ -66,6 +66,7 @@ export const createTokens = (
     }
   );
   req.session.refreshToken = refreshToken;
+  req.session.save();
   redisClient.sAdd(`user:${id}:sessions`, req.sessionID);
 };
 
