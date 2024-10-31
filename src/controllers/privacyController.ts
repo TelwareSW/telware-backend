@@ -1,13 +1,12 @@
 import catchAsync from '@utils/catchAsync';
 import User from '@models/userModel';
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import AppError from '@errors/AppError';
 
 export const getBlockedUsers = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    // const userId = req.user.id; // Blocker ID
-    const userId = '671a7aad6d8b2991d75dfa12';
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id; // Blocker ID
 
     const user = await User.findById(userId).populate(
       'blockedUsers',
@@ -19,18 +18,17 @@ export const getBlockedUsers = catchAsync(
 
     res.status(200).json({
       status: 'success',
+      message: 'Blocked users fetched successfully',
       data: {
-        blockedUsers: user.blockedUsers,
+        users: user.blockedUsers,
       },
     });
   }
 );
 
 export const block = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    console.log('Request Params:', req.params);
-    // const userId = req.user.id; // Blocker ID
-    const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id; // Blocker ID
     const targetUserId = req.params.id; // User ID to block
 
     if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
@@ -52,17 +50,17 @@ export const block = catchAsync(
 
     res.status(200).json({
       status: 'success',
+      message: 'User blocked successfully',
       data: {
-        blockedUsers: user.blockedUsers,
+        users: user.blockedUsers,
       },
     });
   }
 );
 
 export const unblock = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    // const userId = req.user.id; // Blocker ID
-    const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
     const targetUserId = req.params.id; // User ID to unblock
 
     if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
@@ -81,16 +79,17 @@ export const unblock = catchAsync(
 
     res.status(200).json({
       status: 'success',
+      message: 'User unblocked successfullly',
       data: {
-        blockedUsers: user.blockedUsers,
+        users: user.blockedUsers,
       },
     });
   }
 );
 
 export const switchReadRecieptsState = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
     const user = await User.findById(userId);
     if (!user) {
       throw new Error('User not found');
@@ -105,16 +104,15 @@ export const switchReadRecieptsState = catchAsync(
     }
     res.status(200).json({
       status: 'success',
-      data: {
-        readReceiptsEnablePrivacy: updatedUser.readReceiptsEnablePrivacy,
-      },
+      message: 'Read receipts privacy updated successfully',
+      data: {},
     });
   }
 );
 
 export const changeStoriesPrivacy = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
     const { privacy } = req.body;
     if (
       privacy !== 'contacts' &&
@@ -138,15 +136,14 @@ export const changeStoriesPrivacy = catchAsync(
     }
     res.status(200).json({
       status: 'success',
-      data: {
-        storiesPrivacy: user.storiesPrivacy,
-      },
+      message: 'Stories privacy updated successfully',
+      data: {},
     });
   }
 );
 export const changeLastSeenPrivacy = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
     const { privacy } = req.body;
     if (
       privacy !== 'contacts' &&
@@ -170,15 +167,14 @@ export const changeLastSeenPrivacy = catchAsync(
     }
     res.status(200).json({
       status: 'success',
-      data: {
-        lastSeenPrivacy: user.lastSeenPrivacy,
-      },
+      message: 'Last seen privacy updated successfully',
+      data: {},
     });
   }
 );
 export const changeProfilePicturePrivacy = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
     const { privacy } = req.body;
     if (
       privacy !== 'contacts' &&
@@ -202,16 +198,15 @@ export const changeProfilePicturePrivacy = catchAsync(
     }
     res.status(200).json({
       status: 'success',
-      data: {
-        picturePrivacy: user.picturePrivacy,
-      },
+      message: 'Profile picture privacy updated successfully',
+      data: {},
     });
   }
 );
 export const changeInvitePermessionsePrivacy = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = '671a7aad6d8b2991d75dfa12'; // Hardcoded until middleware gets added
-    const invitePermission = req.body.permission;
+  async (req: any, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+    const invitePermission = req.body.privacy;
 
     const user = await User.findByIdAndUpdate(
       userId,
@@ -223,9 +218,8 @@ export const changeInvitePermessionsePrivacy = catchAsync(
     }
     res.status(200).json({
       status: 'success',
-      data: {
-        invitePermessionsPrivacy: user.invitePermessionsPrivacy,
-      },
+      message: 'Invite permissions privacy updated successfully',
+      data: {},
     });
   }
 );

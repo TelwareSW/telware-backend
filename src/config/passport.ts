@@ -5,7 +5,6 @@ import {
   Strategy as GitHubStrategy,
   Profile as GitHubProfile,
 } from 'passport-github2';
-import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { createOAuthUser } from '@services/authService';
 import User from '@models/userModel';
 import IUser from '@base/types/user';
@@ -84,38 +83,6 @@ passport.use(
           (em: any) => em.primary && em.verified
         )?.email;
         const user: IUser = await createOAuthUser(profile, { email });
-        done(null, user);
-      } catch (error) {
-        console.log(error);
-        done(error);
-      }
-    }
-  )
-);
-
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: process.env.FACEBOOK_CLIENT_ID as string,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
-      callbackURL: '/api/v1/auth/oauth/facebook/redirect',
-      scope: ['public_profile', 'email'],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const restOfProfile = await axios.get('https://graph.facebook.com/me', {
-          params: {
-            fields: 'email,picture',
-            access_token: accessToken,
-          },
-        });
-
-        console.log(profile);
-        console.log(restOfProfile.data);
-        const user: IUser = await createOAuthUser(profile, {
-          email: restOfProfile.data.email,
-          photo: restOfProfile.data.picture.data.url,
-        });
         done(null, user);
       } catch (error) {
         console.log(error);

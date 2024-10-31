@@ -19,18 +19,27 @@ import {
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
 import IUser from '@base/types/user';
-import redisClient from '@base/config/redis';
+import redisClient from '@config/redis';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, phoneNumber, password, passwordConfirm, recaptchaResponse } =
       req.body;
 
+    if (
+      !email ||
+      !phoneNumber ||
+      !password ||
+      !passwordConfirm ||
+      !recaptchaResponse
+    )
+      return next(new AppError('Please provide all required fields', 400));
+
     const reCaptchaMessageResponse: IReCaptchaResponse =
       await verifyReCaptcha(recaptchaResponse);
 
-    if (reCaptchaMessageResponse.response === 400)
-      return next(new AppError(reCaptchaMessageResponse.message, 400));
+    // if (reCaptchaMessageResponse.response === 400)
+    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 
@@ -96,7 +105,9 @@ export const verifyEmail = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, verificationCode } = req.body;
     if (!email) return next(new AppError('Provide your email', 400));
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select(
+      '+emailVerificationCode +emailVerificationCodeExpires'
+    );
     if (!user)
       return next(
         new AppError('You need to register before verifying your email', 404)
@@ -149,13 +160,13 @@ export const verifyEmail = catchAsync(
 export const oAuthCallback = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
     createTokens(req.user._id as ObjectId, req);
-    const { user } = req;
+    const { user, sessionID } = req;
     res.status(200).json({
       status: 'success',
       message: 'User logged in successfully',
       data: {
         user,
-        sessionId: req.sessionID,
+        sessionID,
       },
     });
   }
@@ -249,51 +260,6 @@ export const githubLogin = catchAsync(
     )?.email;
 
     const user = await createOAuthUser(profile.data, { email });
-
-    createTokens(user._id as ObjectId, req);
-
-    res.status(200).json({
-      status: 'success',
-      message: 'User logged in successfully',
-      data: {
-        user,
-        sessionId: req.sessionID,
-      },
-    });
-  }
-);
-
-export const facebookLogin = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { code } = req.params;
-    const tokenResponse = await axios.get(
-      'https://graph.facebook.com/v12.0/oauth/access_token',
-      {
-        params: {
-          client_id: process.env.FACEBOOK_CLIENT_ID,
-          client_secret: process.env.FACEBOOK_CLIENT_SECRET,
-          code,
-        },
-      }
-    );
-
-    if (!tokenResponse.data.accessToken) {
-      return next(
-        new AppError('Failed to get access token from Facebook', 400)
-      );
-    }
-
-    const profile = await axios.get('https://graph.facebook.com/me', {
-      params: {
-        fields: 'id,name,email,picture',
-        access_token: tokenResponse.data.accessToken,
-      },
-    });
-
-    const user = await createOAuthUser(profile.data, {
-      email: profile.data.email,
-      photo: profile.data.picture.data.url,
-    });
 
     createTokens(user._id as ObjectId, req);
 

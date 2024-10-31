@@ -29,7 +29,7 @@ router.get('/me', protect, isLoggedIn);
 
 router.post('/password/forget', forgotPassword);
 router.patch('/password/reset/:token', resetPassword);
-router.patch('/change-password', protect, changePassword);
+router.patch('/password/change', protect, changePassword);
 
 router.post('/logout', protect, logout);
 router.post('/logout/all', protect, logoutAll);

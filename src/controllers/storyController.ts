@@ -1,31 +1,36 @@
 import AppError from '@base/errors/AppError';
 import Story from '@base/models/storySchema';
 import User from '@base/models/userModel';
-import { deleteStoryFile, deleteStoryInUser } from '@base/services/storyService';
+import {
+  deleteStoryFile,
+  deleteStoryInUser,
+} from '@base/services/storyService';
 import catchAsync from '@base/utils/catchAsync';
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 
-export const getCurrentUserStory = catchAsync(async (req: Request, res: Response) => {
-  //const userId = req.user.id;   //TODO: use this to get the authenticated user id and use it below
+export const getCurrentUserStory = catchAsync(
+  async (req: any, res: Response) => {
+    const userId = req.user.id;
 
-  const user = await User.findById('6718035409b1d3b2f3a0ebbb').populate('stories');
+    const user = await User.findById(userId).populate('stories');
 
-  if (!user) {
-    throw new AppError('No User exists with this ID', 404);
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Stories retrieved successfuly',
+      data: {
+        stories: user.stories,
+      },
+    });
   }
-
-  return res.status(200).json({
-    status: 'success',
-    message: 'Stories retrieved successfuly',
-    data: {
-      stories: user.stories,
-    },
-  });
-});
-export const postStory = catchAsync(async (req: Request, res: Response) => {
+);
+export const postStory = catchAsync(async (req: any, res: Response) => {
   const { caption } = req.body;
-  //const userId = req.user.id;   //TODO: use this to get the authenticated user id and use it below
+  const userId = req.user.id;
 
   if (!req.file) {
     throw new AppError('An error occured while uploading the story', 500);
@@ -40,10 +45,10 @@ export const postStory = catchAsync(async (req: Request, res: Response) => {
   await newStory.save();
 
   const user = await User.findByIdAndUpdate(
-    '6718035409b1d3b2f3a0ebbb',
+    userId,
     { $push: { stories: newStory._id } },
     { new: true, runValidators: true }
-  ); //TODO: replace the hardcoded user id with userId variable.
+  );
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
@@ -55,12 +60,13 @@ export const postStory = catchAsync(async (req: Request, res: Response) => {
     data: {},
   });
 });
-export const deleteStory = catchAsync(async (req: Request, res: Response) => {
+export const deleteStory = catchAsync(async (req: any, res: Response) => {
   const { storyId } = req.params;
+  const userId = req.user.id;
   const storyObjectId = new mongoose.Types.ObjectId(storyId);
 
   // Delete the story from the user stories
-  await deleteStoryInUser(storyObjectId, '6718035409b1d3b2f3a0ebbb'); //TODO: replace the hardcoded id with the authenticated user id.
+  await deleteStoryInUser(storyObjectId, userId);
 
   // Delete the story file in the server
   await deleteStoryFile(storyObjectId);
@@ -78,7 +84,10 @@ export const deleteStory = catchAsync(async (req: Request, res: Response) => {
 export const getStory = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
   //TODO: HANDLE STORY PRIVACY OF THE USER.
-  const user = await User.findById(userId).populate('stories', 'id content caption timestamp');
+  const user = await User.findById(userId).populate(
+    'stories',
+    'id content caption timestamp'
+  );
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
@@ -92,9 +101,9 @@ export const getStory = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
-export const viewStory = catchAsync(async (req: Request, res: Response) => {
+export const viewStory = catchAsync(async (req: any, res: Response) => {
   const { storyId } = req.params;
-  const userId = '6718035409b1d3b2f3a0ebbb'; //TODO: replace the hardcoded id with the authenticated user id.
+  const userId = req.user.id;
 
   await Story.findByIdAndUpdate(
     storyId,

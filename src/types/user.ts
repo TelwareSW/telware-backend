@@ -31,10 +31,8 @@ interface IUser extends Document {
   resetPasswordToken: string | undefined;
   resetPasswordExpires: number | undefined;
   generateSaveConfirmationCode: () => string;
-  // eslint-disable-next-line no-unused-vars
-  isCorrectPassword: (candidatePass: string) => Promise<boolean>;
-  // eslint-disable-next-line no-unused-vars
-  passwordChanged: (tokenIssuedAt: number) => boolean;
+  isCorrectPassword: (_candidatePass: string) => Promise<boolean>;
+  passwordChanged: (_tokenIssuedAt: number) => boolean;
   createResetPasswordToken: () => string;
   selectFields: () => void;
 }
