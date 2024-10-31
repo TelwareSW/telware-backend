@@ -8,14 +8,16 @@ import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import RedisStore from 'connect-redis';
-import { randomUUID } from 'crypto';
 
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
 import apiRouter from '@routes/apiRoute';
 import path from 'path';
 import redisClient from '@config/redis';
-import { createSessionFromHeaders } from '@middlewares/authMiddleware';
+import {
+  deleteNotUsedSessions,
+  generateSession,
+} from '@middlewares/authMiddleware';
 
 declare module 'express-session' {
   // eslint-disable-next-line no-unused-vars
@@ -40,14 +42,13 @@ app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(createSessionFromHeaders);
 app.use(
   session({
     store: new RedisStore({ client: redisClient }),
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: false,
-    genid: (req) => req.sessionID || randomUUID(),
+    genid: generateSession,
     cookie: {
       maxAge,
       httpOnly: true,
@@ -55,6 +56,7 @@ app.use(
     },
   })
 );
+app.use(deleteNotUsedSessions);
 
 app.use(passport.initialize());
 app.use(passport.session());
