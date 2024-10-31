@@ -46,10 +46,17 @@ const userSchema = new mongoose.Schema<IUser>(
         {
           async validator(email: string): Promise<boolean> {
             if (this.provider === 'local') {
-              const existingUser = await mongoose.models.User.findOne({
+              const existingUser = await mongoose.models.User.find({
                 email,
               });
-              return !existingUser;
+              if (
+                !existingUser ||
+                existingUser.length === 0 ||
+                (existingUser.length === 1 &&
+                  existingUser[0]._id.equals(this._id))
+              )
+                return true;
+              return false;
             }
             return true;
           },
@@ -70,10 +77,17 @@ const userSchema = new mongoose.Schema<IUser>(
         {
           async validator(phoneNumber: string): Promise<boolean> {
             if (this.provider === 'local') {
-              const existingUser = await mongoose.models.User.findOne({
+              const existingUser = await mongoose.models.User.find({
                 phoneNumber,
               });
-              return !existingUser;
+              if (
+                !existingUser ||
+                existingUser.length === 0 ||
+                (existingUser.length === 1 &&
+                  existingUser[0]._id.equals(this._id))
+              )
+                return true;
+              return false;
             }
             return true;
           },

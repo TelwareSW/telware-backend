@@ -74,7 +74,7 @@ export const deleteStory = catchAsync(async (req: any, res: Response) => {
   // Delete the story object from the database.
   await Story.deleteOne({ _id: storyObjectId });
 
-  return res.status(200).json({
+  return res.status(204).json({
     status: 'success',
     message: 'Story deleted successfuly',
     data: {},
@@ -111,7 +111,7 @@ export const viewStory = catchAsync(async (req: any, res: Response) => {
     { new: true, runValidators: true }
   );
 
-  res.status(201).json({
+  res.status(200).json({
     status: 'success',
     message: 'User viewed the story successfuly',
     data: {},

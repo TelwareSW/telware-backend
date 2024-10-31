@@ -24,9 +24,11 @@ import {
   getStory,
   postStory,
 } from '@controllers/storyController';
+import { protect } from '@middlewares/authMiddleware';
 
 const router = Router();
 
+router.use(protect);
 router.use('/privacy', privacyRouter);
 
 // Stories routes
