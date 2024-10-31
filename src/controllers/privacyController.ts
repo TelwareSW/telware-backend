@@ -13,7 +13,7 @@ export const getBlockedUsers = catchAsync(
       'username email'
     );
     if (!user) {
-      return next(new AppError('User not found', 400));
+      return next(new AppError('User not found', 404));
     }
 
     res.status(200).json({
@@ -31,10 +31,8 @@ export const block = catchAsync(
     const userId = req.user.id; // Blocker ID
     const targetUserId = req.params.id; // User ID to block
 
-    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
-      console.log('Invalid ID');
+    if (!mongoose.Types.ObjectId.isValid(targetUserId))
       return next(new AppError('Invalid user ID', 400));
-    }
 
     const user = await User.findByIdAndUpdate(
       userId,
@@ -42,11 +40,7 @@ export const block = catchAsync(
       { new: true, runValidators: true }
     );
 
-    if (!user) {
-      console.log('User not found');
-
-      return next(new AppError('User not found', 400));
-    }
+    if (!user) return next(new AppError('User not found', 404));
 
     res.status(200).json({
       status: 'success',
@@ -61,7 +55,7 @@ export const block = catchAsync(
 export const unblock = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
     const userId = req.user.id;
-    const targetUserId = req.params.id; // User ID to unblock
+    const targetUserId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
       return next(new AppError('Invalid user ID', 400));
@@ -74,7 +68,7 @@ export const unblock = catchAsync(
     );
 
     if (!user) {
-      return next(new AppError('User not found', 400));
+      return next(new AppError('User not found', 404));
     }
 
     res.status(200).json({
@@ -92,7 +86,7 @@ export const switchReadRecieptsState = catchAsync(
     const userId = req.user.id;
     const user = await User.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      return next(new AppError('User not found', 404));
     }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -100,7 +94,7 @@ export const switchReadRecieptsState = catchAsync(
       { new: true, runValidators: true }
     );
     if (!updatedUser) {
-      throw new Error('User not found');
+      return next(new AppError('User not found', 404));
     }
     res.status(200).json({
       status: 'success',
@@ -163,7 +157,7 @@ export const changeLastSeenPrivacy = catchAsync(
       { new: true, runValidators: true }
     );
     if (!user) {
-      throw new Error('User not found');
+      return next(new AppError('User not found', 404));
     }
     res.status(200).json({
       status: 'success',
@@ -194,7 +188,7 @@ export const changeProfilePicturePrivacy = catchAsync(
       { new: true, runValidators: true }
     );
     if (!user) {
-      throw new Error('User not found');
+      return next(new AppError('User not found', 404));
     }
     res.status(200).json({
       status: 'success',
@@ -214,7 +208,7 @@ export const changeInvitePermessionsePrivacy = catchAsync(
       { new: true, runValidators: true }
     );
     if (!user) {
-      throw new Error('User not found');
+      return next(new AppError('User not found', 404));
     }
     res.status(200).json({
       status: 'success',

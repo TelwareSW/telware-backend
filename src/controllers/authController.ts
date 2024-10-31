@@ -38,8 +38,8 @@ export const signup = catchAsync(
     const reCaptchaMessageResponse: IReCaptchaResponse =
       await verifyReCaptcha(reCaptchaResponse);
 
-    if (reCaptchaMessageResponse.response === 400)
-      return next(new AppError(reCaptchaMessageResponse.message, 400));
+    // if (reCaptchaMessageResponse.response === 400)
+    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 
@@ -54,7 +54,7 @@ export const signup = catchAsync(
     const errorState = { errorCaught: true };
     await sendEmailVerificationCode(user, next, errorState);
     if (errorState.errorCaught) return;
-    return res.status(200).json({
+    return res.status(201).json({
       status: 'success',
       message: 'Verification email sent',
       data: {},
@@ -89,7 +89,9 @@ export const login = catchAsync(
 export const sendConfirmationCode = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
-    const user: IUser = (await User.findOne({ email })) as IUser;
+    const user: IUser = (await User.findOne({ email }).select(
+      '+emailVerificationCode +emailVerificationCodeExpires'
+    )) as IUser;
     const errorState = { errorCaught: true };
     await sendEmailVerificationCode(user, next, errorState);
     if (errorState.errorCaught) return;
@@ -118,7 +120,7 @@ export const verifyEmail = catchAsync(
       return next(new AppError('Provide your verification code', 400));
     if (
       user.emailVerificationCodeExpires &&
-      user.emailVerificationCodeExpires > Date.now()
+      user.emailVerificationCodeExpires < Date.now()
     )
       return next(
         new AppError(
@@ -136,7 +138,7 @@ export const verifyEmail = catchAsync(
     user.emailVerificationCode = undefined;
     user.emailVerificationCodeExpires = undefined;
     user.accountStatus = 'active';
-    user.save();
+    await user.save({ validateBeforeSave: false });
 
     const { username, screenName, photo, status, bio } = user;
     res.status(200).json({

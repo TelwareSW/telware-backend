@@ -3,12 +3,13 @@ import User from '@base/models/userModel';
 import catchAsync from '@base/utils/catchAsync';
 import { Request, Response } from 'express';
 import deletePictureFile from '@base/services/userService';
+import IUser from '@base/types/user';
 
 interface GetUser extends Request {
   params: {
     userId?: string;
   };
-  user: any;
+  user: IUser;
   //TODO: add a user here that would contain the user data.
 }
 
