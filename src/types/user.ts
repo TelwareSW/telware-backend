@@ -4,7 +4,8 @@ interface IUser extends Document {
   provider: string;
   providerId: string;
   username: string;
-  screenName: string;
+  screenFirstName: string;
+  screenLastName: string;
   email: string;
   phoneNumber: string | undefined;
   password: string | undefined;

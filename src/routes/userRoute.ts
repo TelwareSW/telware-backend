@@ -1,11 +1,7 @@
 import { Router } from 'express';
 import upload from '@base/config/fileUploads';
 import privacyRouter from '@routes/privacyRoute';
-import {
-  block,
-  getBlockedUsers,
-  unblock,
-} from '@controllers/privacyController';
+import { block, getBlockedUsers, unblock } from '@controllers/privacyController';
 import {
   deletePicture,
   getAllUsers,
@@ -44,6 +40,7 @@ router.delete('/block/:id', unblock);
 // User routes
 router.get('/', getAllUsers);
 router.get('/me', getCurrentUser);
+router.patch('/me', getCurrentUser);
 router.patch('/bio', updateBio);
 router.patch('/phone', updatePhoneNumber);
 router.patch('/email', updateEmail);

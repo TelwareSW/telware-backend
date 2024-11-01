@@ -13,24 +13,42 @@ interface GetUser extends Request {
   //TODO: add a user here that would contain the user data.
 }
 
-export const getCurrentUser = catchAsync(
-  async (req: GetUser, res: Response) => {
-    const userId = req.user.id;
+export const getCurrentUser = catchAsync(async (req: GetUser, res: Response) => {
+  const userId = req.user.id;
 
-    const user = await User.findById(userId);
+  const user = await User.findById(userId);
 
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
-    return res.status(200).json({
-      status: 'success',
-      message: 'User retrieved successfuly',
-      data: {
-        user,
-      },
-    });
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
   }
-);
+  return res.status(200).json({
+    status: 'success',
+    message: 'User retrieved successfuly',
+    data: {
+      user,
+    },
+  });
+});
+
+export const updateCurrentUser = catchAsync(async (req: any, res: Response) => {
+  const userData = req.body;
+  const userId = req.user.id;
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { ...userData },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+  return res.status(200).json({
+    status: 'success',
+    message: 'User data updated successfuly',
+    data: {},
+  });
+});
 
 export const getUser = catchAsync(async (req: GetUser, res: Response) => {
   const { userId } = req.params;
@@ -43,10 +61,7 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
   const fieldsToGet = ['username', 'screenName', 'email', 'status', 'bio'];
 
   //TODO: if privacy is contacts, check if auth user exists in that user contacts
-  if (
-    user.picturePrivacy === 'everyone' ||
-    user.picturePrivacy === 'contacts'
-  ) {
+  if (user.picturePrivacy === 'everyone' || user.picturePrivacy === 'contacts') {
     fieldsToGet.push('photo');
   }
 
@@ -62,10 +77,7 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
 });
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await User.find(
-    {},
-    'username screenName email photo status bio'
-  );
+  const users = await User.find({}, 'username screenName email photo status bio');
 
   return res.status(200).json({
     status: 'success',
@@ -80,11 +92,7 @@ export const updateBio = catchAsync(async (req: any, res: Response) => {
   const { bio } = req.body;
   const userId = req.user.id;
 
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { bio },
-    { new: true, runValidators: true }
-  );
+  const user = await User.findByIdAndUpdate(userId, { bio }, { new: true, runValidators: true });
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
@@ -122,11 +130,7 @@ export const updateEmail = catchAsync(async (req: any, res: Response) => {
   const { email } = req.body;
   const userId = req.user.id;
 
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { email },
-    { new: true, runValidators: true }
-  );
+  const user = await User.findByIdAndUpdate(userId, { email }, { new: true, runValidators: true });
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
@@ -161,12 +165,12 @@ export const updateUsername = catchAsync(async (req: any, res: Response) => {
 });
 
 export const updateScreenName = catchAsync(async (req: any, res: Response) => {
-  const { screenName } = req.body;
+  const { screenFirstName, screenLastName } = req.body;
   const userId = req.user.id;
 
   const user = await User.findByIdAndUpdate(
     userId,
-    { screenName },
+    { screenFirstName, screenLastName },
     { new: true, runValidators: true }
   );
 
@@ -176,7 +180,7 @@ export const updateScreenName = catchAsync(async (req: any, res: Response) => {
 
   return res.status(200).json({
     status: 'success',
-    message: 'User screenName updated successfuly',
+    message: 'User screenFirstName and screenLastName updated successfuly',
     data: {},
   });
 });
