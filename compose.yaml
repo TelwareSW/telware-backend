@@ -1,0 +1,75 @@
+services:
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
+    networks:
+      - backend-net
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
+      interval: 20m
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    # Uncomment Only If You Want To access the mongodb instance from your machine
+    # ports:
+    #   - 27017:27017
+
+  mongo-express:
+    image: mongo-express
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_DB_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_DB_USER}:${MONGO_DB_PASSWORD}@mongo:27017/telwareDB?authSource=admin
+      ME_CONFIG_BASICAUTH: 'false'
+    networks:
+      - backend-net
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  backend:
+    image: telware/backend
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    ports:
+      - '${PORT:-3000}:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${PORT:-3000}
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-net
+
+  redis:
+    image: redis/redis-stack
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+      - 8001:8001
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 20m
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    # TODO: Add some environment variables that might be used in production
+
+networks:
+  backend-net:
