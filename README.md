@@ -1,3 +1,3 @@
-# telware-backend
+# telware backend
 
-Backend Repo for TelWare
+Backend Repo for TelWare Messaging Platform
