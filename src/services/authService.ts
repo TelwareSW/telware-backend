@@ -13,6 +13,7 @@ import {
   fromResetPasswordMessage,
 } from '@utils/emailMessages';
 import AppError from '@errors/AppError';
+import axios from 'axios';
 
 export const validateBeforeLogin = async (
   email: string,
@@ -95,10 +96,9 @@ export const verifyReCaptcha = async (
     return { message: 'please validate the recaptcha', response: 400 };
 
   const verificationURL: string = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${recaptchaResponse}`;
-  const verificationResponse = await fetch(verificationURL, {
-    method: 'POST',
-  });
-  const verificationResponseData = await verificationResponse.json();
+  const verificationResponse = await axios.post(verificationURL);
+  const verificationResponseData = verificationResponse.data;
+
   if (!verificationResponseData.success)
     return { message: 'reCaptcha verification failed', response: 400 };
   return { message: 'recaptcha is verified', response: 200 };
