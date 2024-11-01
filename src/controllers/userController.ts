@@ -50,6 +50,31 @@ export const updateCurrentUser = catchAsync(async (req: any, res: Response) => {
   });
 });
 
+export const getCheckUserName = catchAsync(async (req: any, res: Response) => {
+  const { username } = req.query;
+
+  const user = new User({
+    username,
+    screenFirstName: 'temp',
+    password: 12345678,
+    passwordConfirm: 12345678,
+  });
+
+  await user.validate();
+
+  const existingUser = await User.findOne({ username });
+
+  if (existingUser) {
+    throw new AppError('Username already exists', 409);
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Username is unique',
+    data: {},
+  });
+});
+
 export const getUser = catchAsync(async (req: GetUser, res: Response) => {
   const { userId } = req.params;
 
