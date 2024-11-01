@@ -29,7 +29,14 @@ declare module 'express-session' {
 
 const app = express();
 
-const allowedOrigins = ['*'];
+const allowedOrigins = [
+  'http://localhost',
+  'https://localhost',
+  'http://testing.telware.tech',
+  'https://testing.telware.tech',
+  'http://telware.tech',
+  'https://telware.tech',
+];
 const corsOptions = {
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
