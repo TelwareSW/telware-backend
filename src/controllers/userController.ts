@@ -58,7 +58,7 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
     throw new AppError('No User exists with this ID', 404);
   }
 
-  const fieldsToGet = ['username', 'screenName', 'email', 'status', 'bio'];
+  const fieldsToGet = ['username', 'screenFirstName', 'screenLastName', 'email', 'status', 'bio'];
 
   //TODO: if privacy is contacts, check if auth user exists in that user contacts
   if (user.picturePrivacy === 'everyone' || user.picturePrivacy === 'contacts') {
@@ -77,7 +77,10 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
 });
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await User.find({}, 'username screenName email photo status bio');
+  const users = await User.find(
+    {},
+    'username screenFirstName screenLastName email photo status bio'
+  );
 
   return res.status(200).json({
     status: 'success',

@@ -8,6 +8,7 @@ import {
   getCurrentUser,
   getUser,
   updateBio,
+  updateCurrentUser,
   updateEmail,
   updatePhoneNumber,
   updatePicture,
@@ -40,7 +41,7 @@ router.delete('/block/:id', unblock);
 // User routes
 router.get('/', getAllUsers);
 router.get('/me', getCurrentUser);
-router.patch('/me', getCurrentUser);
+router.patch('/me', updateCurrentUser);
 router.patch('/bio', updateBio);
 router.patch('/phone', updatePhoneNumber);
 router.patch('/email', updateEmail);
