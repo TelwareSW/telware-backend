@@ -85,8 +85,10 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
 
   const fieldsToGet = ['username', 'screenFirstName', 'screenLastName', 'email', 'status', 'bio'];
 
-  //TODO: if privacy is contacts, check if auth user exists in that user contacts
-  if (user.picturePrivacy === 'everyone' || user.picturePrivacy === 'contacts') {
+  if (
+    user.picturePrivacy === 'everyone' ||
+    (user.picturePrivacy === 'contacts' && user.contacts.includes(req.user.id))
+  ) {
     fieldsToGet.push('photo');
   }
 
