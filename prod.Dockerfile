@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:20.18.0-alpine AS build
+FROM node:latest as build
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN npm prune --omit=dev
 
 
 # Run Stage
-FROM node:20.18.0-alpine AS run
+FROM node:latest as run
 
 RUN mkdir -p /home/node/app 
 
