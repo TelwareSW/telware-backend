@@ -185,34 +185,26 @@ export const oAuthCallback = catchAsync(
   }
 );
 
-export const refresh = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const { refreshToken } = req.session;
-    if (!refreshToken)
-      return next(new AppError('Please provide a valid refresh token', 400));
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET as string
-    ) as jwt.JwtPayload;
-    createTokens(req.user._id as ObjectId, req, false);
+export const refresh = catchAsync(async (req: any, res: Response, next: NextFunction) => {
+  const { refreshToken } = req.session;
+  if (!refreshToken) return next(new AppError('Please provide a valid refresh token', 400));
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string) as jwt.JwtPayload;
+  createTokens(req.user._id as ObjectId, req, false);
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Token refreshed successfully',
-      data: {},
-    });
-  }
-);
+  res.status(200).json({
+    status: 'success',
+    message: 'Token refreshed successfully',
+    data: {},
+  });
+});
 
-export const isLoggedIn = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).json({
-      status: 'success',
-      message: 'User is logged in',
-      data: {},
-    });
-  }
-);
+export const isLoggedIn = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'User is logged in',
+    data: {},
+  });
+});
 
 export const forgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -225,9 +217,7 @@ export const forgotPassword = catchAsync(
     const resetPasswordToken = user.createResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    const resetURL = `${req.protocol}://${req.get(
-      'host'
-    )}/passwordreset/${resetPasswordToken}`;
+    const resetURL = `${req.protocol}://${req.get('host')}/passwordreset/${resetPasswordToken}`;
 
     try {
       await sendResetPasswordEmail(resetURL, user.email);
@@ -242,109 +232,96 @@ export const forgotPassword = catchAsync(
       user.resetPasswordExpires = undefined;
       await user.save({ validateBeforeSave: false });
 
-      return next(
-        new AppError(
-          'An error accured while sending the email. Try again later!',
-          500
-        )
-      );
+      return next(new AppError('An error accured while sending the email. Try again later!', 500));
     }
   }
 );
 
-export const resetPassword = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.params;
-    const { password, passwordConfirm } = req.body;
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-    if (!user) {
-      return next(new AppError('Token is invalid or expired', 400));
-    }
-
-    user.password = password;
-    user.passwordConfirm = passwordConfirm;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    user.changedPasswordAt = new Date(Date.now() - 1000);
-    await user.save();
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Password reset successfully',
-      data: {},
-    });
+export const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { token } = req.params;
+  const { password, passwordConfirm } = req.body;
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+  if (!user) {
+    return next(new AppError('Token is invalid or expired', 400));
   }
-);
 
-export const logout = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    req.session.destroy((err: any) => {
-      if (err) return next(new AppError('Failed to logout session', 500));
-    });
-    res.status(204).json({
-      status: 'success',
-      message: 'User logged out successfully',
-      data: {},
-    });
-  }
-);
+  user.password = password;
+  user.passwordConfirm = passwordConfirm;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+  user.changedPasswordAt = new Date(Date.now() - 1000);
+  await user.save();
 
-export const logoutAll = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const sessionIds = await getAllSessionsByUserId(req.user._id);
+  res.status(200).json({
+    status: 'success',
+    message: 'Password reset successfully',
+    data: {},
+  });
+});
 
-    const promises = sessionIds.map(
-      (sessionId) =>
-        new Promise((resolve, reject) => {
-          req.sessionStore.destroy(sessionId, (error: Error) => {
-            if (error) return reject(error);
-            resolve(undefined);
-          });
-        })
-    );
+export const logout = catchAsync(async (req: any, res: Response, next: NextFunction) => {
+  req.session.destroy((err: any) => {
+    if (err) return next(new AppError('Failed to logout session', 500));
+  });
+  res.status(204).json({
+    status: 'success',
+    message: 'User logged out successfully',
+    data: {},
+  });
+});
 
-    await Promise.all(promises);
-    redisClient.del(`user:${req.user._id}:sessions`);
+export const logoutAll = catchAsync(async (req: any, res: Response, next: NextFunction) => {
+  const sessionIds = await getAllSessionsByUserId(req.user._id);
 
-    res.status(204).json({
-      status: 'success',
-      message: 'All Sessions logged out successfully',
-      data: {},
-    });
-  }
-);
+  const promises = sessionIds.map(
+    (sessionId) =>
+      new Promise((resolve, reject) => {
+        req.sessionStore.destroy(sessionId, (error: Error) => {
+          if (error) return reject(error);
+          resolve(undefined);
+        });
+      })
+  );
 
-export const logoutOthers = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const sessionIds = (await getAllSessionsByUserId(req.user._id)).filter(
-      (sessionId) => sessionId !== req.sessionID
-    );
+  await Promise.all(promises);
+  redisClient.del(`user:${req.user._id}:sessions`);
 
-    const promises = sessionIds.map(
-      (sessionId) =>
-        new Promise((resolve, reject) => {
-          req.sessionStore.destroy(sessionId, (error: Error) => {
-            if (error) return reject(error);
-            resolve(undefined);
-          });
-        })
-    );
+  res.status(204).json({
+    status: 'success',
+    message: 'All Sessions logged out successfully',
+    data: {},
+  });
+});
 
-    await Promise.all(promises);
-    redisClient.del(`user:${req.user._id}:sessions`);
-    redisClient.sAdd(`user:${req.user._id}:sessions`, req.sessionID);
+export const logoutOthers = catchAsync(async (req: any, res: Response, next: NextFunction) => {
+  const sessionIds = (await getAllSessionsByUserId(req.user._id)).filter(
+    (sessionId) => sessionId !== req.sessionID
+  );
 
-    res.status(204).json({
-      status: 'success',
-      message: 'All Other Sessions logged out successfully',
-      data: {},
-    });
-  }
-);
+  const promises = sessionIds.map(
+    (sessionId) =>
+      new Promise((resolve, reject) => {
+        req.sessionStore.destroy(sessionId, (error: Error) => {
+          if (error) return reject(error);
+          resolve(undefined);
+        });
+      })
+  );
+
+  await Promise.all(promises);
+  redisClient.del(`user:${req.user._id}:sessions`);
+  redisClient.sAdd(`user:${req.user._id}:sessions`, req.sessionID);
+
+  res.status(204).json({
+    status: 'success',
+    message: 'All Other Sessions logged out successfully',
+    data: {},
+  });
+});
 
 export const changePassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema<IUser>(
       required: [true, 'Username is required'],
       unique: true,
       minlength: [5, 'Username is at least 5 characters'],
-      maxlength: [50, 'Username is at most 15 characters'],
+      maxlength: [15, 'Username is at most 15 characters'],
       validate: {
         validator(username: string): boolean {
           const regex = /^[A-Za-z0-9_]+$/;
@@ -30,7 +30,11 @@ const userSchema = new mongoose.Schema<IUser>(
         message: 'Username can contain only letters, numbers and underscore',
       },
     },
-    screenName: {
+    screenFirstName: {
+      type: String,
+      required: true,
+    },
+    screenLastName: {
       type: String,
       default: '',
     },
@@ -52,8 +56,7 @@ const userSchema = new mongoose.Schema<IUser>(
               if (
                 !existingUser ||
                 existingUser.length === 0 ||
-                (existingUser.length === 1 &&
-                  existingUser[0]._id.equals(this._id))
+                (existingUser.length === 1 && existingUser[0]._id.equals(this._id))
               )
                 return true;
               return false;
@@ -83,8 +86,7 @@ const userSchema = new mongoose.Schema<IUser>(
               if (
                 !existingUser ||
                 existingUser.length === 0 ||
-                (existingUser.length === 1 &&
-                  existingUser[0]._id.equals(this._id))
+                (existingUser.length === 1 && existingUser[0]._id.equals(this._id))
               )
                 return true;
               return false;
@@ -230,19 +232,14 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-userSchema.methods.isCorrectPassword = async function (
-  candidatePass: string
-): Promise<boolean> {
+userSchema.methods.isCorrectPassword = async function (candidatePass: string): Promise<boolean> {
   const result = await bcrypt.compare(candidatePass, this.password);
   if (result) this.matchedPasswords = true;
   return result;
 };
 
 userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
-  if (
-    this.changedPasswordAt &&
-    this.changedPasswordAt.getTime() / 1000 > tokenIssuedAt
-  )
+  if (this.changedPasswordAt && this.changedPasswordAt.getTime() / 1000 > tokenIssuedAt)
     return true;
   return false;
 };
@@ -256,10 +253,7 @@ userSchema.methods.selectFields = function (): void {
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {
   const confirmationCode: string = generateConfirmationCode();
-  this.emailVerificationCode = crypto
-    .createHash('sha256')
-    .update(confirmationCode)
-    .digest('hex');
+  this.emailVerificationCode = crypto.createHash('sha256').update(confirmationCode).digest('hex');
   this.emailVerificationCodeExpires =
     Date.now() + Number(process.env.VERIFICATION_CODE_EXPIRES_IN) * 60 * 1000;
   return confirmationCode;
@@ -268,14 +262,10 @@ userSchema.methods.generateSaveConfirmationCode = function (): string {
 userSchema.methods.createResetPasswordToken = function (): string {
   const resetPasswordToken = crypto.randomBytes(32).toString('hex');
 
-  this.resetPasswordToken = crypto
-    .createHash('sha256')
-    .update(resetPasswordToken)
-    .digest('hex');
+  this.resetPasswordToken = crypto.createHash('sha256').update(resetPasswordToken).digest('hex');
 
   this.resetPasswordExpires =
-    Date.now() +
-    parseInt(process.env.RESET_TOKEN_EXPIRES_IN as string, 10) * 60 * 1000;
+    Date.now() + parseInt(process.env.RESET_TOKEN_EXPIRES_IN as string, 10) * 60 * 1000;
 
   return resetPasswordToken;
 };
