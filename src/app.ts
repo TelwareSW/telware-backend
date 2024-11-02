@@ -36,17 +36,23 @@ const allowedOrigins = [
   'https://testing.telware.tech',
   'http://telware.tech',
   'https://telware.tech',
+  'http://localhost:5174',
+  'https://localhost:5174',
+  'http://127.0.0.1:5174',
+  'https://127.0.0.1:5174',
 ];
 const corsOptions = {
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
+  withCredentials: true,
+  exposedHeaders: ['set-cookie'],
 };
-const maxAge =
-  parseInt(process.env.REFRESH_EXPIRES_IN as string, 10) * 24 * 60 * 60 * 1000;
+const maxAge = 10 * 24 * 60 * 60 * 1000;
 
 app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -59,7 +65,9 @@ app.use(
     cookie: {
       maxAge,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production' ? true : false,
+      path: '/',
     },
   })
 );
