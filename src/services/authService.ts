@@ -186,21 +186,15 @@ export const sendResetPasswordEmail = async (
 
 export const createOAuthUser = async (
   profile: any,
-  additionalData: any
+  email?: string
 ): Promise<any> => {
   const user = await User.findOne({ providerId: profile.id });
   if (user) return user;
 
-  const { phoneNumber } = additionalData;
-  let { email, photo } = additionalData;
-
-  if (!photo) {
-    photo = profile.photos ? profile.photos[0].value : undefined;
-  }
   if (!email) {
     email = profile.emails ? profile.emails[0].value : undefined;
   }
-
+  const photo = profile.photos ? profile.photos[0].value : undefined;
   const username = await generateUsername();
 
   const newUser: IUser = new User({
@@ -210,10 +204,9 @@ export const createOAuthUser = async (
     accountStatus: 'active',
     email,
     photo,
-    phoneNumber,
     username,
   });
-  await newUser.save({ validateBeforeSave: false });
+  await newUser.save();
   return newUser;
 };
 

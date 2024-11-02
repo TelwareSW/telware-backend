@@ -66,7 +66,7 @@ app.use(
       maxAge,
       httpOnly: true,
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'production' ? true : false,
+      secure: process.env.NODE_ENV === 'production',
       path: '/',
     },
   })
@@ -82,7 +82,9 @@ const limiter = rateLimit({
   message:
     'Too many requests from the same IP! Please try again later in an hour',
 });
-app.use('/api', limiter);
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api', limiter);
+}
 
 // Set some HTTP response headers to increase security
 app.use(helmet());

@@ -6,7 +6,6 @@ import {
   Profile as GitHubProfile,
 } from 'passport-github2';
 import { createOAuthUser } from '@services/authService';
-import User from '@models/userModel';
 import IUser from '@base/types/user';
 
 passport.serializeUser((user: any, done) => {
@@ -15,8 +14,7 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);
-    done(null, user);
+    done(null, { id });
   } catch (error) {
     done(error);
   }
@@ -28,24 +26,11 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       callbackURL: '/api/v1/auth/oauth/google/redirect',
-      scope: [
-        'profile',
-        'email',
-        'https://www.googleapis.com/auth/user.phonenumbers.read',
-      ],
+      scope: ['profile', 'email'],
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const peopleResponse = await axios.get(
-          'https://people.googleapis.com/v1/people/me?personFields=phoneNumbers',
-          {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }
-        );
-        const phoneNumber = peopleResponse.data.phoneNumbers
-          ? peopleResponse.data.phoneNumbers[0].value
-          : undefined;
-        const user: IUser = await createOAuthUser(profile, { phoneNumber });
+        const user: IUser = await createOAuthUser(profile);
         done(null, user);
       } catch (error) {
         console.log(error);
@@ -67,8 +52,7 @@ passport.use(
       accessToken: string,
       refreshToken: string,
       profile: GitHubProfile,
-      // eslint-disable-next-line no-unused-vars
-      done: (error: any, user?: any, info?: any) => void
+      done: (_error: any, _user?: any, _info?: any) => void
     ) => {
       try {
         const emailResponse = await axios.get(
@@ -82,7 +66,7 @@ passport.use(
         const email = emailResponse.data.find(
           (em: any) => em.primary && em.verified
         )?.email;
-        const user: IUser = await createOAuthUser(profile, { email });
+        const user: IUser = await createOAuthUser(profile, email);
         done(null, user);
       } catch (error) {
         console.log(error);
