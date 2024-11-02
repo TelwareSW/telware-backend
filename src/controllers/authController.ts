@@ -21,55 +21,72 @@ import { ObjectId } from 'mongoose';
 import IUser from '@base/types/user';
 import redisClient from '@config/redis';
 
-export const signup = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { email, phoneNumber, password, passwordConfirm, reCaptchaResponse } = req.body;
+export const signup = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, phoneNumber, password, passwordConfirm, reCaptchaResponse } =
+      req.body;
 
-  if (!email || !phoneNumber || !password || !passwordConfirm || !reCaptchaResponse)
-    return next(new AppError('Please provide all required fields', 400));
+    if (
+      !email ||
+      !phoneNumber ||
+      !password ||
+      !passwordConfirm ||
+      !reCaptchaResponse
+    )
+      return next(new AppError('Please provide all required fields', 400));
 
-  const reCaptchaMessageResponse: IReCaptchaResponse = await verifyReCaptcha(reCaptchaResponse);
+    const reCaptchaMessageResponse: IReCaptchaResponse =
+      await verifyReCaptcha(reCaptchaResponse);
 
-  if (reCaptchaMessageResponse.response === 400)
-    return next(new AppError(reCaptchaMessageResponse.message, 400));
+    if (reCaptchaMessageResponse.response === 400)
+      return next(new AppError(reCaptchaMessageResponse.message, 400));
 
-  const username: string = await generateUsername();
+    const username: string = await generateUsername();
 
-  const user: IUser = await User.create({
-    email,
-    username,
-    phoneNumber,
-    password,
-    passwordConfirm,
-  });
+    const user: IUser = await User.create({
+      email,
+      username,
+      phoneNumber,
+      password,
+      passwordConfirm,
+    });
 
-  const errorState = { errorCaught: true };
-  await sendEmailVerificationCode(user, next, errorState);
-  if (errorState.errorCaught) return;
-  return res.status(201).json({
-    status: 'success',
-    message: 'Verification email sent',
-    data: {},
-  });
-});
+    const errorState = { errorCaught: true };
+    await sendEmailVerificationCode(user, next, errorState);
+    if (errorState.errorCaught) return;
+    return res.status(201).json({
+      status: 'success',
+      message: 'Verification email sent',
+      data: {},
+    });
+  }
+);
 
-export const login = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) return next(new AppError('No user is found with this email address', 404));
+export const login = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user)
+      return next(
+        new AppError('No user is found with this email address', 404)
+      );
 
-  const message: string = await validateBeforeLogin(email, password);
-  if (message !== 'validated') return next(new AppError(message, 400));
+    const message: string = await validateBeforeLogin(email, password);
+    if (message === 'please verify your email first to be able to login')
+      return next(new AppError(message, 403));
+    if (message !== 'validated') return next(new AppError(message, 400));
 
-  createTokens(user._id as ObjectId, req);
-  res.status(200).json({
-    status: 'success',
-    message: 'logged in successfully',
-    data: {
-      user,
-      sessionId: req.sessionID,
-    },
-  });
-});
+    createTokens(user._id as ObjectId, req);
+    res.status(200).json({
+      status: 'success',
+      message: 'logged in successfully',
+      data: {
+        user,
+        sessionId: req.sessionID,
+      },
+    });
+  }
+);
 
 export const sendConfirmationCode = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -88,44 +105,76 @@ export const sendConfirmationCode = catchAsync(
   }
 );
 
-export const verifyEmail = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { email, verificationCode } = req.body;
-  if (!email) return next(new AppError('Provide your email', 400));
-  const user = await User.findOne({ email }).select(
-    '+emailVerificationCode +emailVerificationCodeExpires'
-  );
-  if (!user) return next(new AppError('You need to register before verifying your email', 404));
-  if (user.accountStatus !== 'unverified')
-    return next(new AppError('your account is already verified', 400));
-  if (!verificationCode) return next(new AppError('Provide your verification code', 400));
-  if (user.emailVerificationCodeExpires && user.emailVerificationCodeExpires < Date.now())
-    return next(new AppError('verification code expired, you can ask for a new one', 400));
-  const verified: boolean = await isCorrectVerificationCode(user, verificationCode);
-  if (!verified) return next(new AppError('verification code is not correct', 400));
-  createTokens(user._id as ObjectId, req);
-  user.emailVerificationCode = undefined;
-  user.emailVerificationCodeExpires = undefined;
-  user.accountStatus = 'active';
-  await user.save({ validateBeforeSave: false });
+export const verifyEmail = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, verificationCode } = req.body;
+    if (!email) return next(new AppError('Provide your email', 400));
+    const user = await User.findOne({ email }).select(
+      '+emailVerificationCode +emailVerificationCodeExpires +verificationAttempts'
+    );
+    if (!user)
+      return next(
+        new AppError('You need to register before verifying your email', 404)
+      );
+    if (user.accountStatus !== 'unverified')
+      return next(new AppError('your account is already verified', 400));
+    if (!verificationCode)
+      return next(new AppError('Provide your verification code', 400));
+    if (
+      user.emailVerificationCodeExpires &&
+      user.emailVerificationCodeExpires < Date.now()
+    ) {
+      user.verificationAttempts = 0;
+      await user.save();
+      return next(
+        new AppError(
+          'verification code expired, you can ask for a new one',
+          400
+        )
+      );
+    }
 
-  const { username, screenFirstName, screenLastName, photo, status, bio } = user;
-  res.status(200).json({
-    status: 'success',
-    message: 'Account got verified successfully',
-    data: {
-      user: {
-        username,
-        screenFirstName,
-        screenLastName,
-        email,
-        photo,
-        status,
-        bio,
+    if (user.verificationAttempts && user.verificationAttempts > 2)
+      return next(
+        new AppError(
+          'You have reached the maximum number of attempts, please try again later',
+          403
+        )
+      );
+    const verified: boolean = await isCorrectVerificationCode(
+      user,
+      verificationCode
+    );
+    if (!verified && user.verificationAttempts !== undefined) {
+      user.verificationAttempts += 1;
+      await user.save();
+      return next(new AppError('verification code is not correct', 400));
+    }
+    createTokens(user._id as ObjectId, req);
+    user.emailVerificationCode = undefined;
+    user.emailVerificationCodeExpires = undefined;
+    user.accountStatus = 'active';
+    user.verificationAttempts = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    const { username, screenName, photo, status, bio } = user;
+    res.status(200).json({
+      status: 'success',
+      message: 'Account got verified successfully',
+      data: {
+        user: {
+          username,
+          screenName,
+          email,
+          photo,
+          status,
+          bio,
+        },
+        sessionId: req.sessionID,
       },
-      sessionId: req.sessionID,
-    },
-  });
-});
+    });
+  }
+);
 
 export const oAuthCallback = catchAsync(async (req: any, res: Response, next: NextFunction) => {
   createTokens(req.user._id as ObjectId, req);

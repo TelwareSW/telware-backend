@@ -93,7 +93,7 @@ const userSchema = new mongoose.Schema<IUser>(
             }
             return true;
           },
-          message: 'Phone already exists',
+          message: 'Phone number already exists',
         },
       ],
     },
@@ -206,6 +206,7 @@ const userSchema = new mongoose.Schema<IUser>(
     changedPasswordAt: { type: Date, select: false },
     emailVerificationCode: { type: String, select: false },
     emailVerificationCodeExpires: { type: Number, select: false },
+    verificationAttempts: {type: Number, select: false, default: 0},
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: String, select: false },
   },
