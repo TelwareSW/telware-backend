@@ -1,5 +1,42 @@
-[{"email": "Susanna45@hotmail.com",
-    "username": "Lawrence_Lehner95",
-    "phoneNumber": "+18119797227",
-    "password": "1520jhgkkggj",
-    "passwordConfirm": "1520jhgkkggj"}]
+[
+  {
+    "email": "test1@gmail.com",
+    "username": "test_user1",
+    "phoneNumber": "+201051046611",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "test2@gmail.com",
+    "username": "test_user2",
+    "phoneNumber": "+201055445511",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "test3@gmail.com",
+    "username": "test_user3",
+    "phoneNumber": "+201055287611",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "test4@gmail.com",
+    "username": "test_user4",
+    "phoneNumber": "+201077446611",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "test5@gmail.com",
+    "username": "test_user5",
+    "phoneNumber": "+201055446690",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  }
+]
