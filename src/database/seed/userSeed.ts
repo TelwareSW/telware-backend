@@ -11,10 +11,16 @@ const createRandomUser = () => {
 
   return {
     email: faker.internet.email(),
-    username: faker.internet.userName().replace(/[.\-/\\]/g, ''),
-    phoneNumber: faker.phone.number({style:"international"}),
+    username: faker.internet
+      .username()
+      .replace(/[.\-/\\]/g, '')
+      .padEnd(2, '_')
+      .padStart(2, '_')
+      .substring(0, 15),
+    phoneNumber: faker.phone.number({ style: 'international' }),
     password,
     passwordConfirm: password,
+    accountStatus: 'active',
   };
 };
 
@@ -25,17 +31,7 @@ const fakerUsers = faker.helpers.multiple(createRandomUser, {
 const importUserData = async () => {
   try {
     const allUsers = [...users, ...fakerUsers];
-
-    console.log('Users to be seeded:', JSON.stringify(allUsers, null, 2));
-
-    allUsers.forEach(user => {
-      if (user.password !== user.passwordConfirm) {
-        throw new Error(`Password and password confirm do not match for user ${  user.username}`);
-      }
-    });
-
     await User.create(allUsers);
-
     console.log('Users data seeded successfully!');
   } catch (err) {
     console.error('Failed to seed users data :(');

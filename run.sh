@@ -31,6 +31,20 @@ case "$1" in
         echo "Running: docker compose up --build"
         docker compose up --build
         ;;
+    seed)
+        echo "Running: docker compose up -d && npm run seed"
+        docker compose up -d
+        docker exec -it telware-backend-backend-1 npm run seed
+        ;;
+    drop)
+        echo "Running: docker compose up -d && npm run drop"
+        docker compose up -d
+        docker exec -it telware-backend-backend-1 npm run drop
+        ;;
+    close)
+        echo "Running: docker compose down"
+        docker compose down
+        ;;
     help)
         usage
         ;;

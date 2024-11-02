@@ -48,7 +48,8 @@ const corsOptions = {
   withCredentials: true,
   exposedHeaders: ['set-cookie'],
 };
-const maxAge = 10 * 24 * 60 * 60 * 1000;
+const maxAge =
+  parseInt(process.env.REFRESH_EXPIRES_IN as string, 10) * 24 * 60 * 60 * 1000;
 
 app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 app.use(cors(corsOptions));
