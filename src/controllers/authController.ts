@@ -72,6 +72,8 @@ export const login = catchAsync(
       );
 
     const message: string = await validateBeforeLogin(email, password);
+    if (message === 'please verify your email first to be able to login')
+      return next(new AppError(message, 403));
     if (message !== 'validated') return next(new AppError(message, 400));
 
     createTokens(user._id as ObjectId, req);
@@ -108,7 +110,7 @@ export const verifyEmail = catchAsync(
     const { email, verificationCode } = req.body;
     if (!email) return next(new AppError('Provide your email', 400));
     const user = await User.findOne({ email }).select(
-      '+emailVerificationCode +emailVerificationCodeExpires'
+      '+emailVerificationCode +emailVerificationCodeExpires +verificationAttempts'
     );
     if (!user)
       return next(
@@ -121,23 +123,38 @@ export const verifyEmail = catchAsync(
     if (
       user.emailVerificationCodeExpires &&
       user.emailVerificationCodeExpires < Date.now()
-    )
+    ) {
+      user.verificationAttempts = 0;
+      await user.save();
       return next(
         new AppError(
           'verification code expired, you can ask for a new one',
           400
         )
       );
+    }
+
+    if (user.verificationAttempts && user.verificationAttempts > 2)
+      return next(
+        new AppError(
+          'You have reached the maximum number of attempts, please try again later',
+          403
+        )
+      );
     const verified: boolean = await isCorrectVerificationCode(
       user,
       verificationCode
     );
-    if (!verified)
+    if (!verified && user.verificationAttempts !== undefined) {
+      user.verificationAttempts += 1;
+      await user.save();
       return next(new AppError('verification code is not correct', 400));
+    }
     createTokens(user._id as ObjectId, req);
     user.emailVerificationCode = undefined;
     user.emailVerificationCodeExpires = undefined;
     user.accountStatus = 'active';
+    user.verificationAttempts = undefined;
     await user.save({ validateBeforeSave: false });
 
     const { username, screenName, photo, status, bio } = user;

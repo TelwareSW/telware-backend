@@ -112,7 +112,7 @@ export const isCorrectVerificationCode = async (
     .createHash('sha256')
     .update(verificationCode)
     .digest('hex');
-
+  console.log(user.emailVerificationCode, hashedCode);
   if (
     hashedCode !== user.emailVerificationCode ||
     (user.emailVerificationCodeExpires &&
