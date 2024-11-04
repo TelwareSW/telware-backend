@@ -1,23 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import catchAsync from '@utils/catchAsync';
 import User from '@models/userModel';
 import AppError from '@errors/AppError';
 import {
   isCorrectVerificationCode,
-  createTokens,
   validateBeforeLogin,
   sendEmailVerificationCode,
   verifyReCaptcha,
   generateUsername,
   sendResetPasswordEmail,
-  getAllSessionsByUserId,
 } from '@services/authService';
+import {
+  getAllSessionsByUserId,
+  saveSession,
+  destroySession,
+  getSession,
+  destroyAllSessionsByUserId,
+} from '@services/sessionService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
 import IUser from '@base/types/user';
 import redisClient from '@config/redis';
+import { SessionData } from 'express-session';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -36,8 +41,8 @@ export const signup = catchAsync(
     const reCaptchaMessageResponse: IReCaptchaResponse =
       await verifyReCaptcha(reCaptchaResponse);
 
-    // if (reCaptchaMessageResponse.response === 400)
-    //   return next(new AppError(reCaptchaMessageResponse.message, 400));
+    if (reCaptchaMessageResponse.response === 400)
+      return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
 
@@ -74,7 +79,7 @@ export const login = catchAsync(
       return next(new AppError(message, 403));
     if (message !== 'validated') return next(new AppError(message, 400));
 
-    createTokens(user._id as ObjectId, req);
+    await saveSession(user._id as ObjectId, req);
     res.status(200).json({
       status: 'success',
       message: 'logged in successfully',
@@ -148,13 +153,14 @@ export const verifyEmail = catchAsync(
       await user.save();
       return next(new AppError('verification code is not correct', 400));
     }
-    createTokens(user._id as ObjectId, req);
     user.emailVerificationCode = undefined;
     user.emailVerificationCodeExpires = undefined;
     user.accountStatus = 'active';
     user.verificationAttempts = undefined;
     await user.save({ validateBeforeSave: false });
+    await saveSession(user._id as ObjectId, req);
 
+    // FIXME: we need to send more info here (unify user object response with login)
     const { username, screenFirstName, screenLastName, photo, status, bio } =
       user;
     res.status(200).json({
@@ -178,7 +184,7 @@ export const verifyEmail = catchAsync(
 
 export const oAuthCallback = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
-    createTokens(req.user.id as ObjectId, req);
+    await saveSession(req.user.id as ObjectId, req);
     const { sessionID } = req;
     if (req.header('origin')) {
       res.redirect(
@@ -189,25 +195,6 @@ export const oAuthCallback = catchAsync(
         `${process.env.CROSS_PLATFORM_OAUTH_REDIRECT_URL}/${sessionID}`
       );
     }
-  }
-);
-
-export const refresh = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const { refreshToken } = req.session;
-    if (!refreshToken)
-      return next(new AppError('Please provide a valid refresh token', 400));
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET as string
-    ) as jwt.JwtPayload;
-    createTokens(req.user._id as ObjectId, req, false);
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Token refreshed successfully',
-      data: {},
-    });
   }
 );
 
@@ -285,11 +272,14 @@ export const resetPassword = catchAsync(
   }
 );
 
-export const logout = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    req.session.destroy((err: any) => {
-      if (err) return next(new AppError('Failed to logout session', 500));
-    });
+export const logoutSession = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { sessionId } = req.body;
+    await redisClient.sRem(
+      `user:${req.session.user?.id}:sessions`,
+      sessionId || req.sessionID
+    );
+    await destroySession(req, res, sessionId);
     res.status(204).json({
       status: 'success',
       message: 'User logged out successfully',
@@ -299,22 +289,9 @@ export const logout = catchAsync(
 );
 
 export const logoutAll = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const sessionIds = await getAllSessionsByUserId(req.user._id);
-
-    const promises = sessionIds.map(
-      (sessionId) =>
-        new Promise((resolve, reject) => {
-          req.sessionStore.destroy(sessionId, (error: Error) => {
-            if (error) return reject(error);
-            resolve(undefined);
-          });
-        })
-    );
-
-    await Promise.all(promises);
-    redisClient.del(`user:${req.user._id}:sessions`);
-
+  async (req: Request, res: Response, next: NextFunction) => {
+    await destroyAllSessionsByUserId(req, res);
+    await destroySession(req, res);
     res.status(204).json({
       status: 'success',
       message: 'All Sessions logged out successfully',
@@ -324,25 +301,12 @@ export const logoutAll = catchAsync(
 );
 
 export const logoutOthers = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const sessionIds = (await getAllSessionsByUserId(req.user._id)).filter(
-      (sessionId) => sessionId !== req.sessionID
+  async (req: Request, res: Response, next: NextFunction) => {
+    await destroyAllSessionsByUserId(req, res);
+    await redisClient.sAdd(
+      `user:${req.session.user?.id}:sessions`,
+      req.sessionID
     );
-
-    const promises = sessionIds.map(
-      (sessionId) =>
-        new Promise((resolve, reject) => {
-          req.sessionStore.destroy(sessionId, (error: Error) => {
-            if (error) return reject(error);
-            resolve(undefined);
-          });
-        })
-    );
-
-    await Promise.all(promises);
-    redisClient.del(`user:${req.user._id}:sessions`);
-    redisClient.sAdd(`user:${req.user._id}:sessions`, req.sessionID);
-
     res.status(204).json({
       status: 'success',
       message: 'All Other Sessions logged out successfully',
@@ -363,10 +327,42 @@ export const changePassword = catchAsync(
     user.changedPasswordAt = new Date(Date.now() - 1000);
     await user.save();
 
+    await redisClient.sRem(
+      `user:${req.session.user?.id}:sessions`,
+      req.sessionID
+    );
+    await saveSession(user._id as ObjectId, req);
     res.status(200).json({
       status: 'success',
       message: 'password changed successfully',
-      data: {},
+      data: {
+        sessionId: req.sessionID,
+      },
+    });
+  }
+);
+
+export const getLogedInSessions = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const sessionIds = await getAllSessionsByUserId(
+      req.session.user?.id as ObjectId
+    );
+    const promises = sessionIds.map((sessionId) => getSession(req, sessionId));
+    const sessions = ((await Promise.all(promises)) as SessionData[]).filter(
+      (session) => session
+    );
+    const usersInfo = sessions.map((session) => ({
+      agent: session.user.agent,
+      status: session.user.status,
+      lastSeenTime: session.user.lastSeenTime,
+    }));
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Got all sessions successfully',
+      data: {
+        sessions: usersInfo,
+      },
     });
   }
 );

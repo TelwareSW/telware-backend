@@ -38,6 +38,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-github2": "^1.2.9",
     "@types/passport-google-oauth20": "^2.0.16",
+    "@types/ua-parser-js": "^0.7.39",
     "@types/validator": "^13.12.2",
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
@@ -69,7 +70,6 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
-    "@types/supertest": "^6.0.2",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
@@ -97,6 +97,7 @@
     "request": "^2.88.2",
     "supertest": "^7.0.0",
     "telware-backend": "file:",
+    "ua-parser-js": "^1.0.39",
     "validator": "^13.12.0"
   }
 }

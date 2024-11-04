@@ -8,22 +8,29 @@ import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import RedisStore from 'connect-redis';
+import { ObjectId } from 'mongoose';
 
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
 import apiRouter from '@routes/apiRoute';
 import path from 'path';
 import redisClient from '@config/redis';
-import {
-  deleteNotUsedSessions,
-  generateSession,
-} from '@middlewares/authMiddleware';
+import { generateSession } from '@services/sessionService';
 
 declare module 'express-session' {
   // eslint-disable-next-line no-unused-vars
-  interface Session {
-    accessToken?: string;
-    refreshToken?: string;
+  interface SessionData {
+    user: {
+      id: ObjectId;
+      timestamp: number;
+      lastSeenTime: number;
+      status: 'online' | 'offline';
+      agent?: {
+        device?: string;
+        os?: string;
+        browser?: string;
+      };
+    };
   }
 }
 
@@ -49,7 +56,7 @@ const corsOptions = {
   exposedHeaders: ['set-cookie'],
 };
 const maxAge =
-  parseInt(process.env.REFRESH_EXPIRES_IN as string, 10) * 24 * 60 * 60 * 1000;
+  parseInt(process.env.SESSION_EXPIRES_IN as string, 10) * 24 * 60 * 60 * 1000;
 
 app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 app.use(cors(corsOptions));
@@ -58,7 +65,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    store: new RedisStore({ client: redisClient }),
+    store: new RedisStore({ client: redisClient, ttl: maxAge / 1000 }),
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: false,
@@ -72,7 +79,6 @@ app.use(
     },
   })
 );
-app.use(deleteNotUsedSessions);
 
 app.use(passport.initialize());
 app.use(passport.session());
