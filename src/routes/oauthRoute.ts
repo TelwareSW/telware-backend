@@ -3,6 +3,12 @@ import passport from 'passport';
 import { oAuthCallback } from '@controllers/authController';
 
 const router = Router();
+/**
+ * @swagger
+ * tags:
+ *  name: OAuth
+ *  description: The OAuth Managing API
+ */
 
 router.get(
   '/google',

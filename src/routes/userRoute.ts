@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import upload from '@base/config/fileUploads';
 import privacyRouter from '@routes/privacyRoute';
-import { block, getBlockedUsers, unblock } from '@controllers/privacyController';
+import {
+  block,
+  getBlockedUsers,
+  unblock,
+} from '@controllers/privacyController';
 import {
   deletePicture,
   getAllUsers,
@@ -26,10 +30,16 @@ import { protect } from '@middlewares/authMiddleware';
 
 const router = Router();
 
+/**
+ * @swagger
+ * tags:
+ *  name: User
+ *  description: The User Managing API
+ */
+
 router.use(protect);
 router.use('/privacy', privacyRouter);
 
-// Stories routes
 router.get('/stories', getCurrentUserStory);
 router.post('/stories', upload.single('file'), postStory);
 router.delete('/stories/:storyId', deleteStory);
