@@ -59,7 +59,6 @@
     "migrate-mongo": "^11.0.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
-    "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.10",
@@ -70,6 +69,7 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
+    "@types/supertest": "^6.0.2",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
@@ -95,6 +95,7 @@
     "passport-google-oauth20": "^2.0.0",
     "redis": "^4.7.0",
     "request": "^2.88.2",
+    "supertest": "^7.0.0",
     "telware-backend": "file:",
     "validator": "^13.12.0"
   }
