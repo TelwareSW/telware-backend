@@ -107,7 +107,7 @@ export const formConfirmationMessageHtml = (
     </html>
     `;
 
-export const fromResetPasswordMessage = (email: string, resetURL: string) =>
+export const formResetPasswordMessage = (email: string, resetURL: string) =>
   `Hi ${email},
     Forgot your password? Click this link to set your new password:
     ${resetURL}
@@ -116,3 +116,64 @@ export const fromResetPasswordMessage = (email: string, resetURL: string) =>
     Best regards,
     -Telware Team 🐦‍⬛
     If you have any questions, feel free to reach out to us at telware.sw@gmail.com`;
+
+export const formResetPasswordMessageHtml = (email: string, resetURL: string) =>
+  `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #fff;
+            color: #333;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .header img {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+          <img src='https://t9012337468.p.clickup-attachments.com/t9012337468/f9be04cb-145f-4c1e-aeba-a1e6ec3d8a56/App%20icon.png' alt="Telware Logo" />
+            <h1>Password Reset Request</h1>
+        </div>
+        <p>Hi <strong>${email}</strong>,</p>
+        <p>Forgot your password?</p>
+        <p><a href="${resetURL}" style="color: #0e92f4;">Click Here</a></p>
+        <p>If you didn't forget your password, please ignore this email.</p>
+        <div class="footer">
+            <p>Best regards,</p>
+            <p>- Telware Team 🐦‍⬛</p>
+            <p>If you have any questions, feel free to reach out to us at <a href="mailto:telware.sw@gmail.com">telware.sw@gmail.com</a></p>
+        </div>
+    </div>
+</body>
+</html>
+`;

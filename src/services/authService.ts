@@ -10,7 +10,8 @@ import redisClient from '@config/redis';
 import {
   formConfirmationMessage,
   formConfirmationMessageHtml,
-  fromResetPasswordMessage,
+  formResetPasswordMessage,
+  formResetPasswordMessageHtml,
 } from '@utils/emailMessages';
 import AppError from '@errors/AppError';
 import axios from 'axios';
@@ -176,11 +177,13 @@ export const sendResetPasswordEmail = async (
   resetURL: string,
   email: string
 ) => {
-  const message: string = fromResetPasswordMessage(email, resetURL);
+  const message: string = formResetPasswordMessage(email, resetURL);
+  const htmlMessage: string = formResetPasswordMessageHtml(email, resetURL);
   await sendEmail({
     email,
     subject: 'Reset your Password for Telware',
     message,
+    htmlMessage,
   });
 };
 
