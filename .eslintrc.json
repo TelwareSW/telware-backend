@@ -2,7 +2,8 @@
   "env": {
     "es2021": true,
     "browser": true,
-    "node": true
+    "node": true,
+    "jest": true
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -11,7 +12,7 @@
     "sourceType": "module"
   },
   "extends": ["airbnb", "prettier", "plugin:node/recommended"],
-  "plugins": ["node", "prettier"],
+  "plugins": ["node", "jest", "prettier"],
   "rules": {
     "prettier/prettier": "off",
     "spaced-comment": "off",
