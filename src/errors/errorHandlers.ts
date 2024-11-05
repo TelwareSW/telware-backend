@@ -18,10 +18,17 @@ export const sendProdError = (err: AppError, res: Response) => {
       message: err.message,
     });
   } else {
-    console.error('ERROR', err);
     res.status(500).json({
       status: 'error',
       message: 'Something went wrong :(',
     });
   }
+};
+
+export const handleDuplicateKeysError = (err: Error): AppError =>
+  new AppError(err.message, 409);
+
+export const handleInvalidPrivacyOption = (err: AppError) => {
+  err.message = 'Invalid Privacy Option.';
+  return new AppError(err.message, 400);
 };

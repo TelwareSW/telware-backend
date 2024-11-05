@@ -155,23 +155,13 @@ export const verifyEmail = catchAsync(
     user.verificationAttempts = undefined;
     await user.save({ validateBeforeSave: false });
 
-    const { username, screenFirstName, screenLastName, photo, status, bio } =
-      user;
     res.status(200).json({
       status: 'success',
       message: 'Account got verified successfully',
       data: {
-        user: {
-          username,
-          screenFirstName,
-          screenLastName,
-          email,
-          photo,
-          status,
-          bio,
-        },
-        sessionId: req.sessionID,
+        user,
       },
+      sessionId: req.sessionID,
     });
   }
 );
