@@ -6,12 +6,16 @@ DEFAULT_CMD="docker compose up --attach backend"
 # Function to show usage
 usage() {
   echo
-  echo "Usage: $0 [backend|all|rebuild||help]"
+  echo "Usage: $0 [backend|all|build|seed|drop|close|background|help]"
   echo "Options:"
-  echo "  backend Run 'docker compose up --attach backend' (start only the backend service)"
-  echo "  all     Run 'docker compose up' (start all services)"
-  echo "  build   Run 'docker compose up --build' (build images before starting)"
-  echo "  help    Show this help message"
+  echo "  backend       Run 'docker compose up --attach backend' (start only the backend service)"
+  echo "  all           Run 'docker compose up' (start all services)"
+  echo "  build         Run 'docker compose up --build' (build images before starting)"
+  echo "  seed          Run 'docker compose up -d' and seed the database"
+  echo "  drop          Run 'docker compose up -d' and drop the database"
+  echo "  close         Run 'docker compose down' (stop all services)"
+  echo "  background    Run 'docker compose up -d' (start all services in background)"
+  echo "  help          Show this help message"
   echo "By default, the script runs the command: docker compose up --attach backend"   
   echo  
   exit 1
@@ -44,6 +48,10 @@ case "$1" in
     close)
         echo "Running: docker compose down"
         docker compose down
+        ;;
+    background)
+        echo "Running: docker compose up -d"
+        docker compose up -d
         ;;
     help)
         usage

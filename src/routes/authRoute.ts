@@ -4,14 +4,14 @@ import {
   sendConfirmationCode,
   verifyEmail,
   login,
-  refresh,
   isLoggedIn,
   forgotPassword,
   resetPassword,
-  logout,
   logoutOthers,
   logoutAll,
   changePassword,
+  logoutSession,
+  getLogedInSessions,
 } from '@controllers/authController';
 import { protect } from '@middlewares/authMiddleware';
 import oauthRouter from '@base/routes/oauthRoute';
@@ -385,8 +385,6 @@ router.post('/send-confirmation', sendConfirmationCode);
  *                   example: An error occurred during email verification
  */
 router.post('/verify', verifyEmail);
-router.post('/refresh', protect, refresh);
-router.get('/me', protect, isLoggedIn);
 
 router.post('/password/forget', forgotPassword);
 router.patch('/password/reset/:token', resetPassword);
@@ -463,8 +461,11 @@ router.patch('/password/reset/:token', resetPassword);
  */
 router.patch('/password/change', protect, changePassword);
 
-router.post('/logout', protect, logout);
-router.post('/logout/all', protect, logoutAll);
-router.post('/logout/others', protect, logoutOthers);
+router.use(protect);
+router.get('/me', isLoggedIn);
+router.get('/sessions', getLogedInSessions);
+router.post('/logout', logoutSession);
+router.post('/logout/all', logoutAll);
+router.post('/logout/others', logoutOthers);
 
 export default router;

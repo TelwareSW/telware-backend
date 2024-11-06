@@ -1,12 +1,9 @@
-import { CookieOptions, Response, Request, NextFunction } from 'express';
-import { ObjectId } from 'mongoose';
-import jwt from 'jsonwebtoken';
+import { CookieOptions, Response, NextFunction } from 'express';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import User from '@models/userModel';
 import IUser from '@base/types/user';
 import crypto from 'crypto';
 import sendEmail from '@utils/email';
-import redisClient from '@config/redis';
 import {
   formConfirmationMessage,
   formConfirmationMessageHtml,
@@ -42,34 +39,6 @@ export const generateUsername = async (): Promise<string> => {
     const user = await User.findOne({ username });
     if (!user) return username;
   }
-};
-
-export const createTokens = (
-  id: ObjectId,
-  req: Request,
-  refresh: boolean = true
-) => {
-  const accessToken = jwt.sign(
-    { id },
-    process.env.ACCESS_TOKEN_SECRET as string,
-    {
-      expiresIn: process.env.ACCESS_EXPIRES_IN as string,
-    }
-  );
-  req.session.accessToken = accessToken;
-
-  if (!refresh) return;
-
-  const refreshToken = jwt.sign(
-    { id },
-    process.env.REFRESH_TOKEN_SECRET as string,
-    {
-      expiresIn: process.env.REFRESH_EXPIRES_IN as string,
-    }
-  );
-  req.session.refreshToken = refreshToken;
-  req.session.save();
-  redisClient.sAdd(`user:${id}:sessions`, req.sessionID);
 };
 
 export const storeCookie = (
@@ -212,6 +181,3 @@ export const createOAuthUser = async (
   await newUser.save();
   return newUser;
 };
-
-export const getAllSessionsByUserId = async (userId: ObjectId) =>
-  redisClient.sMembers(`user:${userId}:sessions`);
