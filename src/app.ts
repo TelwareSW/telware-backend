@@ -10,6 +10,9 @@ import hpp from 'hpp';
 import RedisStore from 'connect-redis';
 import { ObjectId } from 'mongoose';
 
+import swaggerUI from 'swagger-ui-express';
+import swaggerJsDoc from 'swagger-jsdoc';
+
 import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
 import apiRouter from '@routes/apiRoute';
@@ -57,6 +60,36 @@ const corsOptions = {
 };
 const maxAge =
   parseInt(process.env.SESSION_EXPIRES_IN as string, 10) * 24 * 60 * 60 * 1000;
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Telware Backend API',
+      description: 'API Documentation for Telware Backend',
+      version: '1.0.0',
+      contact: {
+        email: 'telware.sw@gmail.com',
+      },
+      license: {
+        name: 'Apache 2.0',
+        url: 'http://apache.org/',
+      },
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000/api/v1/',
+        description: 'Local server',
+      },
+    ],
+  },
+  apis: [`${__dirname}/routes/*.ts`],
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+console.log(JSON.stringify(swaggerDocs, null, 2));
+
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
 app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
 app.use(cors(corsOptions));

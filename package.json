@@ -39,7 +39,10 @@
     "@types/passport-github2": "^1.2.9",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/ua-parser-js": "^0.7.39",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.7",
     "@types/validator": "^13.12.2",
+    "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
     "babel-jest": "^29.7.0",
@@ -96,8 +99,11 @@
     "redis": "^4.7.0",
     "request": "^2.88.2",
     "supertest": "^7.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "telware-backend": "file:",
     "ua-parser-js": "^1.0.39",
-    "validator": "^13.12.0"
+    "validator": "^13.12.0",
+    "yamljs": "^0.3.0"
   }
 }
