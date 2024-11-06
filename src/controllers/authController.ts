@@ -160,22 +160,11 @@ export const verifyEmail = catchAsync(
     await user.save({ validateBeforeSave: false });
     await saveSession(user._id as ObjectId, req);
 
-    // FIXME: we need to send more info here (unify user object response with login)
-    const { username, screenFirstName, screenLastName, photo, status, bio } =
-      user;
     res.status(200).json({
       status: 'success',
       message: 'Account got verified successfully',
       data: {
-        user: {
-          username,
-          screenFirstName,
-          screenLastName,
-          email,
-          photo,
-          status,
-          bio,
-        },
+        user,
         sessionId: req.sessionID,
       },
     });

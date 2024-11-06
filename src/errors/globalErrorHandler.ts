@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import AppError from './AppError';
-import { sendDevError, sendProdError } from './errorHandlers';
-
-const handleInvalidPrivacyOption = (err: AppError) => {
-  err.message = 'Invalid Privacy Option.';
-  return new AppError(err.message, 400);
-};
+import {
+  handleDuplicateKeysError,
+  sendDevError,
+  sendProdError,
+  handleInvalidPrivacyOption,
+} from './errorHandlers';
 
 const globalErrorHandler = (
   err: AppError,
@@ -17,14 +17,17 @@ const globalErrorHandler = (
   err.status = err.status || 'error';
   console.log(err.message);
   if (process.env.NODE_ENV === 'development') {
+    sendDevError(err, res);
+  } else if (process.env.NODE_ENV === 'production') {
     if (
       err.message ===
       'Validation failed: invitePermessionsPrivacy: `nobody` is not a valid enum value for path `invitePermessionsPrivacy`.'
     )
       err = handleInvalidPrivacyOption(err);
 
-    sendDevError(err, res);
-  } else if (process.env.NODE_ENV === 'production') {
+    if (err.name === 'ValidationError')
+      err = handleDuplicateKeysError(err);
+    
     //TODO: Handle all the errors here
 
     sendProdError(err, res);

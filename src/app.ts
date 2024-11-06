@@ -87,8 +87,6 @@ const swaggerOptions = {
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-console.log(JSON.stringify(swaggerDocs, null, 2));
-
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
 app.use('/static', express.static(path.join(process.cwd(), 'src/public')));
