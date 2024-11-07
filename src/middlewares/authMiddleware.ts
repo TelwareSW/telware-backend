@@ -3,6 +3,7 @@ import catchAsync from '@utils/catchAsync';
 import AppError from '@errors/AppError';
 import User from '@models/userModel';
 import { reloadSession } from '@services/sessionService';
+import redisClient from '@base/config/redis';
 
 export const protect = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -30,6 +31,14 @@ export const protect = catchAsync(
 
     req.session.user.lastSeenTime = Date.now();
     req.user = currentUser;
+    next();
+  }
+);
+
+export const savePlatformInfo = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const platform = (req.query.platform as string) || 'web';
+    await redisClient.set('platform', platform);
     next();
   }
 );
