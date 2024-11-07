@@ -20,16 +20,13 @@ const globalErrorHandler = (
   if (process.env.NODE_ENV === 'development') {
     sendDevError(err, res);
   } else if (process.env.NODE_ENV === 'production') {
-    let error: AppError = structuredClone(err);
-
     if (
-      error.message ===
+      err.message ===
       'Validation failed: invitePermessionsPrivacy: `nobody` is not a valid enum value for path `invitePermessionsPrivacy`.'
     )
-      error = handleInvalidPrivacyOption(error);
+      err = handleInvalidPrivacyOption(err);
 
-    if (error.name === 'ValidationError')
-      error = handleDuplicateKeysError(error);
+    if (err.name === 'ValidationError') err = handleDuplicateKeysError(err);
 
     sendProdError(err, res);
   }
