@@ -72,9 +72,7 @@ const config = {
   // maxWorkers: "50%",
 
   // An array of directory names to be searched recursively up from the requiring module's location
-  // moduleDirectories: [
-  //   "node_modules"
-  // ],
+  moduleDirectories: ['node_modules', 'src'],
 
   // An array of file extensions your modules use
   // moduleFileExtensions: [
@@ -89,7 +87,19 @@ const config = {
   // ],
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
-  // moduleNameMapper: {},
+  moduleNameMapper: {
+    '^@services/(.*)$': '<rootDir>/src/services/$1',
+    '^@models/(.*)$': '<rootDir>/src/models/$1',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@config/(.*)$': '<rootDir>/src/config/$1',
+    '^@base/(.*)$': '<rootDir>/src/$1',
+    '^@errors/(.*)$': '<rootDir>/src/errors/$1',
+    '^@routes/(.*)$': '<rootDir>/src/routes/$1',
+    '^@controllers/(.*)$': '<rootDir>/src/controllers/$1',
+    '^@middlewares/(.*)$': '<rootDir>/src/middlewares/$1',
+  },
+  setupFiles: ['tsconfig-paths/register'],
+  testTimeout: 10000,
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
   // modulePathIgnorePatterns: [],
@@ -101,7 +111,7 @@ const config = {
   // notifyMode: "failure-change",
 
   // A preset that is used as a base for Jest's configuration
-  // preset: undefined,
+  preset: 'ts-jest',
 
   // Run tests from one or more projects
   // projects: undefined,
@@ -145,8 +155,7 @@ const config = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  // testEnvironment: "jest-environment-node",
-
+  testEnvironment: 'node',
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
 
@@ -154,10 +163,7 @@ const config = {
   // testLocationInResults: false,
 
   // The glob patterns Jest uses to detect test files
-  // testMatch: [
-  //   "**/__tests__/**/*.[jt]s?(x)",
-  //   "**/?(*.)+(spec|test).[tj]s?(x)"
-  // ],
+  testMatch: ['**/src/tests/**/*.test.ts'],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   // testPathIgnorePatterns: [
