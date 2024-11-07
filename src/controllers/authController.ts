@@ -41,7 +41,10 @@ export const signup = catchAsync(
     const reCaptchaMessageResponse: IReCaptchaResponse =
       await verifyReCaptcha(reCaptchaResponse);
 
-    if (reCaptchaMessageResponse.response === 400)
+    if (
+      !process.env.DISABLE_RECAPTCHA &&
+      reCaptchaMessageResponse.response === 400
+    )
       return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
@@ -175,13 +178,16 @@ export const oAuthCallback = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
     await saveSession(req.user.id as ObjectId, req);
     const { sessionID } = req;
-    if (req.header('origin')) {
+    const platform = await redisClient.get('platform');
+    await redisClient.del('platform');
+
+    if (platform === 'mobile') {
       res.redirect(
-        `${req.protocol}://${process.env.FRONTEND_URL}/login?oauth=true`
+        `${process.env.CROSS_PLATFORM_OAUTH_REDIRECT_URL}/${sessionID}`
       );
     } else {
       res.redirect(
-        `${process.env.CROSS_PLATFORM_OAUTH_REDIRECT_URL}/${sessionID}`
+        `${req.protocol}://${process.env.FRONTEND_URL}/login?oauth=true`
       );
     }
   }
