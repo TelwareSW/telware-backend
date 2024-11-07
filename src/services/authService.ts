@@ -178,6 +178,6 @@ export const createOAuthUser = async (
     photo,
     username,
   });
-  await newUser.save();
+  await newUser.save({ validateBeforeSave: false });
   return newUser;
 };
