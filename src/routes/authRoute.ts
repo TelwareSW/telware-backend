@@ -31,7 +31,7 @@ router.use('/oauth', oauthRouter);
  * @swagger
  * /auth/signup:
  *   post:
- *     summary: Register a new user
+ *     summary: Registers a new user
  *     tags: [Auth]
  *     description: Register a new user by validating inputs, verifying reCaptcha, creating the user, and sending a verification email.
  *     requestBody:
@@ -111,7 +111,7 @@ router.post('/signup', signup);
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Log in a user
+ *     summary: Logs in a user
  *     tags: [Auth]
  *     description: Login user by providing email and password. It validates user credentials and checks if the user's email is verified before granting access.
  *     requestBody:
@@ -198,7 +198,7 @@ router.post('/login', login);
  * @swagger
  * /auth/send-confirmation-code:
  *   post:
- *     summary: Send email confirmation code
+ *     summary: Sends email confirmation code
  *     tags: [Auth]
  *     description: Send a verification code to the provided email to verify the user's email address.
  *     requestBody:
@@ -275,7 +275,7 @@ router.post('/send-confirmation', sendConfirmationCode);
  * @swagger
  * /auth/verify-email:
  *   post:
- *     summary: Verify user's email address
+ *     summary: Verifies user's email address
  *     tags: [Auth]
  *     description: Verify a user's email address by checking the verification code provided by the user. If the code is valid, it activates the user's account.
  *     requestBody:
@@ -385,16 +385,12 @@ router.post('/send-confirmation', sendConfirmationCode);
  *                   example: An error occurred during email verification
  */
 router.post('/verify', verifyEmail);
-
-router.post('/password/forget', forgotPassword);
-router.patch('/password/reset/:token', resetPassword);
 /**
  * @swagger
- * /auth/change-password:
- *   patch:
- *     summary: Change user's password
+ * /password/forget:
+ *   post:
+ *     summary: Sends a reset password email to the user.
  *     tags: [Auth]
- *     description: Allow a user to change their password by providing their current password, a new password, and confirming the new password.
  *     requestBody:
  *       required: true
  *       content:
@@ -402,22 +398,14 @@ router.patch('/password/reset/:token', resetPassword);
  *           schema:
  *             type: object
  *             properties:
- *               oldPassword:
+ *               email:
  *                 type: string
- *                 description: User's current password
- *               newPassword:
- *                 type: string
- *                 description: User's new password
- *               confirmNewPassword:
- *                 type: string
- *                 description: Confirmation of the user's new password
- *             required:
- *               - oldPassword
- *               - newPassword
- *               - confirmNewPassword
+ *                 format: email
+ *                 example: user@gmail.com
+ *                 description: The email of the user requesting password reset.
  *     responses:
  *       200:
- *         description: Password changed successfully
+ *         description: Reset instructions sent successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -428,25 +416,12 @@ router.patch('/password/reset/:token', resetPassword);
  *                   example: success
  *                 message:
  *                   type: string
- *                   example: password changed successfully
+ *                   example: "Reset instructions is sent to your email"
  *                 data:
  *                   type: object
  *                   example: {}
- *       400:
- *         description: Bad request due to incorrect old password or validation error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: fail
- *                 message:
- *                   type: string
- *                   example: Wrong password
- *       500:
- *         description: Internal server error during password change
+ *       404:
+ *         description: No user found with this email.
  *         content:
  *           application/json:
  *             schema:
@@ -457,15 +432,387 @@ router.patch('/password/reset/:token', resetPassword);
  *                   example: error
  *                 message:
  *                   type: string
- *                   example: An error occurred while changing the password
+ *                   example: "No user found with this email"
+ *       500:
+ *         description: Error occurred while sending the email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred while sending the email. Try again later!"
+ */
+router.post('/password/forget', forgotPassword);
+/**
+ * @swagger
+ * /password/reset/{token}:
+ *   patch:
+ *     summary: Resets the user's password using a reset token.
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The password reset token sent to the user's email.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 example: newPassword123
+ *                 description: The new password for the user.
+ *               passwordConfirm:
+ *                 type: string
+ *                 example: newPassword123
+ *                 description: Confirmation of the new password.
+ *     responses:
+ *       200:
+ *         description: Password reset successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "Password reset successfully"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Token is invalid or has expired.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Token is invalid or expired"
+ */
+router.patch('/password/reset/:token', resetPassword);
+/**
+ * @swagger
+ * /password/change:
+ *   patch:
+ *     summary: Allows an authenticated user to change their password.
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 example: oldPassword123
+ *                 description: The user's current password.
+ *               newPassword:
+ *                 type: string
+ *                 example: newPassword456
+ *                 description: The new password for the user.
+ *               confirmNewPassword:
+ *                 type: string
+ *                 example: newPassword456
+ *                 description: Confirmation of the new password.
+ *     responses:
+ *       200:
+ *         description: Password changed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "Password changed successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     sessionId:
+ *                       type: string
+ *                       example: "session12345"
+ *                       description: The new session ID after password change.
+ *       400:
+ *         description: Incorrect old password.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Wrong password"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
  */
 router.patch('/password/change', protect, changePassword);
 
 router.use(protect);
+/**
+ * @swagger
+ * /me:
+ *   get:
+ *     summary: Checks if the user is logged in and retrieves user information if authenticated.
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User is authenticated and logged in.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User is logged in"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.get('/me', isLoggedIn);
+/**
+ * @swagger
+ * /sessions:
+ *   get:
+ *     summary: Retrieves all active sessions for the authenticated user.
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved all active sessions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "Got all sessions successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     sessions:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           agent:
+ *                             type: string
+ *                             example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
+ *                             description: The user agent string of the device.
+ *                           status:
+ *                             type: string
+ *                             example: "active"
+ *                             description: The status of the session.
+ *                           lastSeenTime:
+ *                             type: integer
+ *                             example: 1609459200000
+ *                             description: The last seen time of the session in Unix timestamp format.
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.get('/sessions', getLogedInSessions);
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     summary: Logs the user out from a specified session or the current session if no session ID is provided.
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 example: "session12345"
+ *                 description: The session ID to log out from. If omitted, logs out from the current session.
+ *     responses:
+ *       204:
+ *         description: User logged out successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User logged out successfully"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.post('/logout', logoutSession);
+/**
+ * @swagger
+ * /logout/all:
+ *   post:
+ *     summary: Logs the user out from all active sessions.
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       204:
+ *         description: User successfully logged out from all sessions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "All sessions logged out successfully"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.post('/logout/all', logoutAll);
+/**
+ * @swagger
+ * /logout/others:
+ *   post:
+ *     summary: Logs the user out from all active sessions except for the current session.
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       204:
+ *         description: User successfully logged out from all other sessions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "All other sessions logged out successfully"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.post('/logout/others', logoutOthers);
 
 export default router;
