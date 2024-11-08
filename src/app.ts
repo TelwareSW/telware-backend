@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import RedisStore from 'connect-redis';
+import { readFileSync } from 'fs';
 import { ObjectId } from 'mongoose';
 
 import swaggerUI from 'swagger-ui-express';
@@ -39,18 +40,9 @@ declare module 'express-session' {
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost',
-  'https://localhost',
-  'http://testing.telware.tech',
-  'https://testing.telware.tech',
-  'http://telware.tech',
-  'https://telware.tech',
-  'http://localhost:5174',
-  'https://localhost:5174',
-  'http://127.0.0.1:5174',
-  'https://127.0.0.1:5174',
-];
+const allowedOrigins = JSON.parse(
+  readFileSync(`${__dirname}/config/allowedOrigins.json`, 'utf8')
+);
 const corsOptions = {
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
