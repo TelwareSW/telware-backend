@@ -193,16 +193,6 @@ export const oAuthCallback = catchAsync(
   }
 );
 
-export const isLoggedIn = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).json({
-      status: 'success',
-      message: 'User is logged in',
-      data: {},
-    });
-  }
-);
-
 export const forgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
@@ -357,6 +347,23 @@ export const getLogedInSessions = catchAsync(
       message: 'Got all sessions successfully',
       data: {
         sessions: usersInfo,
+      },
+    });
+  }
+);
+
+export const getCurrentSession = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const session = {
+      agent: req.session.user?.agent,
+      status: req.session.user?.status,
+      lastSeenTime: req.session.user?.lastSeenTime,
+    };
+    res.status(200).json({
+      status: 'success',
+      message: 'Got current session successfully',
+      data: {
+        session,
       },
     });
   }
