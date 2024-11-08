@@ -4,7 +4,6 @@ import {
   sendConfirmationCode,
   verifyEmail,
   login,
-  isLoggedIn,
   forgotPassword,
   resetPassword,
   logoutOthers,
@@ -12,6 +11,7 @@ import {
   changePassword,
   logoutSession,
   getLogedInSessions,
+  getCurrentSession,
 } from '@controllers/authController';
 import { protect } from '@middlewares/authMiddleware';
 import oauthRouter from '@base/routes/oauthRoute';
@@ -387,7 +387,7 @@ router.post('/send-confirmation', sendConfirmationCode);
 router.post('/verify', verifyEmail);
 /**
  * @swagger
- * /password/forget:
+ * /auth/password/forget:
  *   post:
  *     summary: Sends a reset password email to the user.
  *     tags: [Auth]
@@ -450,7 +450,7 @@ router.post('/verify', verifyEmail);
 router.post('/password/forget', forgotPassword);
 /**
  * @swagger
- * /password/reset/{token}:
+ * /auth/password/reset/{token}:
  *   patch:
  *     summary: Resets the user's password using a reset token.
  *     tags: [Auth]
@@ -510,7 +510,7 @@ router.post('/password/forget', forgotPassword);
 router.patch('/password/reset/:token', resetPassword);
 /**
  * @swagger
- * /password/change:
+ * /auth/password/change:
  *   patch:
  *     summary: Allows an authenticated user to change their password.
  *     tags: [Auth]
@@ -588,15 +588,15 @@ router.patch('/password/change', protect, changePassword);
 router.use(protect);
 /**
  * @swagger
- * /me:
+ * /auth/me:
  *   get:
- *     summary: Checks if the user is logged in and retrieves user information if authenticated.
+ *     summary: Checks if the user is logged in and retrieves session information if authenticated.
  *     tags: [Auth]
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: User is authenticated and logged in.
+ *         description: User is authenticated and session information is retrieved successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -607,10 +607,31 @@ router.use(protect);
  *                   example: success
  *                 message:
  *                   type: string
- *                   example: "User is logged in"
+ *                   example: "Got current session successfully"
  *                 data:
  *                   type: object
- *                   example: {}
+ *                   properties:
+ *                     agent:
+ *                       type: object
+ *                       description: The user agent string of the device.
+ *                       properties:
+ *                         device:
+ *                           type: string
+ *                           example: "Desktop"
+ *                         os:
+ *                           type: string
+ *                           example: "Windows 10"
+ *                         browser:
+ *                           type: string
+ *                           example: "Chrome 90.0"
+ *                     status:
+ *                       type: string
+ *                       example: "active"
+ *                       description: The status of the session.
+ *                     lastSeenTime:
+ *                       type: integer
+ *                       example: 1609459200000
+ *                       description: The last seen time of the session in Unix timestamp format.
  *       401:
  *         description: Unauthorized or session not found.
  *         content:
@@ -625,10 +646,10 @@ router.use(protect);
  *                   type: string
  *                   example: "Session not found, you are not allowed here!"
  */
-router.get('/me', isLoggedIn);
+router.get('/me', getCurrentSession);
 /**
  * @swagger
- * /sessions:
+ * /auth/sessions:
  *   get:
  *     summary: Retrieves all active sessions for the authenticated user.
  *     tags: [Auth]
@@ -657,9 +678,18 @@ router.get('/me', isLoggedIn);
  *                         type: object
  *                         properties:
  *                           agent:
- *                             type: string
- *                             example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
+ *                             type: object
  *                             description: The user agent string of the device.
+ *                             properties:
+ *                               device:
+ *                                 type: string
+ *                                 example: "Desktop"
+ *                               os:
+ *                                 type: string
+ *                                 example: "Windows 10"
+ *                               browser:
+ *                                 type: string
+ *                                 example: "Chrome 90.0"
  *                           status:
  *                             type: string
  *                             example: "active"
@@ -685,7 +715,7 @@ router.get('/me', isLoggedIn);
 router.get('/sessions', getLogedInSessions);
 /**
  * @swagger
- * /logout:
+ * /auth/logout:
  *   post:
  *     summary: Logs the user out from a specified session or the current session if no session ID is provided.
  *     tags: [Auth]
@@ -736,7 +766,7 @@ router.get('/sessions', getLogedInSessions);
 router.post('/logout', logoutSession);
 /**
  * @swagger
- * /logout/all:
+ * /auth/logout/all:
  *   post:
  *     summary: Logs the user out from all active sessions.
  *     tags: [Auth]
@@ -776,7 +806,7 @@ router.post('/logout', logoutSession);
 router.post('/logout/all', logoutAll);
 /**
  * @swagger
- * /logout/others:
+ * /auth/logout/others:
  *   post:
  *     summary: Logs the user out from all active sessions except for the current session.
  *     tags: [Auth]
