@@ -1,0 +1,54 @@
+services:
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USER:-ROOT}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD:-1234}
+    networks:
+      - backend-net-prod
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
+      interval: 20m
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    volumes:
+      - mongo-data:/data/db
+
+
+  backend:
+    image: telware/backend-prod
+    build:
+      context: .
+      dockerfile: prod.Dockerfile
+    ports:
+      - '${PORT:-3000}:3000'
+    volumes:
+      - /app/node_modules
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-net-prod
+
+  redis:
+    image: redis/redis-stack
+    restart: unless-stopped
+    networks:
+      - backend-net-prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 20m
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+networks:
+  backend-net-prod:
+
+volumes:
+  mongo-data:
