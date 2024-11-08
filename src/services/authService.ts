@@ -1,16 +1,14 @@
-import { CookieOptions, Response, Request, NextFunction } from 'express';
-import { ObjectId } from 'mongoose';
-import jwt from 'jsonwebtoken';
+import { CookieOptions, Response, NextFunction } from 'express';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import User from '@models/userModel';
 import IUser from '@base/types/user';
 import crypto from 'crypto';
 import sendEmail from '@utils/email';
-import redisClient from '@config/redis';
 import {
   formConfirmationMessage,
   formConfirmationMessageHtml,
-  fromResetPasswordMessage,
+  formResetPasswordMessage,
+  formResetPasswordMessageHtml,
 } from '@utils/emailMessages';
 import AppError from '@errors/AppError';
 import axios from 'axios';
@@ -41,34 +39,6 @@ export const generateUsername = async (): Promise<string> => {
     const user = await User.findOne({ username });
     if (!user) return username;
   }
-};
-
-export const createTokens = (
-  id: ObjectId,
-  req: Request,
-  refresh: boolean = true
-) => {
-  const accessToken = jwt.sign(
-    { id },
-    process.env.ACCESS_TOKEN_SECRET as string,
-    {
-      expiresIn: process.env.ACCESS_EXPIRES_IN as string,
-    }
-  );
-  req.session.accessToken = accessToken;
-
-  if (!refresh) return;
-
-  const refreshToken = jwt.sign(
-    { id },
-    process.env.REFRESH_TOKEN_SECRET as string,
-    {
-      expiresIn: process.env.REFRESH_EXPIRES_IN as string,
-    }
-  );
-  req.session.refreshToken = refreshToken;
-  req.session.save();
-  redisClient.sAdd(`user:${id}:sessions`, req.sessionID);
 };
 
 export const storeCookie = (
@@ -112,7 +82,7 @@ export const isCorrectVerificationCode = async (
     .createHash('sha256')
     .update(verificationCode)
     .digest('hex');
-
+  console.log(user.emailVerificationCode, hashedCode);
   if (
     hashedCode !== user.emailVerificationCode ||
     (user.emailVerificationCodeExpires &&
@@ -176,31 +146,27 @@ export const sendResetPasswordEmail = async (
   resetURL: string,
   email: string
 ) => {
-  const message: string = fromResetPasswordMessage(email, resetURL);
+  const message: string = formResetPasswordMessage(email, resetURL);
+  const htmlMessage: string = formResetPasswordMessageHtml(email, resetURL);
   await sendEmail({
     email,
     subject: 'Reset your Password for Telware',
     message,
+    htmlMessage,
   });
 };
 
 export const createOAuthUser = async (
   profile: any,
-  additionalData: any
+  email?: string
 ): Promise<any> => {
   const user = await User.findOne({ providerId: profile.id });
   if (user) return user;
 
-  const { phoneNumber } = additionalData;
-  let { email, photo } = additionalData;
-
-  if (!photo) {
-    photo = profile.photos ? profile.photos[0].value : undefined;
-  }
   if (!email) {
     email = profile.emails ? profile.emails[0].value : undefined;
   }
-
+  const photo = profile.photos ? profile.photos[0].value : undefined;
   const username = await generateUsername();
 
   const newUser: IUser = new User({
@@ -210,12 +176,8 @@ export const createOAuthUser = async (
     accountStatus: 'active',
     email,
     photo,
-    phoneNumber,
     username,
   });
   await newUser.save({ validateBeforeSave: false });
   return newUser;
 };
-
-export const getAllSessionsByUserId = async (userId: ObjectId) =>
-  redisClient.sMembers(`user:${userId}:sessions`);

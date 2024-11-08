@@ -4,7 +4,8 @@ interface IUser extends Document {
   provider: string;
   providerId: string;
   username: string;
-  screenName: string;
+  screenFirstName: string;
+  screenLastName: string;
   email: string;
   phoneNumber: string | undefined;
   password: string | undefined;
@@ -28,8 +29,10 @@ interface IUser extends Document {
   changedPasswordAt: Date | undefined;
   emailVerificationCode: string | undefined;
   emailVerificationCodeExpires: number | undefined;
+  verificationAttempts: number | undefined;
   resetPasswordToken: string | undefined;
   resetPasswordExpires: number | undefined;
+
   generateSaveConfirmationCode: () => string;
   isCorrectPassword: (_candidatePass: string) => Promise<boolean>;
   passwordChanged: (_tokenIssuedAt: number) => boolean;

@@ -1,38 +1,34 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import mongoDBConnection from '@config/mongoDB';
 import importUserData from './userSeed';
 
 dotenv.config();
+// eslint-disable-next-line import/first, import/order
+import mongoDBConnection from '@config/mongoDB';
 
-const importData = async () => {
+const seed = async () => {
   try {
     console.log('🌱 Seeding Database....');
-    await mongoDBConnection(process.env.MONGO_DB_LOCALHOST_URL as string);
-    const users = importUserData();
-    await Promise.all([users]);
+    await importUserData();
     console.log('Done seeding database successfully!');
   } catch (err) {
     console.log(`Failed to seed database :(`);
     console.log(err);
-  } finally {
-    console.log(`Close Server...`);
-    await mongoose.connection.close();
-    process.exit();
   }
 };
 
-const deleteData = async () => {
+const start = async (wouldImport: boolean = false) => {
   try {
-    await mongoDBConnection(process.env.MONGO_DB_LOCALHOST_URL as string);
+    console.log('⚠️  Dropping Database....');
+    await mongoDBConnection();
     if (mongoose.connection.db === undefined) throw new Error();
     await mongoose.connection.db.dropDatabase();
-    console.log(`Done deleting database successfully!`);
+    console.log(`Done dropping database successfully!`);
+    if (wouldImport) await seed();
   } catch (err) {
-    console.log(`Failed to delete database :(`);
+    console.log(`Failed to drop database :(`);
     console.log(err);
   } finally {
-    console.log(`Close Server...`);
     await mongoose.connection.close();
     process.exit();
   }
@@ -43,8 +39,4 @@ if (!['--import', '--delete'].includes(process.argv[2])) {
   process.exit();
 }
 
-if (process.argv[2] === '--import') {
-  importData();
-} else {
-  deleteData();
-}
+start(process.argv[2] === '--import');

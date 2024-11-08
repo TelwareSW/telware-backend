@@ -1,25 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
-import axios from 'axios';
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import catchAsync from '@utils/catchAsync';
 import User from '@models/userModel';
 import AppError from '@errors/AppError';
 import {
   isCorrectVerificationCode,
-  createTokens,
   validateBeforeLogin,
   sendEmailVerificationCode,
   verifyReCaptcha,
   generateUsername,
-  createOAuthUser,
   sendResetPasswordEmail,
-  getAllSessionsByUserId,
 } from '@services/authService';
+import {
+  getAllSessionsByUserId,
+  saveSession,
+  destroySession,
+  getSession,
+  destroyAllSessionsByUserId,
+} from '@services/sessionService';
 import { IReCaptchaResponse } from '@base/types/recaptchaResponse';
 import { ObjectId } from 'mongoose';
 import IUser from '@base/types/user';
 import redisClient from '@config/redis';
+import { SessionData } from 'express-session';
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -38,7 +41,10 @@ export const signup = catchAsync(
     const reCaptchaMessageResponse: IReCaptchaResponse =
       await verifyReCaptcha(reCaptchaResponse);
 
-    if (reCaptchaMessageResponse.response === 400)
+    if (
+      !process.env.DISABLE_RECAPTCHA &&
+      reCaptchaMessageResponse.response === 400
+    )
       return next(new AppError(reCaptchaMessageResponse.message, 400));
 
     const username: string = await generateUsername();
@@ -72,9 +78,11 @@ export const login = catchAsync(
       );
 
     const message: string = await validateBeforeLogin(email, password);
+    if (message === 'please verify your email first to be able to login')
+      return next(new AppError(message, 403));
     if (message !== 'validated') return next(new AppError(message, 400));
 
-    createTokens(user._id as ObjectId, req);
+    await saveSession(user._id as ObjectId, req);
     res.status(200).json({
       status: 'success',
       message: 'logged in successfully',
@@ -108,7 +116,7 @@ export const verifyEmail = catchAsync(
     const { email, verificationCode } = req.body;
     if (!email) return next(new AppError('Provide your email', 400));
     const user = await User.findOne({ email }).select(
-      '+emailVerificationCode +emailVerificationCodeExpires'
+      '+emailVerificationCode +emailVerificationCodeExpires +verificationAttempts'
     );
     if (!user)
       return next(
@@ -121,38 +129,45 @@ export const verifyEmail = catchAsync(
     if (
       user.emailVerificationCodeExpires &&
       user.emailVerificationCodeExpires < Date.now()
-    )
+    ) {
+      user.verificationAttempts = 0;
+      await user.save();
       return next(
         new AppError(
           'verification code expired, you can ask for a new one',
           400
         )
       );
+    }
+
+    if (user.verificationAttempts && user.verificationAttempts > 2)
+      return next(
+        new AppError(
+          'You have reached the maximum number of attempts, please try again later',
+          403
+        )
+      );
     const verified: boolean = await isCorrectVerificationCode(
       user,
       verificationCode
     );
-    if (!verified)
+    if (!verified && user.verificationAttempts !== undefined) {
+      user.verificationAttempts += 1;
+      await user.save();
       return next(new AppError('verification code is not correct', 400));
-    createTokens(user._id as ObjectId, req);
+    }
     user.emailVerificationCode = undefined;
     user.emailVerificationCodeExpires = undefined;
     user.accountStatus = 'active';
+    user.verificationAttempts = undefined;
     await user.save({ validateBeforeSave: false });
+    await saveSession(user._id as ObjectId, req);
 
-    const { username, screenName, photo, status, bio } = user;
     res.status(200).json({
       status: 'success',
       message: 'Account got verified successfully',
       data: {
-        user: {
-          username,
-          screenName,
-          email,
-          photo,
-          status,
-          bio,
-        },
+        user,
         sessionId: req.sessionID,
       },
     });
@@ -161,147 +176,20 @@ export const verifyEmail = catchAsync(
 
 export const oAuthCallback = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
-    createTokens(req.user._id as ObjectId, req);
-    const { user, sessionID } = req;
-    res.status(200).json({
-      status: 'success',
-      message: 'User logged in successfully',
-      data: {
-        user,
-        sessionID,
-      },
-    });
-  }
-);
+    await saveSession(req.user.id as ObjectId, req);
+    const { sessionID } = req;
+    const platform = await redisClient.get('platform');
+    await redisClient.del('platform');
 
-export const googleLogin = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { code } = req.params;
-    const tokenResponse = await axios.post(
-      'https://oauth2.googleapis.com/token',
-      {
-        params: {
-          code,
-          client_id: process.env.GOOGLE_CLIENT_ID,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET,
-          redirect_uri: 'postmessage',
-          grant_type: 'authorization_code',
-        },
-      }
-    );
-
-    if (!tokenResponse.data.accessToken) {
-      return next(new AppError('Failed to get access token from Google', 400));
+    if (platform === 'mobile') {
+      res.redirect(
+        `${process.env.CROSS_PLATFORM_OAUTH_REDIRECT_URL}/${sessionID}`
+      );
+    } else {
+      res.redirect(
+        `${req.protocol}://${process.env.FRONTEND_URL}/login?oauth=true`
+      );
     }
-
-    const profile = await axios.get(
-      'https://www.googleapis.com/oauth2/v2/userinfo',
-      {
-        headers: { Authorization: `Bearer ${tokenResponse.data.accessToken}` },
-      }
-    );
-
-    const peopleResponse = await axios.get(
-      'https://people.googleapis.com/v1/people/me?personFields=phoneNumbers',
-      {
-        headers: { Authorization: `Bearer ${tokenResponse.data.accessToken}` },
-      }
-    );
-    const phoneNumber = peopleResponse.data.phoneNumbers
-      ? peopleResponse.data.phoneNumbers[0].value
-      : undefined;
-
-    const user = await createOAuthUser(profile.data, { phoneNumber });
-
-    createTokens(user._id as ObjectId, req);
-
-    res.status(200).json({
-      status: 'success',
-      message: 'User logged in successfully',
-      data: {
-        user,
-        sessionId: req.sessionID,
-      },
-    });
-  }
-);
-
-export const githubLogin = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { code } = req.params;
-    const tokenResponse = await axios.post(
-      'https://github.com/login/oauth/accessToken',
-      {
-        params: {
-          code,
-          client_id: process.env.GITHUB_CLIENT_ID,
-          client_secret: process.env.GITHUB_CLIENT_SECRET,
-        },
-        headers: { Accept: 'application/json' },
-      }
-    );
-
-    if (!tokenResponse.data.accessToken) {
-      return next(new AppError('Failed to get access token from GitHub', 400));
-    }
-
-    const profile = await axios.get('https://api.github.com/user', {
-      headers: { Authorization: `Bearer ${tokenResponse.data.accessToken}` },
-    });
-
-    const emailResponse = await axios.get(
-      'https://api.github.com/user/emails',
-      {
-        headers: {
-          Authorization: `token ${tokenResponse.data.accessToken}`,
-        },
-      }
-    );
-    const email = emailResponse.data.find(
-      (em: any) => em.primary && em.verified
-    )?.email;
-
-    const user = await createOAuthUser(profile.data, { email });
-
-    createTokens(user._id as ObjectId, req);
-
-    res.status(200).json({
-      status: 'success',
-      message: 'User logged in successfully',
-      data: {
-        user,
-        sessionId: req.sessionID,
-      },
-    });
-  }
-);
-
-export const refresh = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const { refreshToken } = req.session;
-    if (!refreshToken)
-      return next(new AppError('Please provide a valid refresh token', 400));
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET as string
-    ) as jwt.JwtPayload;
-    createTokens(req.user._id as ObjectId, req, false);
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Token refreshed successfully',
-      data: {},
-    });
-  }
-);
-
-export const isLoggedIn = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).json({
-      status: 'success',
-      message: 'User is logged in',
-      data: {},
-    });
   }
 );
 
@@ -316,9 +204,7 @@ export const forgotPassword = catchAsync(
     const resetPasswordToken = user.createResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    const resetURL = `${req.protocol}://${req.get(
-      'host'
-    )}/passwordreset/${resetPasswordToken}`;
+    const resetURL = `${req.protocol}://${process.env.FRONTEND_URL}/password-reset/${resetPasswordToken}`;
 
     try {
       await sendResetPasswordEmail(resetURL, user.email);
@@ -371,11 +257,14 @@ export const resetPassword = catchAsync(
   }
 );
 
-export const logout = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    req.session.destroy((err: any) => {
-      if (err) return next(new AppError('Failed to logout session', 500));
-    });
+export const logoutSession = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { sessionId } = req.body;
+    await redisClient.sRem(
+      `user:${req.session.user?.id}:sessions`,
+      sessionId || req.sessionID
+    );
+    await destroySession(req, res, sessionId);
     res.status(204).json({
       status: 'success',
       message: 'User logged out successfully',
@@ -385,22 +274,9 @@ export const logout = catchAsync(
 );
 
 export const logoutAll = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const sessionIds = await getAllSessionsByUserId(req.user._id);
-
-    const promises = sessionIds.map(
-      (sessionId) =>
-        new Promise((resolve, reject) => {
-          req.sessionStore.destroy(sessionId, (error: Error) => {
-            if (error) return reject(error);
-            resolve(undefined);
-          });
-        })
-    );
-
-    await Promise.all(promises);
-    redisClient.del(`user:${req.user._id}:sessions`);
-
+  async (req: Request, res: Response, next: NextFunction) => {
+    await destroyAllSessionsByUserId(req, res);
+    await destroySession(req, res);
     res.status(204).json({
       status: 'success',
       message: 'All Sessions logged out successfully',
@@ -410,25 +286,12 @@ export const logoutAll = catchAsync(
 );
 
 export const logoutOthers = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    const sessionIds = (await getAllSessionsByUserId(req.user._id)).filter(
-      (sessionId) => sessionId !== req.sessionID
+  async (req: Request, res: Response, next: NextFunction) => {
+    await destroyAllSessionsByUserId(req, res);
+    await redisClient.sAdd(
+      `user:${req.session.user?.id}:sessions`,
+      req.sessionID
     );
-
-    const promises = sessionIds.map(
-      (sessionId) =>
-        new Promise((resolve, reject) => {
-          req.sessionStore.destroy(sessionId, (error: Error) => {
-            if (error) return reject(error);
-            resolve(undefined);
-          });
-        })
-    );
-
-    await Promise.all(promises);
-    redisClient.del(`user:${req.user._id}:sessions`);
-    redisClient.sAdd(`user:${req.user._id}:sessions`, req.sessionID);
-
     res.status(204).json({
       status: 'success',
       message: 'All Other Sessions logged out successfully',
@@ -449,10 +312,59 @@ export const changePassword = catchAsync(
     user.changedPasswordAt = new Date(Date.now() - 1000);
     await user.save();
 
+    await redisClient.sRem(
+      `user:${req.session.user?.id}:sessions`,
+      req.sessionID
+    );
+    await saveSession(user._id as ObjectId, req);
     res.status(200).json({
       status: 'success',
       message: 'password changed successfully',
-      data: {},
+      data: {
+        sessionId: req.sessionID,
+      },
+    });
+  }
+);
+
+export const getLogedInSessions = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const sessionIds = await getAllSessionsByUserId(
+      req.session.user?.id as ObjectId
+    );
+    const promises = sessionIds.map((sessionId) => getSession(req, sessionId));
+    const sessions = ((await Promise.all(promises)) as SessionData[]).filter(
+      (session) => session
+    );
+    const usersInfo = sessions.map((session) => ({
+      agent: session.user.agent,
+      status: session.user.status,
+      lastSeenTime: session.user.lastSeenTime,
+    }));
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Got all sessions successfully',
+      data: {
+        sessions: usersInfo,
+      },
+    });
+  }
+);
+
+export const getCurrentSession = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const session = {
+      agent: req.session.user?.agent,
+      status: req.session.user?.status,
+      lastSeenTime: req.session.user?.lastSeenTime,
+    };
+    res.status(200).json({
+      status: 'success',
+      message: 'Got current session successfully',
+      data: {
+        session,
+      },
     });
   }
 );

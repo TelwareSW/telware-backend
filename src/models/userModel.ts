@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema<IUser>(
       required: [true, 'Username is required'],
       unique: true,
       minlength: [5, 'Username is at least 5 characters'],
-      maxlength: [50, 'Username is at most 15 characters'],
+      maxlength: [15, 'Username is at most 15 characters'],
       validate: {
         validator(username: string): boolean {
           const regex = /^[A-Za-z0-9_]+$/;
@@ -30,7 +30,11 @@ const userSchema = new mongoose.Schema<IUser>(
         message: 'Username can contain only letters, numbers and underscore',
       },
     },
-    screenName: {
+    screenFirstName: {
+      type: String,
+      default: '',
+    },
+    screenLastName: {
       type: String,
       default: '',
     },
@@ -91,7 +95,7 @@ const userSchema = new mongoose.Schema<IUser>(
             }
             return true;
           },
-          message: 'Phone already exists',
+          message: 'Phone number already exists',
         },
       ],
     },
@@ -204,6 +208,7 @@ const userSchema = new mongoose.Schema<IUser>(
     changedPasswordAt: { type: Date, select: false },
     emailVerificationCode: { type: String, select: false },
     emailVerificationCodeExpires: { type: Number, select: false },
+    verificationAttempts: { type: Number, select: false, default: 0 },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: String, select: false },
   },

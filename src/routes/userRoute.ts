@@ -9,9 +9,11 @@ import {
 import {
   deletePicture,
   getAllUsers,
+  getCheckUserName,
   getCurrentUser,
   getUser,
   updateBio,
+  updateCurrentUser,
   updateEmail,
   updatePhoneNumber,
   updatePicture,
@@ -28,10 +30,16 @@ import { protect } from '@middlewares/authMiddleware';
 
 const router = Router();
 
+/**
+ * @swagger
+ * tags:
+ *  name: User
+ *  description: The User Managing API
+ */
+
 router.use(protect);
 router.use('/privacy', privacyRouter);
 
-// Stories routes
 router.get('/stories', getCurrentUserStory);
 router.post('/stories', upload.single('file'), postStory);
 router.delete('/stories/:storyId', deleteStory);
@@ -44,6 +52,8 @@ router.delete('/block/:id', unblock);
 // User routes
 router.get('/', getAllUsers);
 router.get('/me', getCurrentUser);
+router.get('/username/check', getCheckUserName);
+router.patch('/me', updateCurrentUser);
 router.patch('/bio', updateBio);
 router.patch('/phone', updatePhoneNumber);
 router.patch('/email', updateEmail);

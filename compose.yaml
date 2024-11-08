@@ -3,8 +3,8 @@ services:
     image: mongo
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USER:-ROOT}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD:-1234}
     networks:
       - backend-net
     healthcheck:
@@ -13,6 +13,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 45s
+    volumes:
+      - mongo-data:/data/db
     # Uncomment Only If You Want To access the mongodb instance from your machine
     # ports:
     #   - 27017:27017
@@ -73,3 +75,6 @@ services:
 
 networks:
   backend-net:
+
+volumes:
+  mongo-data:

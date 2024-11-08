@@ -1,71 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { randomUUID } from 'crypto';
 import catchAsync from '@utils/catchAsync';
 import AppError from '@errors/AppError';
-import jwt from 'jsonwebtoken';
 import User from '@models/userModel';
-import { Session, SessionData } from 'express-session';
-
-export const generateSession = (req: any) => {
-  const sessionId = req.header('X-Session-Token') as string;
-  if (sessionId) {
-    req.sessionID = sessionId;
-    req.fromHeader = true;
-  }
-  return req.sessionID || randomUUID();
-};
-
-export const deleteNotUsedSessions = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  res.on('finish', () => {
-    if (!req.session.accessToken || !req.session.refreshToken) {
-      req.session.destroy((err) => {
-        if (err) console.error('Error destroying not needed session:', err);
-      });
-    }
-  });
-  next();
-};
-
-const getSession = (
-  req: Request,
-  sessionId: string
-): Promise<Session & Partial<SessionData>> =>
-  new Promise((resolve, reject) => {
-    req.sessionStore.get(sessionId, (err, session) => {
-      if (err) return reject(err);
-      if (!session)
-        return reject(
-          new AppError('Session not found, you are not allowed here!', 401)
-        );
-      resolve(session as Session & Partial<SessionData>);
-    });
-  });
+import { reloadSession } from '@services/sessionService';
+import redisClient from '@base/config/redis';
 
 export const protect = catchAsync(
-  async (req: any, res: Response, next: NextFunction) => {
-    if (req.fromHeader) {
-      const currentSession = await getSession(req, req.sessionID);
-      req.session.accessToken = currentSession.accessToken;
-      req.session.refreshToken = currentSession.refreshToken;
-    }
-
-    const { accessToken } = req.session;
-
-    if (!accessToken) {
+  async (req: Request, res: Response, next: NextFunction) => {
+    await reloadSession(req);
+    if (!req.session.user) {
       return next(
         new AppError('Session not found, you are not allowed here!', 401)
       );
     }
 
-    const decodedPayload = jwt.verify(
-      accessToken,
-      process.env.ACCESS_TOKEN_SECRET as string
-    ) as jwt.JwtPayload;
-    const currentUser = await User.findById(decodedPayload.id).select(
+    const currentUser = await User.findById(req.session.user.id).select(
       '+password'
     );
     if (!currentUser) {
@@ -74,13 +23,28 @@ export const protect = catchAsync(
       );
     }
 
-    if (currentUser.passwordChanged(decodedPayload.iat as number)) {
+    if (currentUser.passwordChanged(req.session.user.timestamp)) {
       return next(
         new AppError('User has changed password!! Log in again.', 401)
       );
     }
 
+    req.session.user.lastSeenTime = Date.now();
     req.user = currentUser;
+    next();
+  }
+);
+
+export const savePlatformInfo = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const platform = (req.query.platform as string) || 'web';
+    await redisClient.set('platform', platform);
+    next();
+  }
+);
+
+export const isAdmin = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     next();
   }
 );
