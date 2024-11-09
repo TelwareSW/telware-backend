@@ -101,6 +101,7 @@
     "passport-google-oauth20": "^2.0.0",
     "redis": "^4.7.0",
     "request": "^2.88.2",
+    "socket.io": "^4.8.1",
     "supertest": "^7.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
