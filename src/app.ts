@@ -1,15 +1,11 @@
 import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
-import session from 'express-session';
 import passport from 'passport';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
-import RedisStore from 'connect-redis';
-import { readFileSync } from 'fs';
-import { ObjectId } from 'mongoose';
 
 import swaggerUI from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
@@ -18,40 +14,10 @@ import AppError from '@errors/AppError';
 import globalErrorHandler from '@errors/globalErrorHandler';
 import apiRouter from '@routes/apiRoute';
 import path from 'path';
-import redisClient from '@config/redis';
-import { generateSession } from '@services/sessionService';
-
-declare module 'express-session' {
-  // eslint-disable-next-line no-unused-vars
-  interface SessionData {
-    user: {
-      id: ObjectId;
-      timestamp: number;
-      lastSeenTime: number;
-      status: 'online' | 'offline';
-      agent?: {
-        device?: string;
-        os?: string;
-        browser?: string;
-      };
-    };
-  }
-}
+import corsOptions from '@config/cors';
+import sessionMiddleware from '@config/session';
 
 const app = express();
-
-const allowedOrigins = JSON.parse(
-  readFileSync(`${__dirname}/config/allowedOrigins.json`, 'utf8')
-);
-const corsOptions = {
-  origin: allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  credentials: true,
-  withCredentials: true,
-  exposedHeaders: ['set-cookie'],
-};
-const maxAge =
-  parseInt(process.env.SESSION_EXPIRES_IN as string, 10) * 24 * 60 * 60 * 1000;
 
 const swaggerOptions = {
   swaggerDefinition: {
@@ -86,22 +52,7 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  session({
-    store: new RedisStore({ client: redisClient, ttl: maxAge / 1000 }),
-    secret: process.env.SESSION_SECRET as string,
-    resave: false,
-    saveUninitialized: false,
-    genid: generateSession,
-    cookie: {
-      maxAge,
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-    },
-  })
-);
+app.use(sessionMiddleware);
 
 app.use(passport.initialize());
 app.use(passport.session());
