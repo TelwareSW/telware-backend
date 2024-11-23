@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 
 const allowedOrigins = JSON.parse(
-  readFileSync(`${__dirname}/config/allowedOrigins.json`, 'utf8')
+  readFileSync(`${__dirname}/allowedOrigins.json`, 'utf8')
 );
 
 const corsOptions = {
