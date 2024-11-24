@@ -1,29 +1,34 @@
 import AppError from '@base/errors/AppError';
 import Story from '@base/models/storySchema';
 import User from '@base/models/userModel';
-import { deleteStoryFile, deleteStoryInUser } from '@base/services/storyService';
+import {
+  deleteStoryFile,
+  deleteStoryInUser,
+} from '@base/services/storyService';
 import catchAsync from '@base/utils/catchAsync';
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { authorize } from 'passport';
 
-export const getCurrentUserStory = catchAsync(async (req: any, res: Response) => {
-  const userId = req.user.id;
+export const getCurrentUserStory = catchAsync(
+  async (req: any, res: Response) => {
+    const userId = req.user.id;
 
-  const user = await User.findById(userId).populate('stories');
+    const user = await User.findById(userId).populate('stories');
 
-  if (!user) {
-    throw new AppError('No User exists with this ID', 404);
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Stories retrieved successfuly',
+      data: {
+        stories: user.stories,
+      },
+    });
   }
-
-  return res.status(200).json({
-    status: 'success',
-    message: 'Stories retrieved successfuly',
-    data: {
-      stories: user.stories,
-    },
-  });
-});
+);
 export const postStory = catchAsync(async (req: any, res: Response) => {
   const { caption } = req.body;
   const userId = req.user.id;
@@ -81,18 +86,17 @@ export const getStory = catchAsync(async (req: any, res: Response) => {
   const { userId } = req.params;
   const authUserId = req.user.id;
 
-  const user = await User.findById(userId).populate('stories', 'id content caption timestamp');
+  const user = await User.findById(userId).populate(
+    'stories',
+    'id content caption timestamp'
+  );
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
   }
 
   if (!user.contacts.includes(authUserId)) {
-    return res.status(200).json({
-      status: 'success',
-      message: 'Stories retrieved successfuly',
-      data: {},
-    });
+    throw new AppError('You are not authorized to view these stories', 401);
   }
 
   return res.status(200).json({
