@@ -5,7 +5,7 @@ const allowedOrigins = JSON.parse(
 );
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: 'allowedOrigins',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
   withCredentials: true,
