@@ -287,16 +287,938 @@ router.post('/block/:id', block);
 router.delete('/block/:id', unblock);
 
 // User routes
+
+/**
+ * @swagger
+ * /users/:
+ *   get:
+ *     summary: Retrieve all users
+ *     tags: [User]
+ *     description: Fetches a list of all users with specific fields included.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved all users.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "Users retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           username:
+ *                             type: string
+ *                             example: "johndoe123"
+ *                           screenFirstName:
+ *                             type: string
+ *                             example: "John"
+ *                           screenLastName:
+ *                             type: string
+ *                             example: "Doe"
+ *                           email:
+ *                             type: string
+ *                             example: "johndoe@example.com"
+ *                           photo:
+ *                             type: string
+ *                             format: name
+ *                             example: "photo.jpg"
+ *                           status:
+ *                             type: string
+ *                             example: "online"
+ *                           bio:
+ *                             type: string
+ *                             example: "Just a tech enthusiast!"
+ *       401:
+ *         description: Unauthorized, user not logged in or session expired.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.get('/', getAllUsers);
+
+/**
+ * @swagger
+ * /users/me:
+ *   get:
+ *     summary: Retrieve the current authenticated user
+ *     tags: [User]
+ *     description: Fetches the details of the currently authenticated user.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the current user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "64f1d2d2c1234567890abcdef"
+ *                         provider:
+ *                           type: string
+ *                           enum: [local, google, github]
+ *                           example: "local"
+ *                         username:
+ *                           type: string
+ *                           example: "johndoe123"
+ *                         screenFirstName:
+ *                           type: string
+ *                           example: "John"
+ *                         screenLastName:
+ *                           type: string
+ *                           example: "Doe"
+ *                         email:
+ *                           type: string
+ *                           example: "johndoe@example.com"
+ *                         phoneNumber:
+ *                           type: string
+ *                           example: "+1234567890"
+ *                         photo:
+ *                           type: string
+ *                           format: uri
+ *                           example: "photo.jpg"
+ *                         status:
+ *                           type: string
+ *                           enum: [online, connected, offline]
+ *                           example: "online"
+ *                         isAdmin:
+ *                           type: boolean
+ *                           example: false
+ *                         bio:
+ *                           type: string
+ *                           example: "Just a tech enthusiast!"
+ *                         accountStatus:
+ *                           type: string
+ *                           enum: [active, unverified, deactivated, banned]
+ *                           example: "active"
+ *                         maxFileSize:
+ *                           type: number
+ *                           example: 3145
+ *                         automaticDownloadEnable:
+ *                           type: boolean
+ *                           example: true
+ *                         lastSeenPrivacy:
+ *                           type: string
+ *                           enum: [everyone, contacts, nobody]
+ *                           example: "everyone"
+ *                         readReceiptsEnablePrivacy:
+ *                           type: boolean
+ *                           example: true
+ *                         storiesPrivacy:
+ *                           type: string
+ *                           enum: [everyone, contacts, nobody]
+ *                           example: "contacts"
+ *                         picturePrivacy:
+ *                           type: string
+ *                           enum: [everyone, contacts, nobody]
+ *                           example: "contacts"
+ *                         invitePermessionsPrivacy:
+ *                           type: string
+ *                           enum: [everyone, admins]
+ *                           example: "admins"
+ *                         contacts:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                             example: "64f1d2d2c1234567890abcde1"
+ *                         blockedUsers:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                             example: "64f1d2d2c1234567890abcde2"
+ *                         stories:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                             example: "64f1d2d2c1234567890abcde3"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ *       404:
+ *         description: No user exists with the authenticated user's ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ */
 router.get('/me', getCurrentUser);
+
+/**
+ * @swagger
+ * /users/username/check:
+ *   get:
+ *     summary: Check if a username is available
+ *     tags: [User]
+ *     description: Validates a given username and checks if it is already in use.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *           minLength: 5
+ *           maxLength: 15
+ *           pattern: "^[A-Za-z0-9_]+$"
+ *         description: The username to be checked for availability.
+ *     responses:
+ *       200:
+ *         description: Username is unique and available for use.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "Username is unique"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Validation error or invalid username.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid username. Username can contain only letters, numbers, and underscores."
+ *       409:
+ *         description: Username already exists.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Username already exists"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.get('/username/check', getCheckUserName);
+
+/**
+ * @swagger
+ * /users/me:
+ *   patch:
+ *     summary: Update the current user's data
+ *     tags: [User]
+ *     description: Updates the authenticated user's data. Only fields included in the request body will be updated. All fields are validated before saving.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 5
+ *                 maxLength: 15
+ *                 pattern: "^[A-Za-z0-9_]+$"
+ *                 description: The username to update.
+ *               screenFirstName:
+ *                 type: string
+ *                 description: The first name to display.
+ *               screenLastName:
+ *                 type: string
+ *                 description: The last name to display.
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email to update.
+ *               phoneNumber:
+ *                 type: string
+ *                 description: The phone number to update.
+ *               bio:
+ *                 type: string
+ *                 maxLength: 70
+ *                 description: A short biography for the user.
+ *               photo:
+ *                 type: string
+ *                 description: The user profile photo name.
+ *             example:
+ *               username: "newUsername"
+ *               screenFirstName: "John"
+ *               screenLastName: "Doe"
+ *               email: "john.doe@example.com"
+ *               phoneNumber: "+1234567890"
+ *               bio: "Passionate software developer."
+ *               photo: "photo.jpg"
+ *     responses:
+ *       200:
+ *         description: User data updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User data updated successfuly"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Validation error due to invalid data in the request body.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid input data"
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.patch('/me', updateCurrentUser);
+
+/**
+ * @swagger
+ * /users/bio:
+ *   patch:
+ *     summary: Update the user's bio
+ *     tags: [User]
+ *     description: Updates the authenticated user's biography. The bio must not exceed 70 characters.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bio:
+ *                 type: string
+ *                 maxLength: 70
+ *                 description: The updated bio for the user.
+ *             example:
+ *               bio: "This is my new bio!"
+ *     responses:
+ *       200:
+ *         description: User bio updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User bio updated successfuly"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Validation error due to an invalid bio (e.g., exceeding character limit).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid bio length"
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.patch('/bio', updateBio);
+
+/**
+ * @swagger
+ * /users/phone:
+ *   patch:
+ *     summary: Update the user's phone number
+ *     tags: [User]
+ *     description: Updates the authenticated user's phone number. The phone number must be valid and unique.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               phoneNumber:
+ *                 type: string
+ *                 description: The new phone number for the user.
+ *             example:
+ *               phoneNumber: "+1234567890"
+ *     responses:
+ *       200:
+ *         description: User phone number updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User phoneNumber updated successfuly"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Validation error due to an invalid or already existing phone number.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Phone number already exists"
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.patch('/phone', updatePhoneNumber);
+
+/**
+ * @swagger
+ * /users/email:
+ *   patch:
+ *     summary: Update the user's email address
+ *     tags: [User]
+ *     description: Updates the authenticated user's email address. The email must be valid and unique.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: The new email address for the user.
+ *             example:
+ *               email: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: User email updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User email updated successfuly"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Validation error due to an invalid or already existing email address.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Email already exists"
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.patch('/email', updateEmail);
+
+/**
+ * @swagger
+ * /users/username:
+ *   patch:
+ *     summary: Update the user's username
+ *     tags: [User]
+ *     description: Updates the authenticated user's username. The username must be unique and adhere to validation rules.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The new username for the user.
+ *             example:
+ *               username: "new_username"
+ *     responses:
+ *       200:
+ *         description: User username updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User username updated successfuly"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Validation error due to an invalid or already existing username.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Username already exists or is invalid"
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.patch('/username', updateUsername);
+
+/**
+ * @swagger
+ * /users/screen-name:
+ *   patch:
+ *     summary: Update the user's screen name
+ *     tags: [User]
+ *     description: Updates the authenticated user's screen first name and last name.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               screenFirstName:
+ *                 type: string
+ *                 description: The new screen first name for the user.
+ *               screenLastName:
+ *                 type: string
+ *                 description: The new screen last name for the user.
+ *             example:
+ *               screenFirstName: "John"
+ *               screenLastName: "Doe"
+ *     responses:
+ *       200:
+ *         description: User screenFirstName and screenLastName updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User screenFirstName and screenLastName updated successfuly"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Validation error due to invalid screen name data.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid screenFirstName or screenLastName"
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.patch('/screen-name', updateScreenName);
+
+/**
+ * @swagger
+ * /users/picture:
+ *   patch:
+ *     summary: Update the user's profile picture
+ *     tags: [User]
+ *     description: Uploads and updates the authenticated user's profile picture.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photo:
+ *                 type: string
+ *                 format: binary
+ *                 description: The new profile picture for the user.
+ *     responses:
+ *       201:
+ *         description: User profile picture updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User profile picture updated successfully"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Error while uploading the profile picture.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred while uploading the story"
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.patch('/picture', upload.single('file'), updatePicture);
+
+/**
+ * @swagger
+ * /users/picture:
+ *   delete:
+ *     summary: Delete the user's profile picture
+ *     tags: [User]
+ *     description: Removes the authenticated user's profile picture and resets the `photo` field.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       204:
+ *         description: User profile picture deleted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: "User profile picture deleted successfully"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       404:
+ *         description: The authenticated user was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       401:
+ *         description: Unauthorized or session not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: "Session not found, you are not allowed here!"
+ */
 router.delete('/picture', deletePicture);
 
 // conflicting routes
