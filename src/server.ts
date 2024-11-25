@@ -12,7 +12,7 @@ const httpServer = http.createServer(app);
 socketSetup(httpServer);
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-const server = httpServer.listen(port, () => {
+const server = httpServer.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
 
