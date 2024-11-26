@@ -1,15 +1,22 @@
 import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
 import { createChat } from '@base/services/chatService';
+import NormalMessage from '@base/models/channelMessageModel';
 
 export const handleSendMessage = async (socket: Socket, data: any) => {
   let { chatId } = data;
   const { content, contentType, senderId, isFirstTime } = data;
   let newChat;
-  console.log(content, contentType);
 
   try {
-    const message = new Message({
+    if (isFirstTime) {
+      const members = [chatId, senderId];
+      newChat = await createChat(members);
+
+      chatId = newChat._id;
+      socket.join(chatId);
+    } //TODO: to be edited when implementing channel and group messages based on the message type
+    const message = new NormalMessage({
       content,
       contentType,
       chatId,
@@ -18,13 +25,6 @@ export const handleSendMessage = async (socket: Socket, data: any) => {
     });
     await message.save();
 
-    if (isFirstTime) {
-      const members = [chatId, senderId];
-      newChat = await createChat(members);
-
-      chatId = newChat._id;
-      socket.join(chatId);
-    }
     socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   } catch (error) {
     console.error('Error_SEND_MESSAGE:', error);
@@ -32,17 +32,25 @@ export const handleSendMessage = async (socket: Socket, data: any) => {
   }
 };
 
-export const handleEditMessage = async (socket: Socket, data: any) => {
+export const handleEditMessage = async (data: any) => {
   const { messageId, content } = data;
-  Message.findByIdAndUpdate(messageId, { content });
-
-
+  await Message.findByIdAndUpdate(messageId, { content });
 };
 
-
-export const handleDeleteMessage = async (socket: Socket, data: any) => {
+export const handleDeleteMessage = async (data: any) => {
   const { messageId, deleteType } = data;
-  if(deleteType === 'all')
-    Message.findByIdAndDelete(messageId);
-  
+  if (deleteType === 'all') await Message.findByIdAndDelete(messageId);
+};
+
+export const handleForwardMessage = async (socket: Socket, data: any) => {
+  const { chatId, messageId, senderId } = data;
+  const message = Message.findById(messageId);
+  const forwardMessage = new NormalMessage({
+    content: message.content,
+    contentType: message.contentType,
+    isForward: true,
+    senderId,
+    chatId,
+  });
+  socket.to(chatId).emit('RECEIVE_MESSAGE', forwardMessage);
 };
