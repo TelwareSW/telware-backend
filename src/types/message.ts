@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 interface IMessage extends Document {
   timestamp: Date;
@@ -7,6 +7,8 @@ interface IMessage extends Document {
   isPinned: boolean;
   isForward: boolean;
   isAnnouncement: boolean;
+  senderId: Types.ObjectId;
+  chatId: Types.ObjectId;
 }
 
 export default IMessage;
