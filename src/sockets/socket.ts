@@ -4,7 +4,12 @@ import corsOptions from '@base/config/cors';
 import registerChatHandlers from '@base/sockets/chat';
 import { getAllChatIds } from '@services/chatService';
 import mongoose from 'mongoose';
-import { handleSendMessage, handleEditMessage } from './services';
+import {
+  handleSendMessage,
+  handleEditMessage,
+  handleDeleteMessage,
+  handleForwardMessage,
+} from './services';
 
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
   const chatIds = await getAllChatIds(userId);
@@ -24,8 +29,11 @@ const socketSetup = (server: HTTPServer) => {
     await joinRooms(socket, userId);
 
     socket.on('SEND_MESSAGE', (data: any) => handleSendMessage(socket, data));
-    socket.on('EDIT_MESSAGE', (data: any) => handleEditMessage(socket, data));
-    socket.on('DELETE_MESSAGE', (data: any) => handleDeleteMessage(socket, data));
+    socket.on('EDIT_MESSAGE', (data: any) => handleEditMessage(data));
+    socket.on('DELETE_MESSAGE', (data: any) => handleDeleteMessage(data));
+    socket.on('FORWARD_MESSAGE', (data: any) =>
+      handleForwardMessage(socket, data)
+    );
     registerChatHandlers(io, socket);
   });
 };
