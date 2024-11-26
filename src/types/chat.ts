@@ -5,6 +5,7 @@ interface IChat extends Document {
   destructionTimestamp: Date | undefined;
   destructionDuration: number | undefined;
   members: Types.ObjectId[];
+  type: string;
 }
 
 export default IChat;

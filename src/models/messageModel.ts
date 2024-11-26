@@ -30,6 +30,16 @@ const messageSchema = new mongoose.Schema<IMessage>(
       type: Boolean,
       default: false,
     },
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, 'message must have senderId'],
+      ref: 'User',
+    },
+    chatId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, 'message must have chatId'],
+      ref: 'Chat',
+    },
   },
   {
     discriminatorKey: 'messageType',

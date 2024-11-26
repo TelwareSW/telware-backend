@@ -6,6 +6,7 @@ const chatSchema = new mongoose.Schema<IChat>(
     isSeen: {
       type: Boolean,
       required: true,
+      default: true,
     },
     destructionTimestamp: Date,
     destructionDuration: Number,
@@ -19,6 +20,11 @@ const chatSchema = new mongoose.Schema<IChat>(
         },
       },
     ],
+    type: {
+      type: String,
+      enum: ['private', 'group', 'channel'],
+      default: 'private',
+    },
   },
   {
     discriminatorKey: 'chatType',
