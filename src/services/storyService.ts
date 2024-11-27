@@ -1,5 +1,5 @@
 import AppError from '@base/errors/AppError';
-import Story from '@base/models/storySchema';
+import Story from '@base/models/storyModel';
 import User from '@base/models/userModel';
 import mongoose from 'mongoose';
 import { unlink } from 'fs/promises';

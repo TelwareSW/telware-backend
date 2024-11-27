@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import corsOptions from '@base/config/cors';
 import registerChatHandlers from '@base/sockets/chat';
-import { getAllChatIds } from '@services/chatService';
+import { getChats } from '@services/chatService';
 import mongoose from 'mongoose';
 import {
   handleSendMessage,
@@ -12,7 +12,7 @@ import {
 } from './services';
 
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
-  const chatIds = await getAllChatIds(userId);
+  const chatIds = await getChats(userId);
   chatIds.forEach((chatId: mongoose.Types.ObjectId) => {
     socket.join(chatId.toString());
   });

@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
-import { createChat } from '@base/services/chatService';
+import { createNewChat } from '@base/services/chatService';
 import NormalMessage from '@base/models/channelMessageModel';
 
 export const handleSendMessage = async (socket: Socket, data: any) => {
@@ -11,7 +11,7 @@ export const handleSendMessage = async (socket: Socket, data: any) => {
   try {
     if (isFirstTime) {
       const members = [chatId, senderId];
-      newChat = await createChat(members);
+      newChat = await createNewChat(members);
 
       chatId = newChat._id;
       socket.join(chatId);

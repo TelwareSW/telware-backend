@@ -1,6 +1,6 @@
 import AppError from '@base/errors/AppError';
 import GroupChannel from '@base/models/groupChannelModel';
-import NormalChat from '@base/models/normalChat';
+import NormalChat from '@base/models/normalChatModel';
 import { getChats } from '@base/services/chatService';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
