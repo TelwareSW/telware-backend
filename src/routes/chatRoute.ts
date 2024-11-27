@@ -7,3 +7,5 @@ router.use(protect);
 
 router.post('/', createChat);
 router.get('/', getAllChats);
+
+export default router;
