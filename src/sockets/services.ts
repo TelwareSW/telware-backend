@@ -1,7 +1,8 @@
 import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
 import { createNewChat } from '@base/services/chatService';
-import NormalMessage from '@base/models/channelMessageModel';
+import NormalMessage from '@base/models/normalMessageModel';
+import IMessage from '@base/types/message';
 
 export const handleSendMessage = async (socket: Socket, data: any) => {
   let { chatId } = data;
@@ -11,8 +12,8 @@ export const handleSendMessage = async (socket: Socket, data: any) => {
   try {
     if (isFirstTime) {
       const members = [chatId, senderId];
+      console.log(members);
       newChat = await createNewChat(members);
-
       chatId = newChat._id;
       socket.join(chatId);
     } //TODO: to be edited when implementing channel and group messages based on the message type
@@ -27,8 +28,7 @@ export const handleSendMessage = async (socket: Socket, data: any) => {
 
     socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   } catch (error) {
-    console.error('Error_SEND_MESSAGE:', error);
-    socket.emit('ERROR', { message: 'Failed to send message.' });
+    socket.to(chatId).emit('ERROR', { message: 'Failed to send message.' });
   }
 };
 
@@ -44,7 +44,8 @@ export const handleDeleteMessage = async (data: any) => {
 
 export const handleForwardMessage = async (socket: Socket, data: any) => {
   const { chatId, messageId, senderId } = data;
-  const message = Message.findById(messageId);
+  const message = (await Message.findById(messageId)) as IMessage;
+
   const forwardMessage = new NormalMessage({
     content: message.content,
     contentType: message.contentType,

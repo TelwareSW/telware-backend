@@ -28,7 +28,6 @@ export const protect = catchAsync(
         new AppError('User has changed password!! Log in again.', 401)
       );
     }
-
     req.session.user.lastSeenTime = Date.now();
     req.user = currentUser;
     next();

@@ -20,6 +20,14 @@ export const getChats = async (
   } else return allChats;
 };
 
+export const getChatIds = async (
+  userId: mongoose.Types.ObjectId,
+  type: string
+) => {
+  const chats = await getChats(userId, type);
+  return chats.map((chat: any) => chat._id);
+};
+
 export const createNewChat = async (
   data: any
 ): Promise<INormalChat | IGroupChannel> => {
