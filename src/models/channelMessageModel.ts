@@ -17,11 +17,11 @@ const channelMessageSchema = new mongoose.Schema<IChannelMessage>(
   }
 );
 
-const NormalMessage = Message.discriminator(
+const ChannelMessage = Message.discriminator(
   'ChannelMessage',
   channelMessageSchema
 );
-export default NormalMessage;
+export default ChannelMessage;
 
 //TODO:
 //
