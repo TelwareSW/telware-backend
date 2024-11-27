@@ -1,7 +1,9 @@
 import Chat from '@base/models/chatModel';
 import mongoose from 'mongoose';
 import GroupChannel from '@base/models/groupChannelModel';
-import NormalChat from '@base/models/normalChat';
+import NormalChat from '@base/models/normalChatModel';
+import IGroupChannel from '@base/types/groupChannel';
+import INormalChat from '@base/types/normalChat';
 
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
@@ -18,9 +20,11 @@ export const getChats = async (
   } else return allChats;
 };
 
-export const createNewChat = async (data: any) => {
+export const createNewChat = async (
+  data: any
+): Promise<INormalChat | IGroupChannel> => {
   const { type, name, members } = data;
-  let newChat;
+  let newChat: INormalChat | IGroupChannel;
   if (type && type === 'private') {
     newChat = new NormalChat({
       members,
@@ -32,4 +36,5 @@ export const createNewChat = async (data: any) => {
     });
   }
   await newChat.save();
+  return newChat;
 };
