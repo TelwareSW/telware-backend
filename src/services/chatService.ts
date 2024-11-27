@@ -7,7 +7,7 @@ import INormalChat from '@base/types/normalChat';
 
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
-  type: any
+  type: string
 ): Promise<any> => {
   const allChats = await Chat.find({ members: userId });
   let requiredChats;

@@ -1,6 +1,5 @@
 import IMessage from '@base/types/message';
 import mongoose from 'mongoose';
-import Communication from './communicationModel';
 
 const messageSchema = new mongoose.Schema<IMessage>(
   {
@@ -49,5 +48,5 @@ const messageSchema = new mongoose.Schema<IMessage>(
   }
 );
 
-const Message = Communication.discriminator('Message', messageSchema);
+const Message = mongoose.model('Message', messageSchema);
 export default Message;
