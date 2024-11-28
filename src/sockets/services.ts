@@ -12,7 +12,6 @@ export const handleSendMessage = async (socket: Socket, data: any) => {
   try {
     if (isFirstTime) {
       const members = [chatId, senderId];
-      console.log(members);
       newChat = await createNewChat(members);
       chatId = newChat._id;
       socket.join(chatId);
@@ -25,7 +24,7 @@ export const handleSendMessage = async (socket: Socket, data: any) => {
       status: 'sent',
     });
     await message.save();
-
+    console.log(message._id);
     socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   } catch (error) {
     socket.to(chatId).emit('ERROR', { message: 'Failed to send message.' });
@@ -53,5 +52,6 @@ export const handleForwardMessage = async (socket: Socket, data: any) => {
     senderId,
     chatId,
   });
+  console.log(forwardMessage, chatId);
   socket.to(chatId).emit('RECEIVE_MESSAGE', forwardMessage);
 };

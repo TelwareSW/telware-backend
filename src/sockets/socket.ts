@@ -33,7 +33,6 @@ const socketSetup = (server: HTTPServer) => {
       userId = new mongoose.Types.ObjectId('67471ac6fd7d7888434613e5'); //TODO: Replace it with the actual userId
     else userId = new mongoose.Types.ObjectId('67471ac6fd7d7888434613e6');
     counter += 1;
-    console.log(userId);
     await joinRooms(socket, userId);
 
     socket.on('SEND_MESSAGE', (data: any) => handleSendMessage(socket, data));
