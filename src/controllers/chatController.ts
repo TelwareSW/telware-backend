@@ -1,5 +1,6 @@
 import AppError from '@base/errors/AppError';
 import GroupChannel from '@base/models/groupChannelModel';
+import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import { getChats } from '@base/services/chatService';
 import IUser from '@base/types/user';
@@ -44,6 +45,24 @@ export const getAllChats = catchAsync(
       status: 'success',
       message: 'Chats retrieved successfuly',
       data: chats,
+    });
+  }
+);
+
+export const getMessages = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const page: number = parseInt(req.query.page as string, 10) || 1;
+    const limit: number = parseInt(req.query.limit as string, 10) || 100;
+    const skip: number = (page - 1) * limit;
+    const messages = await Message.find({ chatId })
+      .select('content')
+      .limit(limit)
+      .skip(skip);
+    res.status(200).json({
+      status: 'success',
+      message: 'messages retreived successfuly',
+      data: messages,
     });
   }
 );
