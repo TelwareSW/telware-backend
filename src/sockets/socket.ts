@@ -9,6 +9,7 @@ import {
   handleEditMessage,
   handleDeleteMessage,
   handleForwardMessage,
+  handleReplyMessage,
 } from './services';
 
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
@@ -35,11 +36,20 @@ const socketSetup = (server: HTTPServer) => {
     counter += 1;
     await joinRooms(socket, userId);
 
-    socket.on('SEND_MESSAGE', (data: any) => handleSendMessage(socket, data));
-    socket.on('EDIT_MESSAGE', (data: any) => handleEditMessage(data));
-    socket.on('DELETE_MESSAGE', (data: any) => handleDeleteMessage(data));
-    socket.on('FORWARD_MESSAGE', (data: any) =>
-      handleForwardMessage(socket, data)
+    socket.on('SEND_MESSAGE', (data: any, func: Function) =>
+      handleSendMessage(socket, data, func)
+    );
+    socket.on('EDIT_MESSAGE', (data: any, func: Function) =>
+      handleEditMessage(data, func)
+    );
+    socket.on('REPLY_MESSAGE', (data: any, func: Function) =>
+      handleReplyMessage(socket, data, func)
+    );
+    socket.on('DELETE_MESSAGE', (data: any, func: Function) =>
+      handleDeleteMessage(data, func)
+    );
+    socket.on('FORWARD_MESSAGE', (data: any, func: Function) =>
+      handleForwardMessage(socket, data, func)
     );
     registerChatHandlers(io, socket);
   });

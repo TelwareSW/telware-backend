@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import IMessage from './message';
 
 interface INormalMessage extends IMessage {
-  isAnnouncement: boolean;
+  isAnnouncement: Boolean;
   parentMessage: Types.ObjectId | undefined;
 }
 
