@@ -66,3 +66,17 @@ export const getMessages = catchAsync(
     });
   }
 );
+
+export const postMediaFile = catchAsync(async (req: any, res: Response) => {
+  if (!req.file) {
+    throw new AppError('An error occured while uploading the story', 500);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Uploaded media file successfuly',
+    data: {
+      mediaFileName: req.file.filename,
+    },
+  });
+});
