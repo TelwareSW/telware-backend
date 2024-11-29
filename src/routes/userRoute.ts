@@ -22,6 +22,7 @@ import {
 } from '@controllers/userController';
 import {
   deleteStory,
+  getAllContactsStories,
   getCurrentUserStory,
   getStory,
   postStory,
@@ -1392,5 +1393,78 @@ router.get('/:userId', getUser);
  *                     - You are not authorized to view these stories
  */
 router.get('/:userId/stories', getStory);
+
+/**
+ * @swagger
+ * /users/contacts/stories:
+ *   get:
+ *     tags: [User]
+ *     summary: Retrieve all stories from the user's contacts
+ *     description: Fetches all stories shared by the authenticated user's contacts. The response contains a flattened array of all stories.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Stories retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Stories retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     stories:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             example: "60d5fa2be9b1c72d4c70d123"
+ *                           content:
+ *                             type: string
+ *                             example: "story_name.jpg"
+ *                           caption:
+ *                             type: string
+ *                             example: "Beautiful sunset 🌅"
+ *                           timestamp:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2024-11-29T15:45:00Z"
+ *       404:
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: No User exists with this ID
+ *       401:
+ *         description: Unauthorized. No valid token provided.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized access
+ */
+router.get('/contacts/stories', getAllContactsStories);
 
 export default router;

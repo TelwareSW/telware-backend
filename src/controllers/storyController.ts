@@ -123,3 +123,39 @@ export const viewStory = catchAsync(async (req: any, res: Response) => {
     data: {},
   });
 });
+
+export const getAllContactsStories = catchAsync(
+  async (req: any, res: Response) => {
+    const userId = req.user.id;
+
+    // retrieve authenticated user contacts
+    const user = await User.findById(userId, 'contacts');
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+    const contacts = user.contacts || [];
+
+    // get all contacts stories in a form of array of arrays.
+    const stories = await Promise.all(
+      contacts.map(async (contactId) => {
+        const contactData = await User.findById(contactId).populate(
+          'stories',
+          'id content caption timestamp'
+        );
+
+        return contactData?.stories || [];
+      })
+    );
+
+    // flatten all arrays into one single array.
+    const flattenedStories = stories.flat();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Stories retrieved successfuly',
+      data: {
+        stories: flattenedStories,
+      },
+    });
+  }
+);
