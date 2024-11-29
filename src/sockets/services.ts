@@ -46,7 +46,6 @@ export const handleSendMessage = async (
       status: 'sent',
     });
   await message.save();
-  console.log(message);
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
     messageId: message._id,
@@ -163,6 +162,7 @@ export const handleReplyMessage = async (
       message: 'Failed to send the message',
       error: 'missing required Fields',
     });
+
   const reply = new NormalMessage({
     content,
     contentType,
@@ -175,11 +175,26 @@ export const handleReplyMessage = async (
 
   if (chatType === 'channel') {
     const parentChannelMessage = await ChannelMessage.findById(parentMessageId);
+    if (!parentChannelMessage)
+      return func({
+        success: false,
+        message: 'Failed to reply to the message',
+        error: 'No message found with the provided parent message id',
+      });
     parentChannelMessage.threadMessages.push(reply._id);
+  } else {
+    const parentMessage = await NormalMessage.findById(parentMessageId);
+    if (!parentMessage)
+      return func({
+        success: false,
+        message: 'Failed to reply to the message',
+        error: 'No message found with the provided parent message id',
+      });
   }
   socket.to(chatId).emit('RECEIVE_REPLY', reply);
   const res = {
     messageId: reply._id,
   };
+  console.log(reply);
   func({ success: true, message: 'Reply sent successfully', res });
 };
