@@ -455,7 +455,7 @@ const socketSetup = (server: HTTPServer) => {
      *                   type: string
      *                   description: Details about the error (e.g., message not found).
      */
-
+    
     socket.on('FORWARD_MESSAGE', (data: any, func: Function) =>
       handleForwardMessage(socket, data, func)
     );
