@@ -6,6 +6,7 @@ import {
   postMediaFile,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
+import upload from '@base/config/fileUploads';
 import restrictToMembers from '@base/middlewares/chatMiddlewares';
 
 const router = Router();
@@ -20,7 +21,6 @@ const router = Router();
 router.use(protect);
 
 router.post('/', createChat);
-router.get('/:type?', getAllChats);
 router.get('/messages/:chatId', restrictToMembers, getMessages);
 
 /**
@@ -90,5 +90,8 @@ router.get('/messages/:chatId', restrictToMembers, getMessages);
  *                   example: An error occurred while uploading the story
  */
 router.post('/media', upload.single('file'), postMediaFile);
+
+// Should be either the last endpoint in the file or changed to not conflict with other endpoints.
+router.get('/:type?', getAllChats);
 
 export default router;
