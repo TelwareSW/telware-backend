@@ -39,9 +39,13 @@ const swaggerOptions = {
         url: 'http://localhost:3000/api/v1/',
         description: 'Local server',
       },
+      {
+        url: 'ws://localhost:3000',
+        description: 'WebSocket server',
+      },
     ],
   },
-  apis: [`${__dirname}/routes/*.ts`],
+  apis: [`${__dirname}/routes/*.ts`, `${__dirname}/sockets/*.ts`],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
