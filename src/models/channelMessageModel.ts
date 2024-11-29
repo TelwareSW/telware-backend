@@ -8,6 +8,7 @@ const channelMessageSchema = new mongoose.Schema<IChannelMessage>(
       {
         type: mongoose.Types.ObjectId,
         ref: 'NormalMessage',
+        default: [],
       },
     ],
   },
