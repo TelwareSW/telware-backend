@@ -2,11 +2,11 @@ import { Document, Types } from 'mongoose';
 
 interface IMessage extends Document {
   timestamp: Date;
-  content: String;
-  contentType: String;
-  isPinned: Boolean;
-  isForward: Boolean;
-  isAnnouncement: Boolean;
+  content: string;
+  contentType: string;
+  isPinned: boolean;
+  isForward: boolean;
+  isAnnouncement: boolean;
   senderId: Types.ObjectId;
   chatId: Types.ObjectId;
 }

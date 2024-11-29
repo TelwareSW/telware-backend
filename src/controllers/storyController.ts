@@ -96,11 +96,7 @@ export const getStory = catchAsync(async (req: any, res: Response) => {
   }
 
   if (!user.contacts.includes(authUserId)) {
-    return res.status(200).json({
-      status: 'success',
-      message: 'Stories retrieved successfuly',
-      data: {},
-    });
+    throw new AppError('You are not authorized to view these stories', 401);
   }
 
   return res.status(200).json({
