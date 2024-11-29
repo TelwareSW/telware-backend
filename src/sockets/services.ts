@@ -182,6 +182,8 @@ export const handleReplyMessage = async (
         error: 'No message found with the provided parent message id',
       });
     parentChannelMessage.threadMessages.push(reply._id);
+    await parentChannelMessage.save();
+    console.log(parentChannelMessage);
   } else {
     const parentMessage = await NormalMessage.findById(parentMessageId);
     if (!parentMessage)
