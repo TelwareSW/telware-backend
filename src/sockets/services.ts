@@ -1,11 +1,40 @@
 import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
-import { createNewChat } from '@base/services/chatService';
+import { createNewChat, enableDestruction } from '@base/services/chatService';
 import NormalMessage from '@base/models/normalMessageModel';
 import IMessage from '@base/types/message';
 import ChannelMessage from '@base/models/channelMessageModel';
+import redisClient from '@config/redis';
 
 //TODO: handle the case where the user is not joined to the room and still tries to send a message
+export const handleDraftMessage = async (
+  socket: Socket,
+  data: any,
+  func: Function
+) => {
+  try {
+    const { chatId, senderId, content, contentType, isFirstTime, chatType } = data;
+
+    // Store draft in Redis
+    const draftKey = `draft:${chatId}:${senderId}`;
+    const draftMessage = { content, contentType, chatId,isFirstTime,senderId, status: 'draft', chatType };
+
+    await redisClient.setEx(draftKey, 86400, JSON.stringify(draftMessage));
+
+    // Emit the draft update to the client
+    socket.emit('RECEIVE_DRAFT', draftMessage);
+
+    const res = { messageId: draftKey };
+    func({ success: true, message: 'Draft saved', res });
+  } catch (error) {
+    func({
+      success: false,
+      message: 'Failed to save the draft',
+    });
+  }
+};
+
+// handleSendMessage function
 export const handleSendMessage = async (
   socket: Socket,
   data: any,
@@ -45,6 +74,8 @@ export const handleSendMessage = async (
       senderId,
       status: 'sent',
     });
+    const draftKey = `draft:${chatId}:${senderId}`;
+    await redisClient.del(draftKey); 
   await message.save();
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
@@ -74,8 +105,11 @@ export const handleEditMessage = async (data: any, func: Function) => {
       message: 'Failed to edit the message',
       error: 'cannot edit a forwarded message',
     });
-  console.log(message);
-  func({ success: true, message: 'Message edited successfully' });
+  func({
+    success: true,
+    message: 'Message edited successfully',
+    res: { message },
+  });
 };
 
 export const handleDeleteMessage = async (data: any, func: Function) => {
@@ -134,7 +168,6 @@ export const handleForwardMessage = async (
       chatId,
     });
   await forwardMessage.save();
-  console.log(forwardMessage);
   socket.to(chatId).emit('RECEIVE_MESSAGE', forwardMessage);
   const res = {
     messageId: forwardMessage._id,
@@ -183,7 +216,6 @@ export const handleReplyMessage = async (
       });
     parentChannelMessage.threadMessages.push(reply._id);
     await parentChannelMessage.save();
-    console.log(parentChannelMessage);
   } else {
     const parentMessage = await NormalMessage.findById(parentMessageId);
     if (!parentMessage)
@@ -197,6 +229,5 @@ export const handleReplyMessage = async (
   const res = {
     messageId: reply._id,
   };
-  console.log(reply);
   func({ success: true, message: 'Reply sent successfully', res });
 };

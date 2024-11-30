@@ -8,8 +8,6 @@ const chatSchema = new mongoose.Schema<IChat>(
       required: true,
       default: true,
     },
-    destructionTimestamp: Date,
-    destructionDuration: Number,
     members: [
       {
         type: mongoose.Types.ObjectId,

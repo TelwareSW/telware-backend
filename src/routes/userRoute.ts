@@ -22,6 +22,7 @@ import {
 } from '@controllers/userController';
 import {
   deleteStory,
+  getAllContactsStories,
   getCurrentUserStory,
   getStory,
   postStory,
@@ -1220,6 +1221,90 @@ router.patch('/picture', upload.single('file'), updatePicture);
  *                   example: "Session not found, you are not allowed here!"
  */
 router.delete('/picture', deletePicture);
+
+/**
+ * @swagger
+ * /users/contacts/stories:
+ *   get:
+ *     summary: Retrieve stories of user's contacts
+ *     description: Fetches all stories of the authenticated user's contacts. The contacts are determined based on private chats that the user is part of. The response includes user details (like username, profile picture) and their associated stories.
+ *     tags:
+ *       - User
+ *       - Story
+ *     responses:
+ *       200:
+ *         description: Stories retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Stories retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                         example: "64eae68cdb5e4556b8b6e54d"
+ *                       name:
+ *                         type: string
+ *                         example: "John Doe"
+ *                       photo:
+ *                         type: string
+ *                         example: "profile.jpg"
+ *                       stories:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                               example: "74fbb38ddb5e4556b8b6e67a"
+ *                             content:
+ *                               type: string
+ *                               example: "story.jpg"
+ *                             caption:
+ *                               type: string
+ *                               example: "Beautiful sunset"
+ *                             timestamp:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2024-11-30T12:34:56.789Z"
+ *       404:
+ *         description: User or stories not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: No User exists with this ID
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: An unexpected error occurred
+ */
+router.get('/contacts/stories', getAllContactsStories);
 
 // conflicting routes
 /**
