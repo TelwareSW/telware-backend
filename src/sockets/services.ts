@@ -11,8 +11,8 @@ export const handleSendMessage = async (
   data: any,
   func: Function
 ) => {
-  let { chatId } = data;
-  const { content, contentType, senderId, isFirstTime, chatType } = data;
+  const { content, contentType, senderId, isFirstTime, chatType, chatId } =
+    data;
   let newChat;
   if (!content || !contentType || !senderId || !chatType || !chatId)
     return func({
@@ -25,8 +25,8 @@ export const handleSendMessage = async (
   if (isFirstTime) {
     const members = [chatId, senderId];
     newChat = await createNewChat(members);
-    chatId = newChat._id;
-    socket.join(chatId);
+    const newChatId = newChat.id.toString();
+    socket.join(newChatId);
   }
   let message;
   if (chatType === 'private' || chatType === 'group')
@@ -75,7 +75,6 @@ export const handleEditMessage = async (data: any, func: Function) => {
       message: 'Failed to edit the message',
       error: 'cannot edit a forwarded message',
     });
-  console.log(message);
   func({
     success: true,
     message: 'Message edited successfully',
@@ -139,7 +138,6 @@ export const handleForwardMessage = async (
       chatId,
     });
   await forwardMessage.save();
-  console.log(forwardMessage);
   socket.to(chatId).emit('RECEIVE_MESSAGE', forwardMessage);
   const res = {
     messageId: forwardMessage._id,
@@ -188,7 +186,6 @@ export const handleReplyMessage = async (
       });
     parentChannelMessage.threadMessages.push(reply._id);
     await parentChannelMessage.save();
-    console.log(parentChannelMessage);
   } else {
     const parentMessage = await NormalMessage.findById(parentMessageId);
     if (!parentMessage)
@@ -202,6 +199,5 @@ export const handleReplyMessage = async (
   const res = {
     messageId: reply._id,
   };
-  console.log(reply);
   func({ success: true, message: 'Reply sent successfully', res });
 };
