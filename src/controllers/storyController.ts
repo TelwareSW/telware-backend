@@ -4,11 +4,12 @@ import User from '@base/models/userModel';
 import {
   deleteStoryFile,
   deleteStoryInUser,
+  getUserContacts,
+  getUsersStoriesData,
 } from '@base/services/storyService';
 import catchAsync from '@base/utils/catchAsync';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import mongoose from 'mongoose';
-import { authorize } from 'passport';
 
 export const getCurrentUserStory = catchAsync(
   async (req: any, res: Response) => {
@@ -128,34 +129,16 @@ export const getAllContactsStories = catchAsync(
   async (req: any, res: Response) => {
     const userId = req.user.id;
 
-    // retrieve authenticated user contacts
-    const user = await User.findById(userId, 'contacts');
-    if (!user) {
-      throw new AppError('No User exists with this ID', 404);
-    }
-    const contacts = user.contacts || [];
+    // retrieve authenticated user contacts (users that there is a chat with them), returns a Set
+    const contactsIds = await getUserContacts(userId);
 
-    // get all contacts stories in a form of array of arrays.
-    const stories = await Promise.all(
-      contacts.map(async (contactId) => {
-        const contactData = await User.findById(contactId).populate(
-          'stories',
-          'id content caption timestamp'
-        );
-
-        return contactData?.stories || [];
-      })
-    );
-
-    // flatten all arrays into one single array.
-    const flattenedStories = stories.flat();
+    // get all contacts stories with also some of their data too (like id, username and profile picture).
+    const data = await getUsersStoriesData([...contactsIds]);
 
     res.status(200).json({
       status: 'success',
       message: 'Stories retrieved successfuly',
-      data: {
-        stories: flattenedStories,
-      },
+      data,
     });
   }
 );

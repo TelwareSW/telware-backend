@@ -1222,6 +1222,90 @@ router.patch('/picture', upload.single('file'), updatePicture);
  */
 router.delete('/picture', deletePicture);
 
+/**
+ * @swagger
+ * /users/contacts/stories:
+ *   get:
+ *     summary: Retrieve stories of user's contacts
+ *     description: Fetches all stories of the authenticated user's contacts. The contacts are determined based on private chats that the user is part of. The response includes user details (like username, profile picture) and their associated stories.
+ *     tags:
+ *       - User
+ *       - Story
+ *     responses:
+ *       200:
+ *         description: Stories retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Stories retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                         example: "64eae68cdb5e4556b8b6e54d"
+ *                       name:
+ *                         type: string
+ *                         example: "John Doe"
+ *                       photo:
+ *                         type: string
+ *                         example: "profile.jpg"
+ *                       stories:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                               example: "74fbb38ddb5e4556b8b6e67a"
+ *                             content:
+ *                               type: string
+ *                               example: "story.jpg"
+ *                             caption:
+ *                               type: string
+ *                               example: "Beautiful sunset"
+ *                             timestamp:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2024-11-30T12:34:56.789Z"
+ *       404:
+ *         description: User or stories not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: No User exists with this ID
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: An unexpected error occurred
+ */
+router.get('/contacts/stories', getAllContactsStories);
+
 // conflicting routes
 /**
  * @swagger
@@ -1393,78 +1477,5 @@ router.get('/:userId', getUser);
  *                     - You are not authorized to view these stories
  */
 router.get('/:userId/stories', getStory);
-
-/**
- * @swagger
- * /users/contacts/stories:
- *   get:
- *     tags: [User]
- *     summary: Retrieve all stories from the user's contacts
- *     description: Fetches all stories shared by the authenticated user's contacts. The response contains a flattened array of all stories.
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: Stories retrieved successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: Stories retrieved successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     stories:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                             example: "60d5fa2be9b1c72d4c70d123"
- *                           content:
- *                             type: string
- *                             example: "story_name.jpg"
- *                           caption:
- *                             type: string
- *                             example: "Beautiful sunset 🌅"
- *                           timestamp:
- *                             type: string
- *                             format: date-time
- *                             example: "2024-11-29T15:45:00Z"
- *       404:
- *         description: User not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 message:
- *                   type: string
- *                   example: No User exists with this ID
- *       401:
- *         description: Unauthorized. No valid token provided.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 message:
- *                   type: string
- *                   example: Unauthorized access
- */
-router.get('/contacts/stories', getAllContactsStories);
 
 export default router;
