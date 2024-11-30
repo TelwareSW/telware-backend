@@ -23,18 +23,11 @@ const socketSetup = (server: HTTPServer) => {
   const io = new Server(server, {
     cors: corsOptions,
   });
-  let counter = 0;
-  io.on('connection', async (socket) => {
-    console.log(`New client connected: ${socket.id}`);
 
-    let userId = new mongoose.Types.ObjectId('67471ac6fd7d7888434613e4');
-    if (counter === 0)
-      userId = new mongoose.Types.ObjectId('67471ac6fd7d7888434613e4'); //TODO: Replace it with the actual userId
-    else if (counter === 1)
-      userId = new mongoose.Types.ObjectId('67471ac6fd7d7888434613e5'); //TODO: Replace it with the actual userId
-    else userId = new mongoose.Types.ObjectId('67471ac6fd7d7888434613e6');
-    counter += 1;
-    await joinRooms(socket, userId);
+  io.on('connection', async (socket) => {
+    const { userId } = socket.handshake.query;
+    console.log(`New client connected: ${socket.id}`);
+    await joinRooms(socket, new mongoose.Types.ObjectId(userId as string));
 
     /**
      * @swagger
@@ -455,7 +448,7 @@ const socketSetup = (server: HTTPServer) => {
      *                   type: string
      *                   description: Details about the error (e.g., message not found).
      */
-    
+
     socket.on('FORWARD_MESSAGE', (data: any, func: Function) =>
       handleForwardMessage(socket, data, func)
     );
