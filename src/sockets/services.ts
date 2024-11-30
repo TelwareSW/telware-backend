@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
-import { createNewChat } from '@base/services/chatService';
+import { createNewChat, enableDestruction } from '@base/services/chatService';
 import NormalMessage from '@base/models/normalMessageModel';
 import IMessage from '@base/types/message';
 import ChannelMessage from '@base/models/channelMessageModel';
@@ -50,6 +50,7 @@ export const handleSendMessage = async (
   const res = {
     messageId: message._id,
   };
+  enableDestruction(message, chatId);
   func({ success: true, message: 'Message sent successfully', res });
 };
 
@@ -75,7 +76,11 @@ export const handleEditMessage = async (data: any, func: Function) => {
       error: 'cannot edit a forwarded message',
     });
   console.log(message);
-  func({ success: true, message: 'Message edited successfully' });
+  func({
+    success: true,
+    message: 'Message edited successfully',
+    res: { message },
+  });
 };
 
 export const handleDeleteMessage = async (data: any, func: Function) => {
