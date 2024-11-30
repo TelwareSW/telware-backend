@@ -1,8 +1,8 @@
 import AppError from '@base/errors/AppError';
+import Chat from '@base/models/chatModel';
 import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
-import User from '@base/models/userModel';
 import { getChats } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
@@ -43,10 +43,10 @@ export const createChat = catchAsync(
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user: IUser = req.user as IUser;
-    const { type } = req.params;
+    const { type } = req.query;
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
-    const chats = await getChats(userId, type);
+    const chats = await getChats(userId, type as string);
     if (chats.length === 0)
       return res.status(200).json({
         status: 'success',
@@ -54,15 +54,10 @@ export const getAllChats = catchAsync(
         data: {},
       });
 
-    const memberIds = chats.flatMap((chat: any) => chat.members);
-    const members = await User.find(
-      { _id: { $in: memberIds } },
-      'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
-    );
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: { chats, members },
+      data: { chats },
     });
   }
 );
@@ -130,3 +125,19 @@ export const disableSelfDestructing = catchAsync(
     });
   }
 );
+
+export const getChat = catchAsync(async (req: Request, res: Response) => {
+  const { chatId } = req.params;
+  const chat = await Chat.findById(chatId).populate('members');
+  if (!chat) {
+    throw new AppError('No chat with the provided id', 404);
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Chat retrieved successfuly',
+    data: {
+      chat,
+    },
+  });
+});
