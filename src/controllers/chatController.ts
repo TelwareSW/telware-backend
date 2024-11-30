@@ -1,8 +1,8 @@
 import AppError from '@base/errors/AppError';
-import Chat from '@base/models/chatModel';
 import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
+import User from '@base/models/userModel';
 import { getChats } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
@@ -12,6 +12,9 @@ import mongoose from 'mongoose';
 export const createChat = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { type, name, members } = req.body;
+    const user: IUser = req.user as IUser;
+    if (!user) return next(new AppError('you need to login first', 400));
+
     if ((!name && type !== 'private') || !type || !members)
       return next(new AppError('please provide all required fields', 400));
 
@@ -19,11 +22,13 @@ export const createChat = catchAsync(
     if (type && type === 'private')
       newChat = new NormalChat({
         members,
+        type,
       });
     else
       newChat = new GroupChannel({
         name,
         members,
+        type,
       });
 
     await newChat.save();
@@ -42,10 +47,22 @@ export const getAllChats = catchAsync(
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
     const chats = await getChats(userId, type);
+    if (chats.length === 0)
+      return res.status(200).json({
+        status: 'success',
+        message: 'no chats found',
+        data: {},
+      });
+
+    const memberIds = chats.flatMap((chat: any) => chat.members);
+    const members = await User.find(
+      { _id: { $in: memberIds } },
+      'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
+    );
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: chats,
+      data: { chats, members },
     });
   }
 );
@@ -89,10 +106,11 @@ export const enableSelfDestructing = catchAsync(
     const destructionTimestamp = Date.now();
     if (!destructionDuration)
       return next(new AppError('missing required fields', 400));
-    const chat = Chat.findByIdAndUpdate(chatId, {
+    const chat = await NormalChat.findByIdAndUpdate(chatId, {
       destructionDuration,
       destructionTimestamp,
     });
+
     if (!chat) return next(new AppError('No chat with the provided id', 404));
     res.status(200).json({
       status: 'success',
@@ -104,7 +122,7 @@ export const enableSelfDestructing = catchAsync(
 export const disableSelfDestructing = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { chatId } = req.params;
-    const chat = Chat.findByIdAndUpdate(chatId, {
+    const chat = NormalChat.findByIdAndUpdate(chatId, {
       destructionTimestamp: undefined,
       destructionDuration: undefined,
     });

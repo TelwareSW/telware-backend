@@ -10,15 +10,18 @@ export const getChats = async (
   userId: mongoose.Types.ObjectId,
   type: string
 ): Promise<any> => {
+  //populate to be moved for better performance
   const allChats = await Chat.find({ members: userId });
+
   let requiredChats;
   if (type === 'private') {
     requiredChats = allChats.filter((chat) => chat.type === 'private');
   } else if (type === 'group') {
     requiredChats = allChats.filter((chat) => chat.type === 'group');
   } else if (type === 'channel') {
-    requiredChats = allChats.filter((chat) => chat.type === 'chat');
+    requiredChats = allChats.filter((chat) => chat.type === 'channel');
   } else return allChats;
+  return requiredChats;
 };
 
 export const getChatIds = async (
@@ -49,15 +52,10 @@ export const createNewChat = async (
 };
 
 export const enableDestruction = async (message: any, chatId: any) => {
-  const chat = await Chat.findById({ chatId });
-  if (chat && chat.destructionTimestamp) {
-    const timeUntilDeletion =
-      (chat.destructionDuration as number) * 1000 - Date.now();
-
-    if (timeUntilDeletion > 0) {
-      setTimeout(async () => {
-        await Message.findByIdAndDelete(message._id);
-      }, timeUntilDeletion);
-    }
+  const chat = await NormalChat.findById(chatId);
+  if (chat && chat.destructionDuration) {
+    setTimeout(async () => {
+      await Message.findByIdAndDelete(message._id);
+    }, chat.destructionDuration * 1000);
   }
 };
