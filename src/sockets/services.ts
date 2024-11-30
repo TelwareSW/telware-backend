@@ -4,15 +4,44 @@ import { createNewChat, enableDestruction } from '@base/services/chatService';
 import NormalMessage from '@base/models/normalMessageModel';
 import IMessage from '@base/types/message';
 import ChannelMessage from '@base/models/channelMessageModel';
+import redisClient from '@config/redis';
 
 //TODO: handle the case where the user is not joined to the room and still tries to send a message
+export const handleDraftMessage = async (
+  socket: Socket,
+  data: any,
+  func: Function
+) => {
+  try {
+    const { chatId, senderId, content, contentType, isFirstTime, chatType } = data;
+
+    // Store draft in Redis
+    const draftKey = `draft:${chatId}:${senderId}`;
+    const draftMessage = { content, contentType, chatId,isFirstTime,senderId, status: 'draft', chatType };
+
+    await redisClient.setEx(draftKey, 86400, JSON.stringify(draftMessage));
+
+    // Emit the draft update to the client
+    socket.emit('RECEIVE_DRAFT', draftMessage);
+
+    const res = { messageId: draftKey };
+    func({ success: true, message: 'Draft saved', res });
+  } catch (error) {
+    func({
+      success: false,
+      message: 'Failed to save the draft',
+    });
+  }
+};
+
+// handleSendMessage function
 export const handleSendMessage = async (
   socket: Socket,
   data: any,
   func: Function
 ) => {
-  const { content, contentType, senderId, isFirstTime, chatType, chatId } =
-    data;
+  let { chatId } = data;
+  const { content, contentType, senderId, isFirstTime, chatType } = data;
   let newChat;
   if (!content || !contentType || !senderId || !chatType || !chatId)
     return func({
@@ -25,8 +54,8 @@ export const handleSendMessage = async (
   if (isFirstTime) {
     const members = [chatId, senderId];
     newChat = await createNewChat(members);
-    const newChatId = newChat.id.toString();
-    socket.join(newChatId);
+    chatId = newChat._id;
+    socket.join(chatId);
   }
   let message;
   if (chatType === 'private' || chatType === 'group')
@@ -45,12 +74,13 @@ export const handleSendMessage = async (
       senderId,
       status: 'sent',
     });
+    const draftKey = `draft:${chatId}:${senderId}`;
+    await redisClient.del(draftKey); 
   await message.save();
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
     messageId: message._id,
   };
-  enableDestruction(message, chatId);
   func({ success: true, message: 'Message sent successfully', res });
 };
 
