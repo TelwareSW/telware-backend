@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import importUserData from './userSeed';
+import importData from './userSeed';
 
 dotenv.config();
 // eslint-disable-next-line import/first, import/order
@@ -9,7 +9,7 @@ import mongoDBConnection from '@config/mongoDB';
 const seed = async () => {
   try {
     console.log('🌱 Seeding Database....');
-    await importUserData();
+    await importData();
     console.log('Done seeding database successfully!');
   } catch (err) {
     console.log(`Failed to seed database :(`);
@@ -29,9 +29,7 @@ const start = async (wouldImport: boolean = false) => {
     console.log(`Failed to drop database :(`);
     console.log(err);
   } finally {
-    setTimeout(() => {
-      mongoose.connection.close();
-  }, 5);
+    mongoose.disconnect();
     process.exit();
   }
 };
