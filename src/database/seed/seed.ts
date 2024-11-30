@@ -29,7 +29,9 @@ const start = async (wouldImport: boolean = false) => {
     console.log(`Failed to drop database :(`);
     console.log(err);
   } finally {
-    await mongoose.connection.close();
+    setTimeout(() => {
+      mongoose.connection.close();
+  }, 5);
     process.exit();
   }
 };

@@ -1,4 +1,4 @@
-FROM node:latest 
+FROM node:lts 
 
 RUN mkdir /app
 
@@ -13,6 +13,3 @@ COPY . .
 EXPOSE 3000
 
 CMD ["npm", "run", "dev"]
-
-
-

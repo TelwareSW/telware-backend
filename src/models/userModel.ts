@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema<IUser>(
       required: [true, 'Username is required'],
       unique: true,
       minlength: [5, 'Username is at least 5 characters'],
-      maxlength: [15, 'Username is at most 15 characters'],
+      maxlength: [100, 'Username is at most 15 characters'],
       validate: {
         validator(username: string): boolean {
           const regex = /^[A-Za-z0-9_]+$/;
@@ -203,30 +203,6 @@ const userSchema = new mongoose.Schema<IUser>(
           type: String,
           default: '',
         },
-        messages: [
-          {
-            sender: {
-              type: mongoose.Types.ObjectId,
-              ref: 'User', 
-            },
-            receiver: {
-              type: mongoose.Types.ObjectId,
-              ref: 'User',
-            },
-            content: {
-              type: String,
-              required: true,
-            },
-            timestamp: {
-              type: Date,
-              default: Date.now,
-            },
-            isRead: {
-              type: Boolean,
-              default: false,
-            },
-          },
-        ],
       },
     ],
     changedPasswordAt: { type: Date, select: false },

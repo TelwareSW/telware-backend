@@ -32,7 +32,6 @@ interface IUser extends Document {
   verificationAttempts: number | undefined;
   resetPasswordToken: string | undefined;
   resetPasswordExpires: number | undefined;
-  messages:Types.ObjectId[];
 
   generateSaveConfirmationCode: () => string;
   isCorrectPassword: (_candidatePass: string) => Promise<boolean>;
