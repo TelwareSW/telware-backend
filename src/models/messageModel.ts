@@ -39,6 +39,10 @@ const messageSchema = new mongoose.Schema<IMessage>(
       required: [true, 'message must have chatId'],
       ref: 'Chat',
     },
+    timestamp: {
+      type: Date,
+      default: Date.now(),
+    },
   },
   {
     discriminatorKey: 'messageType',
