@@ -4,6 +4,7 @@ import GroupChannel from '@base/models/groupChannelModel';
 import NormalChat from '@base/models/normalChatModel';
 import IGroupChannel from '@base/types/groupChannel';
 import INormalChat from '@base/types/normalChat';
+import Message from '@base/models/messageModel';
 
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
@@ -45,4 +46,18 @@ export const createNewChat = async (
   }
   await newChat.save();
   return newChat;
+};
+
+export const enableDestruction = async (message: any, chatId: any) => {
+  const chat = await Chat.findById({ chatId });
+  if (chat && chat.destructionTimestamp) {
+    const timeUntilDeletion =
+      (chat.destructionDuration as number) * 1000 - Date.now();
+
+    if (timeUntilDeletion > 0) {
+      setTimeout(async () => {
+        await Message.findByIdAndDelete(message._id);
+      }, timeUntilDeletion);
+    }
+  }
 };

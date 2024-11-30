@@ -4,6 +4,8 @@ import {
   getAllChats,
   getMessages,
   postMediaFile,
+  enableSelfDestructing,
+  disableSelfDestructing,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -22,6 +24,8 @@ router.use(protect);
 
 router.post('/', createChat);
 router.get('/messages/:chatId', restrictToMembers, getMessages);
+router.patch('/destruct/:chatId', restrictToMembers, enableSelfDestructing);
+router.patch('/un-destruct/:chatId', restrictToMembers, disableSelfDestructing);
 
 /**
  * @swagger
