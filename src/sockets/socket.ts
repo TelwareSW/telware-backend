@@ -11,6 +11,7 @@ import {
   handleForwardMessage,
   handleReplyMessage,
 } from './services';
+import registerMessagesHandlers from './messages';
 
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
   const chatIds = await getChatIds(userId, 'all');
@@ -455,11 +456,13 @@ const socketSetup = (server: HTTPServer) => {
      *                   type: string
      *                   description: Details about the error (e.g., message not found).
      */
-    
+
     socket.on('FORWARD_MESSAGE', (data: any, func: Function) =>
       handleForwardMessage(socket, data, func)
     );
+
     registerChatHandlers(io, socket);
+    registerMessagesHandlers(io, socket);
   });
 };
 
