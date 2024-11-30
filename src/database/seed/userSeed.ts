@@ -2,6 +2,7 @@ import fs from 'fs';
 import { faker } from '@faker-js/faker';
 import User from '@models/userModel';
 import Chat from '@models/chatModel';
+import Message from '@models/messageModel';
 
 const existingUsers = JSON.parse(
   fs.readFileSync(`${__dirname}/json/users.json`, 'utf-8')
@@ -30,24 +31,34 @@ const fakerUsers = faker.helpers.multiple(createRandomUser, { count: 20 });
 const createRandomChat = async (users: any[]) => {
   const members = faker.helpers.arrayElements(
     users,
-    faker.number.int({ min: 2, max: 5 })
+    faker.number.int({ min: 2, max: 15 })
   );
   const chatType = faker.helpers.arrayElement(['private', 'group', 'channel']);
+  if (chatType === 'private') members.length = 2;
 
   const chat = {
-    isSeen: true,
-    destructionTimestamp: faker.datatype.boolean() ? new Date() : undefined,
-    destructionDuration: faker.datatype.boolean()
-      ? faker.number.int({ max: 24 })
-      : undefined,
-    members: members.map((user: any) => ({
+    members: members.map((user: any, index: Number) => ({
       _id: user._id,
-      Role: faker.helpers.arrayElement(['member', 'admin', 'creator']),
+      Role:
+        index === 0
+          ? 'creator'
+          : faker.helpers.arrayElement(['member', 'admin', 'creator']),
     })),
     type: chatType,
   };
 
   return Chat.create(chat);
+};
+
+const createRandomMessage = async (users: any[], chat: any) => {
+  const sender = faker.helpers.arrayElement(users);
+  const message = {
+    content: faker.lorem.sentence(),
+    senderId: sender._id,
+    chatId: chat._id,
+  };
+
+  return Message.create(message);
 };
 
 const importData = async () => {
@@ -58,6 +69,11 @@ const importData = async () => {
     const chatsToSeed = await Promise.all(
       Array.from({ length: 10 }).map(async () => {
         const chat = await createRandomChat(createdUsers);
+        await Promise.all(
+          Array.from({ length: 10 }).map(() =>
+            createRandomMessage(createdUsers, chat)
+          )
+        );
         chat.members.forEach(async (userRef: any) => {
           await User.findByIdAndUpdate(userRef._id, {
             $push: { chats: chat._id },

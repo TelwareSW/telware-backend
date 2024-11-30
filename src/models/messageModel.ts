@@ -19,7 +19,7 @@ const messageSchema = new mongoose.Schema<IMessage>(
         'file',
         'link',
       ],
-      required: [true, 'message must have a content type'],
+      default: 'text',
     },
     isPinned: {
       type: Boolean,

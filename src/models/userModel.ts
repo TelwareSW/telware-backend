@@ -203,30 +203,6 @@ const userSchema = new mongoose.Schema<IUser>(
           type: String,
           default: '',
         },
-        messages: [
-          {
-            sender: {
-              type: mongoose.Types.ObjectId,
-              ref: 'User', 
-            },
-            receiver: {
-              type: mongoose.Types.ObjectId,
-              ref: 'User',
-            },
-            content: {
-              type: String,
-              required: true,
-            },
-            timestamp: {
-              type: Date,
-              default: Date.now,
-            },
-            isRead: {
-              type: Boolean,
-              default: false,
-            },
-          },
-        ],
       },
     ],
     changedPasswordAt: { type: Date, select: false },
