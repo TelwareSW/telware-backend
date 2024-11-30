@@ -11,7 +11,10 @@ export const getChats = async (
   type: string
 ): Promise<any> => {
   //populate to be moved for better performance
-  const allChats = await Chat.find({ members: userId });
+  const allChats = await Chat.find({ members: userId }).populate(
+    'members',
+    'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
+  );
 
   let requiredChats;
   if (type === 'private') {
