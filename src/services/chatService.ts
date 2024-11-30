@@ -6,6 +6,23 @@ import IGroupChannel from '@base/types/groupChannel';
 import INormalChat from '@base/types/normalChat';
 import Message from '@base/models/messageModel';
 
+export const getLastMessageInChat = async (
+  chatId: string | mongoose.Types.ObjectId
+) => {
+  const latestMessage = await Message.findOne({ chatId }).sort({
+    timestamp: -1,
+  });
+
+  if (!latestMessage) {
+    return {};
+  }
+
+  return {
+    lastMessage: latestMessage,
+    lastMessageDate: latestMessage.timestamp,
+  };
+};
+
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
   type: string
@@ -16,14 +33,25 @@ export const getChats = async (
     'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
   );
 
+  const newChatsData = await Promise.all(
+    allChats.map(async (chat) => {
+      const additonalData = await getLastMessageInChat(chat.id);
+      return {
+        ...chat.toObject(),
+        ...additonalData,
+      };
+    })
+  );
+
   let requiredChats;
   if (type === 'private') {
-    requiredChats = allChats.filter((chat) => chat.type === 'private');
+    requiredChats = newChatsData.filter((chat) => chat.type === 'private');
   } else if (type === 'group') {
-    requiredChats = allChats.filter((chat) => chat.type === 'group');
+    requiredChats = newChatsData.filter((chat) => chat.type === 'group');
   } else if (type === 'channel') {
-    requiredChats = allChats.filter((chat) => chat.type === 'channel');
-  } else return allChats;
+    requiredChats = newChatsData.filter((chat) => chat.type === 'channel');
+  } else return newChatsData;
+
   return requiredChats;
 };
 

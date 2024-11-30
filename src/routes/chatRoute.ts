@@ -113,6 +113,48 @@ router.use(protect);
  *                           numberOfMembers:
  *                             type: number
  *                             description: number of members in the chat.
+ *                           lastMessage:
+ *                             type: object
+ *                             description: The last message in the chat.
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                                 description: The ID of the last message.
+ *                                 example: "60d5f3c78f1f4b231e8f6bda"
+ *                               content:
+ *                                 type: string
+ *                                 description: The content of the message.
+ *                                 example: "Hey there!"
+ *                               contentType:
+ *                                 type: string
+ *                                 description: The type of content in the message.
+ *                                 example: "text"
+ *                               isPinned:
+ *                                 type: boolean
+ *                                 description: Whether the message is pinned.
+ *                                 example: false
+ *                               isForward:
+ *                                 type: boolean
+ *                                 description: Whether the message is forwarded.
+ *                                 example: false
+ *                               senderId:
+ *                                 type: string
+ *                                 description: The ID of the sender of the message.
+ *                                 example: "5f2e1f923e5b1c2f3b1a56e0"
+ *                               chatId:
+ *                                 type: string
+ *                                 description: The ID of the chat the message belongs to.
+ *                                 example: "648ac9dc36f5a1c5e84e6f7b"
+ *                               timestamp:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 description: The timestamp when the message was sent.
+ *                                 example: "2024-12-01T10:00:00Z"
+ *                           lastMessageDate:
+ *                             type: string
+ *                             format: date-time
+ *                             description: The timestamp of the last message in the chat.
+ *                             example: "2024-12-01T10:00:00Z"
  *       400:
  *         description: Bad Request - User not logged in or missing required fields.
  *         content:
@@ -494,7 +536,7 @@ router.post('/media', upload.single('file'), postMediaFile);
  *   get:
  *     summary: Retrieve a specific chat
  *     tags: [Chat]
- *     description: Retrieve the details of a specific chat by its ID, including its members.
+ *     description: Retrieve the details of a specific chat by its ID, including its members, the last message, and the date of the last message.
  *     parameters:
  *       - in: path
  *         name: chatId
@@ -577,6 +619,48 @@ router.post('/media', upload.single('file'), postMediaFile);
  *                         numberOfMembers:
  *                           type: number
  *                           description: Number of members in the chat.
+ *                         lastMessage:
+ *                           type: object
+ *                           description: The last message in the chat.
+ *                           properties:
+ *                             _id:
+ *                               type: string
+ *                               description: The ID of the last message.
+ *                               example: "60d5f3c78f1f4b231e8f6bda"
+ *                             content:
+ *                               type: string
+ *                               description: The content of the message.
+ *                               example: "Hey there!"
+ *                             contentType:
+ *                               type: string
+ *                               description: The type of content in the message.
+ *                               example: "text"
+ *                             isPinned:
+ *                               type: boolean
+ *                               description: Whether the message is pinned.
+ *                               example: false
+ *                             isForward:
+ *                               type: boolean
+ *                               description: Whether the message is forwarded.
+ *                               example: false
+ *                             senderId:
+ *                               type: string
+ *                               description: The ID of the sender of the message.
+ *                               example: "5f2e1f923e5b1c2f3b1a56e0"
+ *                             chatId:
+ *                               type: string
+ *                               description: The ID of the chat the message belongs to.
+ *                               example: "648ac9dc36f5a1c5e84e6f7b"
+ *                             timestamp:
+ *                               type: string
+ *                               format: date-time
+ *                               description: The timestamp when the message was sent.
+ *                               example: "2024-12-01T10:00:00Z"
+ *                         lastMessageDate:
+ *                           type: string
+ *                           format: date-time
+ *                           description: The timestamp of the last message in the chat.
+ *                           example: "2024-12-01T10:00:00Z"
  *       404:
  *         description: Chat not found.
  *         content:

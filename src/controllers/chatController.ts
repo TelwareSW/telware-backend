@@ -3,7 +3,7 @@ import Chat from '@base/models/chatModel';
 import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
-import { getChats } from '@base/services/chatService';
+import { getChats, getLastMessageInChat } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
@@ -133,11 +133,13 @@ export const getChat = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('No chat with the provided id', 404);
   }
 
+  const additonalData = await getLastMessageInChat(chatId);
+
   return res.status(200).json({
     status: 'success',
     message: 'Chat retrieved successfuly',
     data: {
-      chat,
+      chat: { ...chat.toObject(), ...additonalData },
     },
   });
 });
