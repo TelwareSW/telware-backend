@@ -1,4 +1,5 @@
 import AppError from '@base/errors/AppError';
+import Chat from '@base/models/chatModel';
 import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
@@ -77,3 +78,37 @@ export const postMediaFile = catchAsync(async (req: any, res: Response) => {
     },
   });
 });
+
+export const enableSelfDestructing = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const { destructionDuration } = req.body;
+    const destructionTimestamp = Date.now();
+    if (!destructionDuration)
+      return next(new AppError('missing required fields', 400));
+    const chat = Chat.findByIdAndUpdate(chatId, {
+      destructionDuration,
+      destructionTimestamp,
+    });
+    if (!chat) return next(new AppError('No chat with the provided id', 404));
+    res.status(200).json({
+      status: 'success',
+      message: 'Destruction time is enabled successfuly',
+    });
+  }
+);
+
+export const disableSelfDestructing = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const chat = Chat.findByIdAndUpdate(chatId, {
+      destructionTimestamp: undefined,
+      destructionDuration: undefined,
+    });
+    if (!chat) return next(new AppError('No chat with the provided id', 404));
+    res.status(200).json({
+      status: 'success',
+      message: 'Destruction time is disabled successfuly',
+    });
+  }
+);
