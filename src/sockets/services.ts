@@ -50,12 +50,16 @@ export const handleSendMessage = async (
   const res = {
     messageId: message._id,
   };
-  enableDestruction(message, chatId);
+  enableDestruction(socket, message, chatId);
   func({ success: true, message: 'Message sent successfully', res });
 };
 
-export const handleEditMessage = async (data: any, func: Function) => {
-  const { messageId, content } = data;
+export const handleEditMessage = async (
+  socket: Socket,
+  data: any,
+  func: Function
+) => {
+  const { messageId, content, chatId } = data;
   if (!messageId || !content)
     return func({
       success: false,
@@ -75,6 +79,7 @@ export const handleEditMessage = async (data: any, func: Function) => {
       message: 'Failed to edit the message',
       error: 'cannot edit a forwarded message',
     });
+  socket.to(chatId).emit('EDIT_MESSAGE_SERVER', message);
   func({
     success: true,
     message: 'Message edited successfully',
@@ -82,8 +87,12 @@ export const handleEditMessage = async (data: any, func: Function) => {
   });
 };
 
-export const handleDeleteMessage = async (data: any, func: Function) => {
-  const { messageId } = data;
+export const handleDeleteMessage = async (
+  socket: Socket,
+  data: any,
+  func: Function
+) => {
+  const { messageId, chatId } = data;
   if (!messageId)
     return func({
       success: false,
@@ -97,6 +106,7 @@ export const handleDeleteMessage = async (data: any, func: Function) => {
       message: 'Failed to delete the message',
       error: 'no message found with the provided id',
     });
+  socket.to(chatId).emit(messageId);
   func({ success: true, message: 'Message deleted successfully' });
 };
 

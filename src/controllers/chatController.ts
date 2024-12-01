@@ -3,7 +3,8 @@ import Chat from '@base/models/chatModel';
 import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
-import { getChats } from '@base/services/chatService';
+import User from '@base/models/userModel';
+import { getChats, getLastMessage } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
@@ -11,25 +12,20 @@ import mongoose from 'mongoose';
 
 export const createChat = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { type, name, members } = req.body;
+    const { type, name } = req.body;
     const user: IUser = req.user as IUser;
     if (!user) return next(new AppError('you need to login first', 400));
 
-    if ((!name && type !== 'private') || !type || !members)
-      return next(new AppError('please provide all required fields', 400));
-
-    let newChat;
-    if (type && type === 'private')
-      newChat = new NormalChat({
-        members,
-        type,
-      });
-    else
-      newChat = new GroupChannel({
-        name,
-        members,
-        type,
-      });
+    const newChat = new GroupChannel({
+      name,
+      type,
+      members: [
+        {
+          _id: user._id,
+          Role: 'creator',
+        },
+      ],
+    });
 
     await newChat.save();
     res.status(201).json({
@@ -40,13 +36,15 @@ export const createChat = catchAsync(
   }
 );
 
+//TODO: insert the lastMessage into the corresponding chat using aggregation for better performance
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user: IUser = req.user as IUser;
-    const { type } = req.query;
+    const type = req.query.type as string;
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
-    const chats = await getChats(userId, type as string);
+
+    const chats = await getChats(userId, type);
     if (chats.length === 0)
       return res.status(200).json({
         status: 'success',
@@ -54,10 +52,18 @@ export const getAllChats = catchAsync(
         data: {},
       });
 
+    const memberIds = chats.flatMap((chat: any) => chat.members);
+    const members = await User.find(
+      { _id: { $in: memberIds } },
+      'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
+    );
+
+    const lastMessages = await getLastMessage(chats);
+
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: { chats },
+      data: { chats, members, lastMessages },
     });
   }
 );
@@ -65,10 +71,12 @@ export const getAllChats = catchAsync(
 export const getMessages = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { chatId } = req.params;
+
     const page: number = parseInt(req.query.page as string, 10) || 1;
     const limit: number = parseInt(req.query.limit as string, 10) || 100;
     const skip: number = (page - 1) * limit;
     const messages = await Message.find({ chatId }).limit(limit).skip(skip);
+
     res.status(200).json({
       status: 'success',
       message: 'messages retreived successfuly',
