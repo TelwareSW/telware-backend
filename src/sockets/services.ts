@@ -11,8 +11,8 @@ export const handleSendMessage = async (
   data: any,
   func: Function
 ) => {
-  const { content, contentType, senderId, isFirstTime, chatType, chatId } =
-    data;
+  let { chatId } = data;
+  const { content, contentType, senderId, isFirstTime, chatType } = data;
   if (!content || !contentType || !senderId || !chatType || !chatId)
     return func({
       success: false,
@@ -22,7 +22,11 @@ export const handleSendMessage = async (
 
   if (isFirstTime) {
     const members = [chatId, senderId];
-    await NormalChat.create(members);
+    const chat = new NormalChat({ members });
+    const id = String(chat._id);
+    await chat.save();
+    chatId = id;
+    socket.join(id);
   }
 
   const message = new Message({
@@ -33,6 +37,7 @@ export const handleSendMessage = async (
     messageType: chatType,
   });
   await message.save();
+
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
     messageId: message._id,

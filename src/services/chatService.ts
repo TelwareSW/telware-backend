@@ -24,7 +24,7 @@ export const getLastMessage = async (chats: any) => {
 
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
-  type: string
+  type?: string
 ): Promise<any> => {
   let chats;
   if (!type) chats = await Chat.find({ members: userId });
@@ -34,7 +34,7 @@ export const getChats = async (
 
 export const getChatIds = async (
   userId: mongoose.Types.ObjectId,
-  type: string
+  type?: string
 ) => {
   const chats = await getChats(userId, type);
   return chats.map((chat: any) => chat._id);
