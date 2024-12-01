@@ -374,6 +374,9 @@ router.get('/messages/:chatId', restrictToMembers, getMessages);
  *                   type: string
  *                   example: "No chat with the provided id"
  */
+router.get('/', getAllChats);
+router.get('/messages/:chatId', restrictToMembers, getMessages);
+
 router.patch('/destruct/:chatId', restrictToMembers, enableSelfDestructing);
 
 /**

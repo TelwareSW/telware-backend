@@ -189,8 +189,8 @@ const socketSetup = (server: HTTPServer) => {
      *                   description: The specific error (e.g., message not found or message is forwarded).
      */
 
-    socket.on('EDIT_MESSAGE', (data: any, func: Function) =>
-      handleEditMessage(data, func)
+    socket.on('EDIT_MESSAGE_CLIENT', (data: any, func: Function) =>
+      handleEditMessage(socket, data, func)
     );
 
     /**
