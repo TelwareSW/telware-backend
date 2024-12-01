@@ -27,20 +27,19 @@ router.use(protect);
  * @swagger
  * /chats:
  *   get:
- *     summary: Retrieve all chats for the authenticated user
- *     tags: [Chat]
- *     description: Get all chats (private, group, or channel) for the logged-in user. Optionally, filter by chat type.
+ *     summary: Retrieve all chats for the logged-in user.
+ *     tags:
+ *       - Chat
  *     parameters:
  *       - in: query
  *         name: type
- *         required: false
  *         schema:
  *           type: string
  *           enum: [private, group, channel]
- *         description: Filter chats by type (private, group, or channel).
+ *         description: Filter chats by their type.
  *     responses:
  *       200:
- *         description: Chats retrieved successfully or no chats found.
+ *         description: Success. Returns a list of chats, members, and their last messages.
  *         content:
  *           application/json:
  *             schema:
@@ -48,10 +47,10 @@ router.use(protect);
  *               properties:
  *                 status:
  *                   type: string
- *                   example: "success"
+ *                   example: success
  *                 message:
  *                   type: string
- *                   example: "Chats retrieved successfully"
+ *                   example: Chats retrieved successfully
  *                 data:
  *                   type: object
  *                   properties:
@@ -62,59 +61,88 @@ router.use(protect);
  *                         properties:
  *                           _id:
  *                             type: string
- *                             description: The chat ID.
+ *                             example: 64c2f99c6f1e4e21a0f6a5e8
  *                           isSeen:
  *                             type: boolean
- *                             description: Indicates if the chat has been seen.
+ *                             example: true
  *                           members:
  *                             type: array
- *                             description: List of chat members.
  *                             items:
- *                               type: object
- *                               properties:
- *                                 _id:
- *                                   type: string
- *                                   description: The user ID of the member.
- *                                 username:
- *                                   type: string
- *                                   description: Username of the member.
- *                                 screenFirstName:
- *                                   type: string
- *                                   description: Screen first name of the member.
- *                                 screenLastName:
- *                                   type: string
- *                                   description: Screen last name of the member.
- *                                 phoneNumber:
- *                                   type: string
- *                                   description: Phone number of the member.
- *                                 photo:
- *                                   type: string
- *                                   description: Profile photo URL of the member.
- *                                 status:
- *                                   type: string
- *                                   description: Status of the member.
- *                                 isAdmin:
- *                                   type: boolean
- *                                   description: Whether the member is an admin in the chat.
- *                                 Role:
- *                                   type: string
- *                                   description: Role of the member in the chat.
- *                                   enum: [member, admin, creator]
- *                                 stories:
- *                                   type: array
- *                                   description: List of user stories.
- *                                 blockedUsers:
- *                                   type: array
- *                                   description: List of blocked users by this member.
+ *                               type: string
+ *                               example: 64c2f8ad6f1e4e21a0f6a5d7
  *                           type:
  *                             type: string
- *                             description: The type of the chat (private, group, or channel).
  *                             enum: [private, group, channel]
+ *                             example: private
  *                           numberOfMembers:
- *                             type: number
- *                             description: number of members in the chat.
+ *                             type: integer
+ *                             example: 3
+ *                     members:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 64c2f8ad6f1e4e21a0f6a5d7
+ *                           username:
+ *                             type: string
+ *                             example: john_doe
+ *                           screenFirstName:
+ *                             type: string
+ *                             example: John
+ *                           screenLastName:
+ *                             type: string
+ *                             example: Doe
+ *                           phoneNumber:
+ *                             type: string
+ *                             example: +123456789
+ *                           photo:
+ *                             type: string
+ *                             example: john_doe.jpg
+ *                           status:
+ *                             type: string
+ *                             enum: [online, connected, offline]
+ *                             example: online
+ *                           isAdmin:
+ *                             type: boolean
+ *                             example: false
+ *                           stories:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                               example: 64c2fb5e6f1e4e21a0f6a6c9
+ *                           blockedUsers:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                               example: 64c2fca96f1e4e21a0f6a7f0
+ *                     lastMessages:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           chatId:
+ *                             type: string
+ *                             example: 64c2f99c6f1e4e21a0f6a5e8
+ *                           lastMessage:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                                 example: 64c2f8ad6f1e4e21a0f6a5d7
+ *                               content:
+ *                                 type: string
+ *                                 example: Hello, how are you?
+ *                               senderId:
+ *                                 type: string
+ *                                 example: 64c2f8ad6f1e4e21a0f6a5d7
+ *                               timestamp:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 example: 2024-12-01T12:34:56Z
  *       400:
- *         description: Bad Request - User not logged in or missing required fields.
+ *         description: Bad request. User is not logged in.
  *         content:
  *           application/json:
  *             schema:
@@ -122,16 +150,16 @@ router.use(protect);
  *               properties:
  *                 status:
  *                   type: string
- *                   example: "fail"
+ *                   example: error
  *                 message:
  *                   type: string
- *                   example: "you need to login first"
+ *                   example: You need to login first
  */
 router.get('/', getAllChats);
 
 /**
  * @swagger
- * /chats/:
+ * /chats:
  *   post:
  *     summary: Create a new chat
  *     tags: [Chat]
@@ -167,13 +195,58 @@ router.get('/', getAllChats);
  *               properties:
  *                 status:
  *                   type: string
- *                   example: "success"
+ *                   example: success
  *                 message:
  *                   type: string
- *                   example: "Chat created successfully"
+ *                   example: Chat created successfuly
  *                 data:
  *                   type: object
- *                   description: The newly created chat object.
+ *                   properties:
+ *                     isSeen:
+ *                       type: boolean
+ *                       example: true
+ *                     members:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                         example: "674b62b8595166a31cef6bad"
+ *                     type:
+ *                       type: string
+ *                       example: private
+ *                     _id:
+ *                       type: string
+ *                       example: "674cbe3338e993348d08ec2b"
+ *                     chatType:
+ *                       type: string
+ *                       example: GroupChannel
+ *                     name:
+ *                       type: string
+ *                       example: Study Group
+ *                     messagnigPermession:
+ *                       type: boolean
+ *                       example: true
+ *                     downloadingPermession:
+ *                       type: boolean
+ *                       example: true
+ *                     privacy:
+ *                       type: boolean
+ *                       example: true
+ *                     isFilterd:
+ *                       type: boolean
+ *                       example: false
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2024-12-01T19:51:15.947Z"
+ *                     __v:
+ *                       type: integer
+ *                       example: 0
+ *                     numberOfMembers:
+ *                       type: integer
+ *                       example: 1
+ *                     id:
+ *                       type: string
+ *                       example: "674cbe3338e993348d08ec2b"
  *       400:
  *         description: Bad Request - Missing required fields or user not logged in.
  *         content:
@@ -241,31 +314,66 @@ router.post('/', createChat);
  *               properties:
  *                 status:
  *                   type: string
- *                   example: "success"
+ *                   example: success
  *                 message:
  *                   type: string
- *                   example: "messages retrieved successfully"
+ *                   example: messages retrieved successfully
  *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         description: The message ID.
- *                       chatId:
- *                         type: string
- *                         description: The ID of the chat.
- *                       content:
- *                         type: string
- *                         description: The message content.
- *                       sender:
- *                         type: string
- *                         description: The ID of the sender.
- *                       timestamp:
- *                         type: string
- *                         format: date-time
- *                         description: The time the message was sent.
+ *                   type: object
+ *                   properties:
+ *                     messages:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "674cbbba97faf0d2e8a93846"
+ *                           content:
+ *                             type: string
+ *                             example: this should disappear
+ *                           contentType:
+ *                             type: string
+ *                             example: text
+ *                           isPinned:
+ *                             type: boolean
+ *                             example: false
+ *                           isForward:
+ *                             type: boolean
+ *                             example: false
+ *                           senderId:
+ *                             type: string
+ *                             example: "674b62b8595166a31cef6bad"
+ *                           chatId:
+ *                             type: string
+ *                             example: "674b62b9595166a31cef6c13"
+ *                           parentMessage:
+ *                             type: string
+ *                             example: "674b62b9595166a31cef6c12"
+ *                           timestamp:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2024-12-01T19:37:56.399Z"
+ *                           isAnnouncement:
+ *                             type: boolean
+ *                             example: false
+ *                           threadMessages:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                             example: []
+ *                           messageType:
+ *                             type: string
+ *                             example: private
+ *                           __v:
+ *                             type: integer
+ *                             example: 0
+ *                           id:
+ *                             type: string
+ *                             example: "674cbbba97faf0d2e8a93846"
+ *                     nextPage:
+ *                       type: integer
+ *                       example: 2
  *       400:
  *         description: Bad Request - Chat does not exist.
  *         content:
@@ -563,10 +671,6 @@ router.post('/media', upload.single('file'), postMediaFile);
  *                               isAdmin:
  *                                 type: boolean
  *                                 description: Whether the member is an admin in the chat.
- *                               Role:
- *                                 type: string
- *                                 description: Role of the member in the chat.
- *                                 enum: [member, admin, creator]
  *                               stories:
  *                                 type: array
  *                                 description: List of user stories.

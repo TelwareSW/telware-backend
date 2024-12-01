@@ -135,7 +135,10 @@ export const disableSelfDestructing = catchAsync(
 
 export const getChat = catchAsync(async (req: Request, res: Response) => {
   const { chatId } = req.params;
-  const chat = await Chat.findById(chatId).populate('members');
+  const chat = await Chat.findById(chatId).populate(
+    'members',
+    'username screenFirstName screenLastName phoneNumber photo status isAdmin'
+  );
   if (!chat) {
     throw new AppError('No chat with the provided id', 404);
   }
