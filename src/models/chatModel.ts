@@ -5,7 +5,6 @@ const chatSchema = new mongoose.Schema<IChat>(
   {
     isSeen: {
       type: Boolean,
-      required: true,
       default: true,
     },
     members: [
@@ -15,6 +14,7 @@ const chatSchema = new mongoose.Schema<IChat>(
         Role: {
           type: String,
           enum: ['member', 'admin', 'creator'],
+          default: 'member',
         },
       },
     ],

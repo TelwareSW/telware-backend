@@ -15,7 +15,7 @@ import {
 import registerMessagesHandlers from './messages';
 
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
-  const chatIds = await getChatIds(userId, 'all');
+  const chatIds = await getChatIds(userId);
   chatIds.forEach((chatId: mongoose.Types.ObjectId) => {
     socket.join(chatId.toString());
   });
@@ -190,8 +190,8 @@ const socketSetup = (server: HTTPServer) => {
      *                   description: The specific error (e.g., message not found or message is forwarded).
      */
 
-    socket.on('EDIT_MESSAGE', (data: any, func: Function) =>
-      handleEditMessage(data, func)
+    socket.on('EDIT_MESSAGE_CLIENT', (data: any, func: Function) =>
+      handleEditMessage(socket, data, func)
     );
 
     /**
@@ -361,7 +361,7 @@ const socketSetup = (server: HTTPServer) => {
      */
 
     socket.on('DELETE_MESSAGE', (data: any, func: Function) =>
-      handleDeleteMessage(data, func)
+      handleDeleteMessage(socket, data, func)
     );
 
     /**

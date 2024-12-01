@@ -5,28 +5,36 @@ import NormalChat from '@base/models/normalChatModel';
 import IGroupChannel from '@base/types/groupChannel';
 import INormalChat from '@base/types/normalChat';
 import Message from '@base/models/messageModel';
+import { Socket } from 'socket.io';
+
+export const getLastMessage = async (chats: any) => {
+  const lastMessages = await Promise.all(
+    chats.map(async (chat: any) => {
+      const lastMessage = await Message.findOne({ chatId: chat._id })
+        .sort({ timestamp: -1 })
+        .select('content senderId timestamp');
+      return {
+        chatId: chat._id,
+        lastMessage,
+      };
+    })
+  );
+  return lastMessages;
+};
 
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
-  type: string
+  type?: string
 ): Promise<any> => {
-  //populate to be moved for better performance
-  const allChats = await Chat.find({ members: userId });
-
-  let requiredChats;
-  if (type === 'private') {
-    requiredChats = allChats.filter((chat) => chat.type === 'private');
-  } else if (type === 'group') {
-    requiredChats = allChats.filter((chat) => chat.type === 'group');
-  } else if (type === 'channel') {
-    requiredChats = allChats.filter((chat) => chat.type === 'channel');
-  } else return allChats;
-  return requiredChats;
+  let chats;
+  if (!type) chats = await Chat.find({ members: userId });
+  else chats = await Chat.find({ members: userId, type });
+  return chats;
 };
 
 export const getChatIds = async (
   userId: mongoose.Types.ObjectId,
-  type: string
+  type?: string
 ) => {
   const chats = await getChats(userId, type);
   return chats.map((chat: any) => chat._id);
@@ -35,27 +43,26 @@ export const getChatIds = async (
 export const createNewChat = async (
   data: any
 ): Promise<INormalChat | IGroupChannel> => {
-  const { type, name, members } = data;
-  let newChat: INormalChat | IGroupChannel;
-  if (type && type === 'private') {
-    newChat = new NormalChat({
-      members,
-    });
-  } else {
-    newChat = new GroupChannel({
-      name,
-      members,
-    });
-  }
+  const { name, members } = data;
+  const newChat = new GroupChannel({
+    name,
+    members,
+  });
   await newChat.save();
   return newChat;
 };
 
-export const enableDestruction = async (message: any, chatId: any) => {
+export const enableDestruction = async (
+  socket: Socket,
+  message: any,
+  chatId: any
+) => {
   const chat = await NormalChat.findById(chatId);
+  const messageId = message._id;
   if (chat && chat.destructionDuration) {
     setTimeout(async () => {
-      await Message.findByIdAndDelete(message._id);
+      await Message.findByIdAndDelete(messageId);
+      socket.to(chatId).emit('DESTRUCT_MESSAGE', messageId);
     }, chat.destructionDuration * 1000);
   }
 };
