@@ -344,6 +344,9 @@ router.post('/', createChat);
  *                       chatId:
  *                         type: string
  *                         example: "674b62b9595166a31cef6c13"
+ *                       parentMessage:
+ *                         type: string
+ *                         example: "674b62b9595166a31cef6c12"
  *                       timestamp:
  *                         type: string
  *                         format: date-time
@@ -662,10 +665,6 @@ router.post('/media', upload.single('file'), postMediaFile);
  *                               isAdmin:
  *                                 type: boolean
  *                                 description: Whether the member is an admin in the chat.
- *                               Role:
- *                                 type: string
- *                                 description: Role of the member in the chat.
- *                                 enum: [member, admin, creator]
  *                               stories:
  *                                 type: array
  *                                 description: List of user stories.
