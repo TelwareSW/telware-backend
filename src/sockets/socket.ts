@@ -360,7 +360,7 @@ const socketSetup = (server: HTTPServer) => {
      */
 
     socket.on('DELETE_MESSAGE', (data: any, func: Function) =>
-      handleDeleteMessage(data, func)
+      handleDeleteMessage(socket, data, func)
     );
 
     /**
