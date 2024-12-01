@@ -36,7 +36,6 @@ export const createChat = catchAsync(
   }
 );
 
-//TODO: insert the lastMessage into the corresponding chat using aggregation for better performance
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user: IUser = req.user as IUser;
@@ -80,7 +79,7 @@ export const getMessages = catchAsync(
     res.status(200).json({
       status: 'success',
       message: 'messages retreived successfuly',
-      data: messages,
+      data: { messages, nextPage: page + 1 },
     });
   }
 );
