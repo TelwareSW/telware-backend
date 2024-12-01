@@ -43,10 +43,23 @@ const messageSchema = new mongoose.Schema<IMessage>(
       type: Date,
       default: Date.now(),
     },
+    isAnnouncement: {
+      type: Boolean,
+      default: false,
+    },
+    parentMessage: mongoose.Types.ObjectId,
+    threadMessages: [
+      {
+        type: mongoose.Types.ObjectId,
+        default: [],
+      },
+    ],
+    messageType: {
+      type: String,
+      enum: ['channel', 'group', 'private'],
+    },
   },
   {
-    discriminatorKey: 'messageType',
-    collection: 'Message',
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
