@@ -14,7 +14,7 @@ import {
 import registerMessagesHandlers from './messages';
 
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
-  const chatIds = await getChatIds(userId, 'all');
+  const chatIds = await getChatIds(userId);
   chatIds.forEach((chatId: mongoose.Types.ObjectId) => {
     socket.join(chatId.toString());
   });
