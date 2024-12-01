@@ -317,57 +317,63 @@ router.post('/', createChat);
  *                   example: success
  *                 message:
  *                   type: string
- *                   example: messages retreived successfuly
+ *                   example: messages retrieved successfully
  *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         example: "674cbbba97faf0d2e8a93846"
- *                       content:
- *                         type: string
- *                         example: this should disappear
- *                       contentType:
- *                         type: string
- *                         example: text
- *                       isPinned:
- *                         type: boolean
- *                         example: false
- *                       isForward:
- *                         type: boolean
- *                         example: false
- *                       senderId:
- *                         type: string
- *                         example: "674b62b8595166a31cef6bad"
- *                       chatId:
- *                         type: string
- *                         example: "674b62b9595166a31cef6c13"
- *                       parentMessage:
- *                         type: string
- *                         example: "674b62b9595166a31cef6c12"
- *                       timestamp:
- *                         type: string
- *                         format: date-time
- *                         example: "2024-12-01T19:37:56.399Z"
- *                       isAnnouncement:
- *                         type: boolean
- *                         example: false
- *                       threadMessages:
- *                         type: array
- *                         items:
- *                           type: string
- *                         example: []
- *                       messageType:
- *                         type: string
- *                         example: private
- *                       __v:
- *                         type: integer
- *                         example: 0
- *                       id:
- *                         type: string
- *                         example: "674cbbba97faf0d2e8a93846"
+ *                   type: object
+ *                   properties:
+ *                     messages:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "674cbbba97faf0d2e8a93846"
+ *                           content:
+ *                             type: string
+ *                             example: this should disappear
+ *                           contentType:
+ *                             type: string
+ *                             example: text
+ *                           isPinned:
+ *                             type: boolean
+ *                             example: false
+ *                           isForward:
+ *                             type: boolean
+ *                             example: false
+ *                           senderId:
+ *                             type: string
+ *                             example: "674b62b8595166a31cef6bad"
+ *                           chatId:
+ *                             type: string
+ *                             example: "674b62b9595166a31cef6c13"
+ *                           parentMessage:
+ *                             type: string
+ *                             example: "674b62b9595166a31cef6c12"
+ *                           timestamp:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2024-12-01T19:37:56.399Z"
+ *                           isAnnouncement:
+ *                             type: boolean
+ *                             example: false
+ *                           threadMessages:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                             example: []
+ *                           messageType:
+ *                             type: string
+ *                             example: private
+ *                           __v:
+ *                             type: integer
+ *                             example: 0
+ *                           id:
+ *                             type: string
+ *                             example: "674cbbba97faf0d2e8a93846"
+ *                     nextPage:
+ *                       type: integer
+ *                       example: 2
  *       400:
  *         description: Bad Request - Chat does not exist.
  *         content:
