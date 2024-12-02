@@ -4,10 +4,13 @@ import { ObjectId } from 'mongoose';
 import redisClient from '@config/redis';
 import UAParser from 'ua-parser-js';
 
-export const getSocketsByUserId = (userId: ObjectId): string[] => ['socketIds'];
+export const getSocketsByUserId = async (userId: ObjectId) =>
+  redisClient.sMembers(`user:${userId}:sockets`);
 
 export const generateSession = (req: any) => {
-  const sessionId = req.header('X-Session-Token') as string;
+  const sessionId = req.headers
+    ? (req.headers['X-Session-Token'] as string)
+    : undefined;
   return sessionId || randomUUID();
 };
 
@@ -21,9 +24,10 @@ export const getSession = (req: Request, sessionId: string) =>
     });
   });
 
-export const reloadSession = (req: Request) =>
+export const reloadSession = (req: any) =>
   new Promise((resolve, _reject) => {
-    req.session.reload((_error) => {
+    req.session.reload((_error: any) => {
+      if (_error) return _reject(_error);
       resolve(undefined);
     });
   });

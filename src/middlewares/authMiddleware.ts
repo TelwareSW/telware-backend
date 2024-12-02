@@ -29,6 +29,7 @@ export const protect = catchAsync(
       );
     }
     req.session.user.lastSeenTime = Date.now();
+    req.session.save();
     req.user = currentUser;
     next();
   }
@@ -47,4 +48,3 @@ export const isAdmin = catchAsync(
     next();
   }
 );
-
