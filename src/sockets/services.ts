@@ -8,8 +8,8 @@ import mongoose, { ObjectId } from 'mongoose';
 import { getSocketsByUserId } from '@base/services/sessionService';
 import User from '@base/models/userModel';
 
-const joinRoom = (io: any, roomId: String, userId: ObjectId) => {
-  const socketIds = getSocketsByUserId(userId);
+const joinRoom = async (io: any, roomId: String, userId: ObjectId) => {
+  const socketIds = await getSocketsByUserId(userId);
   socketIds.forEach((socketId: string) => {
     const socket = io.sockets.sockets.get(socketId);
     if (socket) socket.join(roomId);
@@ -73,7 +73,7 @@ export const handleSendMessage = async (
     const id = String(chat._id);
     await chat.save();
     socket.join(id);
-    joinRoom(io, id, chatId);
+    await joinRoom(io, id, chatId);
     await User.findByIdAndUpdate(senderId, { chats: id });
     await User.findByIdAndUpdate(chatId, { chats: id });
     chatId = id;
