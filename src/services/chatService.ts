@@ -10,9 +10,9 @@ import { Socket } from 'socket.io';
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
     chats.map(async (chat: any) => {
-      const lastMessage = await Message.findOne({ chatId: chat._id })
-        .sort({ timestamp: -1 })
-        .select('content senderId timestamp');
+      const lastMessage = await Message.findOne({ chatId: chat._id }).sort({
+        timestamp: -1,
+      });
       return {
         chatId: chat._id,
         lastMessage,
