@@ -3,10 +3,8 @@ import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema<IMessage>(
   {
-    content: {
-      type: String,
-      required: [true, 'a message must have content'],
-    },
+    content: String,
+    media: String,
     contentType: {
       type: String,
       enum: [

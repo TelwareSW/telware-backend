@@ -2,6 +2,7 @@ import { Document, Types } from 'mongoose';
 
 interface IMessage extends Document {
   timestamp: Date;
+  media: string;
   content: string;
   contentType: string;
   isPinned: boolean;

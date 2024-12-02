@@ -116,7 +116,7 @@ const socketSetup = (server: HTTPServer) => {
      */
 
     socket.on('SEND_MESSAGE', (data: any, func: Function) =>
-      handleSendMessage(socket, data, func)
+      handleSendMessage(io, socket, data, func)
     );
 
     /**

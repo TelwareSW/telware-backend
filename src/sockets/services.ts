@@ -5,9 +5,17 @@ import IMessage from '@base/types/message';
 import ChannelMessage from '@base/models/channelMessageModel';
 import redisClient from '@config/redis';
 import NormalChat from '@base/models/normalChatModel';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
+import { getSocketsByUserId } from '@base/services/sessionService';
 
-//TODO: handle the case where the user is not joined to the room and still tries to send a message
+const joinRoom = (io: any, roomId: String, userId: ObjectId) => {
+  const socketIds = getSocketsByUserId(userId);
+  socketIds.forEach((socketId: string) => {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket) socket.join(roomId);
+  });
+};
+
 export const handleDraftMessage = async (
   socket: Socket,
   data: any,
@@ -37,13 +45,14 @@ export const handleDraftMessage = async (
 
 // handleSendMessage function
 export const handleSendMessage = async (
+  io: any,
   socket: Socket,
   data: any,
   func: Function
 ) => {
   let { chatId } = data;
-  const { content, contentType, senderId, isFirstTime, chatType } = data;
-  if (!content || !contentType || !senderId || !chatType || !chatId)
+  const { media, content, contentType, senderId, isFirstTime, chatType } = data;
+  if ((!content && !media) || !contentType || !senderId || !chatType || !chatId)
     return func({
       success: false,
       message: 'Failed to send the message',
@@ -57,6 +66,7 @@ export const handleSendMessage = async (
     await chat.save();
     chatId = id;
     socket.join(id);
+    joinRoom(io, chatId, chatId);
   }
   const message = new Message({
     content,
@@ -64,6 +74,7 @@ export const handleSendMessage = async (
     chatId,
     senderId,
     messageType: chatType,
+    media,
   });
   await message.save();
   
