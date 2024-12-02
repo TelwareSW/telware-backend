@@ -71,7 +71,7 @@ const importData = async () => {
         const chat = await createRandomChat(createdUsers);
         await Promise.all(
           Array.from({ length: 10 }).map(() =>
-            createRandomMessage(createdUsers, chat)
+            createRandomMessage(chat.members, chat)
           )
         );
         chat.members.forEach(async (userRef: any) => {
@@ -83,8 +83,32 @@ const importData = async () => {
       })
     );
 
+    const firstTwoUsers = createdUsers
+      .filter(
+        (user: any) =>
+          user.username === 'test_user1' || user.username === 'test_user2'
+      )
+      .map((user: any) => ({
+        _id: user._id,
+      }));
+    const longChat = await Chat.create({
+      members: firstTwoUsers,
+      type: 'private',
+    });
+    await Promise.all(
+      Array.from({ length: 100 }).map(() =>
+        createRandomMessage(firstTwoUsers, longChat)
+      )
+    );
+
+    longChat.members.forEach(async (userRef: any) => {
+      await User.findByIdAndUpdate(userRef._id, {
+        $push: { chats: longChat._id },
+      });
+    });
+
     console.log(
-      `Successfully seeded ${createdUsers.length} users and ${chatsToSeed.length} chats.`
+      `Successfully seeded ${createdUsers.length} users and ${chatsToSeed.length + 1} chats.`
     );
   } catch (err) {
     console.error('Failed to seed user and chat data:');

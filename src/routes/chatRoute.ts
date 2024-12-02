@@ -7,7 +7,7 @@ import {
   enableSelfDestructing,
   disableSelfDestructing,
   getAllDrafts,
-  getDraft
+  getDraft,
   getChat,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
