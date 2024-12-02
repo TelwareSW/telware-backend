@@ -6,12 +6,10 @@ import { getChatIds } from '@services/chatService';
 import redisClient from '@base/config/redis';
 import mongoose from 'mongoose';
 import {
-  handleSendMessage,
   handleEditMessage,
   handleDeleteMessage,
-  handleForwardMessage,
-  handleReplyMessage,
   handleDraftMessage,
+  handleMessaging,
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
@@ -35,25 +33,19 @@ const socketSetup = (server: HTTPServer) => {
     const userId = socket.request.session.user.id;
     console.log(`New client with userID ${userId} connected: ${socket.id}`);
     await joinRooms(socket, new mongoose.Types.ObjectId(userId as string));
+
     socket.on('SEND_MESSAGE', (data: any, ack: Function) =>
-      handleSendMessage(io, socket, data, ack)
+      handleMessaging(io, socket, data, ack)
     );
 
     socket.on('EDIT_MESSAGE_CLIENT', (data: any, ack: Function) =>
       handleEditMessage(socket, data, ack)
     );
 
-    socket.on('REPLY_MESSAGE', (data: any, ack: Function) =>
-      handleReplyMessage(socket, data, ack)
-    );
-
     socket.on('DELETE_MESSAGE', (data: any, ack: Function) =>
       handleDeleteMessage(socket, data, ack)
     );
 
-    socket.on('FORWARD_MESSAGE', (data: any, ack: Function) =>
-      handleForwardMessage(socket, data, ack)
-    );
     socket.on('UPDATE_DRAFT', (data: any, ack: Function) =>
       handleDraftMessage(socket, data, ack)
     );
