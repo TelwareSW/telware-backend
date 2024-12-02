@@ -21,11 +21,20 @@ export const handleDraftMessage = async (
   func: Function
 ) => {
   try {
-    const { chatId, senderId, content, contentType, isFirstTime, chatType } = data;
+    const { chatId, senderId, content, contentType, isFirstTime, chatType } =
+      data;
 
     // Store draft in Redis
     const draftKey = `draft:${chatId}:${senderId}`;
-    const draftMessage = { content, contentType, chatId,isFirstTime,senderId, status: 'draft', chatType };
+    const draftMessage = {
+      content,
+      contentType,
+      chatId,
+      isFirstTime,
+      senderId,
+      status: 'draft',
+      chatType,
+    };
 
     await redisClient.setEx(draftKey, 86400, JSON.stringify(draftMessage));
 
@@ -42,7 +51,6 @@ export const handleDraftMessage = async (
   }
 };
 
-// handleSendMessage function
 export const handleSendMessage = async (
   io: any,
   socket: Socket,
@@ -76,9 +84,9 @@ export const handleSendMessage = async (
     media,
   });
   await message.save();
-  
+
   const draftKey = `draft:${chatId}:${senderId}`;
-  await redisClient.del(draftKey); 
+  await redisClient.del(draftKey);
 
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
@@ -100,7 +108,12 @@ export const handleEditMessage = async (
       message: 'Failed to edit the message',
       error: 'missing required Fields',
     });
-  const message = await Message.findByIdAndUpdate(messageId, { content });
+  const message = await Message.findByIdAndUpdate(
+    messageId,
+    { content },
+    { new: true }
+  );
+  console.log(message);
   if (!message)
     return func({
       success: false,
