@@ -5,12 +5,10 @@ import registerChatHandlers from '@base/sockets/chat';
 import { getChatIds } from '@services/chatService';
 import mongoose from 'mongoose';
 import {
-  handleSendMessage,
   handleEditMessage,
   handleDeleteMessage,
-  handleForwardMessage,
-  handleReplyMessage,
   handleDraftMessage,
+  handleMessaging,
 } from './services';
 import registerMessagesHandlers from './messages';
 
@@ -30,25 +28,19 @@ const socketSetup = (server: HTTPServer) => {
     const { userId } = socket.handshake.query;
     console.log(`New client connected: ${socket.id}`);
     await joinRooms(socket, new mongoose.Types.ObjectId(userId as string));
+
     socket.on('SEND_MESSAGE', (data: any, ack: Function) =>
-      handleSendMessage(io, socket, data, ack)
+      handleMessaging(io, socket, data, ack)
     );
 
     socket.on('EDIT_MESSAGE_CLIENT', (data: any, ack: Function) =>
       handleEditMessage(socket, data, ack)
     );
 
-    socket.on('REPLY_MESSAGE', (data: any, ack: Function) =>
-      handleReplyMessage(socket, data, ack)
-    );
-
     socket.on('DELETE_MESSAGE', (data: any, ack: Function) =>
       handleDeleteMessage(socket, data, ack)
     );
 
-    socket.on('FORWARD_MESSAGE', (data: any, ack: Function) =>
-      handleForwardMessage(socket, data, ack)
-    );
     socket.on('UPDATE_DRAFT', (data: any, ack: Function) =>
       handleDraftMessage(socket, data, ack)
     );
