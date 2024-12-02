@@ -27,6 +27,7 @@ export const createChat = catchAsync(
         },
       ],
     });
+    user.chats.push(newChat._id as mongoose.Types.ObjectId);
 
     await newChat.save();
     res.status(201).json({
@@ -136,7 +137,7 @@ export const disableSelfDestructing = catchAsync(
 
 export const getAllDrafts = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.query.userId as string; 
+    const userId = req.query.userId as string;
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -160,7 +161,7 @@ export const getAllDrafts = catchAsync(
         drafts,
       });
     } catch (error) {
-      return next(error); 
+      return next(error);
     }
   }
 );
@@ -187,7 +188,9 @@ export const getDraft = catchAsync(
       const drafts = JSON.parse(draftsData);
 
       if (chatId) {
-        const filteredDrafts = drafts.filter((draft: any) => draft.chatId === chatId);
+        const filteredDrafts = drafts.filter(
+          (draft: any) => draft.chatId === chatId
+        );
 
         if (filteredDrafts.length === 0) {
           return res.status(404).json({
@@ -207,7 +210,7 @@ export const getDraft = catchAsync(
         drafts,
       });
     } catch (error) {
-      return next(error); 
+      return next(error);
     }
   }
 );

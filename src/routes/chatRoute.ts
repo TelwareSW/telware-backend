@@ -20,14 +20,12 @@ router.use(protect);
 router.get('/', getAllChats);
 router.post('/', createChat);
 router.get('/messages/:chatId', restrictToMembers, getMessages);
-router.get('/', getAllChats);
 router.get('/messages/:chatId', restrictToMembers, getMessages);
 
 router.patch('/destruct/:chatId', restrictToMembers, enableSelfDestructing);
 router.patch('/un-destruct/:chatId', restrictToMembers, disableSelfDestructing);
 router.post('/media', upload.single('file'), postMediaFile);
 
-router.get('/:type?', getAllChats);
 router.get('/get-all-drafts', getAllDrafts);
 router.get('/:chatId', getChat);
 router.get('/get-draft', getDraft);

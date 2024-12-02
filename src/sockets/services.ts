@@ -6,6 +6,7 @@ import redisClient from '@config/redis';
 import NormalChat from '@base/models/normalChatModel';
 import mongoose, { ObjectId } from 'mongoose';
 import { getSocketsByUserId } from '@base/services/sessionService';
+import User from '@base/models/userModel';
 
 const joinRoom = (io: any, roomId: String, userId: ObjectId) => {
   const socketIds = getSocketsByUserId(userId);
@@ -71,9 +72,11 @@ export const handleSendMessage = async (
     const chat = new NormalChat({ members });
     const id = String(chat._id);
     await chat.save();
-    chatId = id;
     socket.join(id);
-    joinRoom(io, chatId, chatId);
+    joinRoom(io, id, chatId);
+    await User.findByIdAndUpdate(senderId, { chats: id });
+    await User.findByIdAndUpdate(chatId, { chats: id });
+    chatId = id;
   }
   const message = new Message({
     content,
