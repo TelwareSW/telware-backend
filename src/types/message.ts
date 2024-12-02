@@ -10,7 +10,7 @@ interface IMessage extends Document {
   isAnnouncement: boolean;
   senderId: Types.ObjectId;
   chatId: Types.ObjectId;
-  parentMessage: Types.ObjectId | undefined;
+  parentMessageId: Types.ObjectId | undefined;
   threadMessages: Types.ObjectId[];
   messageType: string;
 }

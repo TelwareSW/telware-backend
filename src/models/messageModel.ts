@@ -45,7 +45,7 @@ const messageSchema = new mongoose.Schema<IMessage>(
       type: Boolean,
       default: false,
     },
-    parentMessage: mongoose.Types.ObjectId,
+    parentMessageId: mongoose.Types.ObjectId,
     threadMessages: [
       {
         type: mongoose.Types.ObjectId,
