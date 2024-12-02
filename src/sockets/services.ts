@@ -2,7 +2,6 @@ import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
 import { enableDestruction } from '@base/services/chatService';
 import IMessage from '@base/types/message';
-import ChannelMessage from '@base/models/channelMessageModel';
 import redisClient from '@config/redis';
 import NormalChat from '@base/models/normalChatModel';
 import mongoose from 'mongoose';
