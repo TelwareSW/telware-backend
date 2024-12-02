@@ -14,11 +14,11 @@ const createTransporter = (provider: string) => {
     });
 
   return nodemailer.createTransport({
-    host: process.env.MAILTRAP_HOST,
+    host: process.env.GMAIL_HOST,
     port: Number(process.env.MAIL_PORT),
     auth: {
-      user: process.env.MAILTRAP_USERNAME,
-      pass: process.env.MAILTRAP_PASSWORD,
+      user: process.env.TELWARE_EMAIL,
+      pass: process.env.TELWARE_PASSWORD,
     },
   });
 };
