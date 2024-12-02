@@ -90,7 +90,7 @@ export const handleMessaging = async (
     isForward,
     senderId,
     chatId,
-    parentMessage: parentMessageId,
+    parentMessageId,
     messageType: chatType,
   });
   await message.save();
