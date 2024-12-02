@@ -72,7 +72,7 @@ export const getMessages = catchAsync(
     const { chatId } = req.params;
 
     const page: number = parseInt(req.query.page as string, 10) || 1;
-    const limit: number = parseInt(req.query.limit as string, 10) || 100;
+    const limit: number = parseInt(req.query.limit as string, 10) || 20;
     const skip: number = (page - 1) * limit;
     const messages = await Message.find({ chatId }).limit(limit).skip(skip);
 
