@@ -594,3 +594,224 @@
  *                   type: string
  *                   description: Details about the error (e.g., draft not found).
  */
+
+/**
+ * @swagger
+ * /RECEIVE_REPLY:
+ *   post:
+ *     summary: Receives a reply to a specific message in a chat room.
+ *     description: This endpoint handles receiving a reply to a specific message in a chat. The reply will be saved and broadcast to the other members of the chat.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chatId
+ *               - content
+ *               - messageId
+ *               - senderId
+ *               - parentMsgId
+ *               - type
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique ID of the chat where the reply is sent.
+ *               content:
+ *                 type: string
+ *                 description: The content of the reply message.
+ *               messageId:
+ *                 type: string
+ *                 description: The unique ID of the message being sent.
+ *               senderId:
+ *                 type: string
+ *                 description: The unique ID of the sender of the reply.
+ *               parentMsgId:
+ *                 type: string
+ *                 description: The unique ID of the message being replied to.
+ *               type:
+ *                 type: ContentType
+ *                 description: The type of the content (e.g., "text", "image", "video").
+ *     responses:
+ *       200:
+ *         description: Successfully received the reply.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: A success message describing the result.
+ *                   example: "Reply received successfully."
+ *                 res:
+ *                   type: object
+ *                   description: Additional data for a successful operation, including the message ID.
+ *                   properties:
+ *                     messageId:
+ *                       type: string
+ *                       description: The unique ID of the reply message.
+ *                       example: "5f1d7e7d2c8b961a8f56b0de"
+ *       400:
+ *         description: Missing required fields or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was unsuccessful.
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: An error message describing the issue.
+ *                   example: "Failed to receive the reply"
+ *                 error:
+ *                   type: string
+ *                   description: The error reason (e.g., "missing required fields").
+ *                   example: "missing required fields"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was unsuccessful.
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the result.
+ *                   example: "Internal server error."
+ *                 error:
+ *                   type: string
+ *                   description: Details about the error.
+ *                   example: "Database save failed"
+ */
+
+/**
+ * @swagger
+ * /RECEIVE_MESSAGE:
+ *   post:
+ *     summary: Receives a message in a chat room.
+ *     description: This endpoint handles receiving a message in a chat. The message will be saved and broadcast to the other members of the chat.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chatId
+ *               - content
+ *               - messageId
+ *               - senderId
+ *               - type
+ *               - timestamp
+ *               - messageType
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique ID of the chat where the message is sent.
+ *               content:
+ *                 type: string
+ *                 description: The content of the message.
+ *               messageId:
+ *                 type: string
+ *                 description: The unique ID of the message being sent.
+ *               senderId:
+ *                 type: string
+ *                 description: The unique ID of the sender of the message.
+ *               type:
+ *                 type: ContentType
+ *                 description: The type of the content (e.g., "text", "image", "video").
+ *               timestamp:
+ *                 type: string
+ *                 description: The timestamp of when the message was sent.
+ *               autoDeleteTimeStamp:
+ *                 type: string
+ *                 nullable: true
+ *                 description: The timestamp indicating when the message will be automatically deleted, if applicable.
+ *               messageType:
+ *                 type: MessageType
+ *                 enum:
+ *                   - normal
+ *                   - announcement
+ *                   - forward
+ *                 description: The type of the message, such as "normal", "announcement", or "forward".
+ *               media:
+ *                 type: string
+ *                 description: Optional media content attached to the message (e.g., image URL, video link).
+ *     responses:
+ *       200:
+ *         description: Successfully received the message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: A success message describing the result.
+ *                   example: "Message received successfully."
+ *                 res:
+ *                   type: object
+ *                   description: Additional data for a successful operation, including the message ID.
+ *                   properties:
+ *                     messageId:
+ *                       type: string
+ *                       description: The unique ID of the received message.
+ *                       example: "5f1d7e7d2c8b961a8f56b0de"
+ *       400:
+ *         description: Missing required fields or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was unsuccessful.
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: An error message describing the issue.
+ *                   example: "Failed to receive the message"
+ *                 error:
+ *                   type: string
+ *                   description: The error reason (e.g., "missing required fields").
+ *                   example: "missing required fields"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was unsuccessful.
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the result.
+ *                   example: "Internal server error."
+ *                 error:
+ *                   type: string
+ *                   description: Details about the error.
+ *                   example: "Database save failed"
+ */
