@@ -20,22 +20,33 @@ export const handleMessaging = async (
   io: any,
   socket: Socket,
   data: any,
-  ack: Function
+  ack: Function,
+  senderId: String
 ) => {
   let { chatId, media, content, contentType, parentMessageId } = data;
-  const { senderId, isFirstTime, chatType, isReply, isForward } = data;
+  const { isFirstTime, chatType, isReply, isForward } = data;
 
   if (
     (!isForward &&
       !content &&
       !media &&
-      (!contentType || !senderId || !chatType || !chatId)) ||
+      (!contentType || !chatType || !chatId)) ||
     ((isReply || isForward) && !parentMessageId)
   )
     return ack({
       success: false,
       message: 'Failed to send the message',
       error: 'missing required Fields',
+    });
+
+  if (
+    (isFirstTime && isReply) ||
+    (isForward && (content || media || contentType))
+  )
+    return ack({
+      success: false,
+      message: 'Failed to send the message',
+      error: 'conflicting fields',
     });
 
   if (isFirstTime) {
@@ -164,11 +175,11 @@ export const handleDeleteMessage = async (
 export const handleDraftMessage = async (
   socket: Socket,
   data: any,
-  ack: Function
+  ack: Function,
+  senderId: String
 ) => {
   try {
-    const { chatId, senderId, content, contentType, isFirstTime, chatType } =
-      data;
+    const { chatId, content, contentType, isFirstTime, chatType } = data;
 
     // Store draft in Redis
     const draftKey = `draft:${chatId}:${senderId}`;
