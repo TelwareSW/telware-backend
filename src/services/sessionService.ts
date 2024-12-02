@@ -4,6 +4,8 @@ import { ObjectId } from 'mongoose';
 import redisClient from '@config/redis';
 import UAParser from 'ua-parser-js';
 
+export const getSocketsByUserId = (userId: ObjectId): string[] => ['socketIds'];
+
 export const generateSession = (req: any) => {
   const sessionId = req.header('X-Session-Token') as string;
   return sessionId || randomUUID();

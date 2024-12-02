@@ -2,18 +2,56 @@ import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
 import { enableDestruction } from '@base/services/chatService';
 import IMessage from '@base/types/message';
+import redisClient from '@config/redis';
 import NormalChat from '@base/models/normalChatModel';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
+import { getSocketsByUserId } from '@base/services/sessionService';
 
-//TODO: handle the case where the user is not joined to the room and still tries to send a message
+const joinRoom = (io: any, roomId: String, userId: ObjectId) => {
+  const socketIds = getSocketsByUserId(userId);
+  socketIds.forEach((socketId: string) => {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket) socket.join(roomId);
+  });
+};
+
+export const handleDraftMessage = async (
+  socket: Socket,
+  data: any,
+  func: Function
+) => {
+  try {
+    const { chatId, senderId, content, contentType, isFirstTime, chatType } = data;
+
+    // Store draft in Redis
+    const draftKey = `draft:${chatId}:${senderId}`;
+    const draftMessage = { content, contentType, chatId,isFirstTime,senderId, status: 'draft', chatType };
+
+    await redisClient.setEx(draftKey, 86400, JSON.stringify(draftMessage));
+
+    // Emit the draft update to the client
+    socket.emit('RECEIVE_DRAFT', draftMessage);
+
+    const res = { messageId: draftKey };
+    func({ success: true, message: 'Draft saved', res });
+  } catch (error) {
+    func({
+      success: false,
+      message: 'Failed to save the draft',
+    });
+  }
+};
+
+// handleSendMessage function
 export const handleSendMessage = async (
+  io: any,
   socket: Socket,
   data: any,
   func: Function
 ) => {
   let { chatId } = data;
-  const { content, contentType, senderId, isFirstTime, chatType } = data;
-  if (!content || !contentType || !senderId || !chatType || !chatId)
+  const { media, content, contentType, senderId, isFirstTime, chatType } = data;
+  if ((!content && !media) || !contentType || !senderId || !chatType || !chatId)
     return func({
       success: false,
       message: 'Failed to send the message',
@@ -27,16 +65,20 @@ export const handleSendMessage = async (
     await chat.save();
     chatId = id;
     socket.join(id);
+    joinRoom(io, chatId, chatId);
   }
-
   const message = new Message({
     content,
     contentType,
     chatId,
     senderId,
     messageType: chatType,
+    media,
   });
   await message.save();
+  
+  const draftKey = `draft:${chatId}:${senderId}`;
+  await redisClient.del(draftKey); 
 
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {

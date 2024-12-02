@@ -6,6 +6,8 @@ import {
   postMediaFile,
   enableSelfDestructing,
   disableSelfDestructing,
+  getAllDrafts,
+  getDraft,
   getChat,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
@@ -599,6 +601,34 @@ router.patch('/un-destruct/:chatId', restrictToMembers, disableSelfDestructing);
  */
 router.post('/media', upload.single('file'), postMediaFile);
 
+// Should be either the last endpoint in the file or changed to not conflict with other endpoints.
+router.get('/:type?', getAllChats);
+/**
+ * @swagger
+ * /chats/get-all-drafts:
+ *   get:
+ *     summary: Get all drafts
+ *     tags: [Chat]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of drafts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   title:
+ *                     type: string
+ *                   content:
+ *                     type: string
+ */
+router.get('/get-all-drafts', getAllDrafts);
 /**
  * @swagger
  * /chats/{chatId}:
@@ -700,4 +730,28 @@ router.post('/media', upload.single('file'), postMediaFile);
  */
 router.get('/:chatId', getChat);
 
+/**
+ * @swagger
+ * /chats/get-draft:
+ *   get:
+ *     summary: Get a specific draft
+ *     tags: [Chat]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A draft's details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 title:
+ *                   type: string
+ *                 content:
+ *                   type: string
+ */
+router.get('/get-draft', getDraft);
 export default router;
