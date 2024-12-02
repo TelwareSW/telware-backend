@@ -10,6 +10,7 @@ import {
   handleDeleteMessage,
   handleForwardMessage,
   handleReplyMessage,
+  handleDraftMessage
 } from './services';
 import registerMessagesHandlers from './messages';
 
@@ -453,6 +454,93 @@ const socketSetup = (server: HTTPServer) => {
     socket.on('FORWARD_MESSAGE', (data: any, func: Function) =>
       handleForwardMessage(socket, data, func)
     );
+
+/**
+ * @swagger
+ * /UPDATE_DRAFT:
+ *   post:
+ *     summary: Updates a draft message
+ *     description: Updates an existing draft message with new content. The updated draft is saved and the client is notified of the update.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - draftId
+ *               - content
+ *               - userId
+ *             properties:
+ *               draftId:
+ *                 type: string
+ *                 description: The unique ID of the draft to be updated.
+ *               content:
+ *                 type: string
+ *                 description: The new content of the draft.
+ *               userId:
+ *                 type: string
+ *                 description: The unique ID of the user updating the draft.
+ *     responses:
+ *       200:
+ *         description: Draft updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the result.
+ *                 res:
+ *                   type: object
+ *                   description: The result of the update operation, containing the updated draft details.
+ *                   properties:
+ *                     draftId:
+ *                       type: string
+ *                       description: The unique ID of the updated draft.
+ *                     content:
+ *                       type: string
+ *                       description: The new content of the updated draft.
+ *       400:
+ *         description: Missing required fields or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: An error message describing the problem.
+ *                 error:
+ *                   type: string
+ *                   description: Details about the error (e.g., missing fields).
+ *       404:
+ *         description: No draft found with the provided ID or failed to update the draft.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: An error message describing the result.
+ *                 error:
+ *                   type: string
+ *                   description: Details about the error (e.g., draft not found).
+ */
+socket.on('UPDATE_DRAFT', (data: any, func: Function) =>
+  handleDraftMessage(socket, data, func));
 
     registerChatHandlers(io, socket);
     registerMessagesHandlers(io, socket);

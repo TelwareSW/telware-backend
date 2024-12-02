@@ -2,6 +2,8 @@ import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
 import { enableDestruction } from '@base/services/chatService';
 import IMessage from '@base/types/message';
+import ChannelMessage from '@base/models/channelMessageModel';
+import redisClient from '@config/redis';
 import NormalChat from '@base/models/normalChatModel';
 import mongoose, { ObjectId } from 'mongoose';
 import { getSocketsByUserId } from '@base/services/sessionService';
@@ -14,6 +16,34 @@ const joinRoom = (io: any, roomId: String, userId: ObjectId) => {
   });
 };
 
+export const handleDraftMessage = async (
+  socket: Socket,
+  data: any,
+  func: Function
+) => {
+  try {
+    const { chatId, senderId, content, contentType, isFirstTime, chatType } = data;
+
+    // Store draft in Redis
+    const draftKey = `draft:${chatId}:${senderId}`;
+    const draftMessage = { content, contentType, chatId,isFirstTime,senderId, status: 'draft', chatType };
+
+    await redisClient.setEx(draftKey, 86400, JSON.stringify(draftMessage));
+
+    // Emit the draft update to the client
+    socket.emit('RECEIVE_DRAFT', draftMessage);
+
+    const res = { messageId: draftKey };
+    func({ success: true, message: 'Draft saved', res });
+  } catch (error) {
+    func({
+      success: false,
+      message: 'Failed to save the draft',
+    });
+  }
+};
+
+// handleSendMessage function
 export const handleSendMessage = async (
   io: any,
   socket: Socket,
@@ -38,7 +68,6 @@ export const handleSendMessage = async (
     socket.join(id);
     joinRoom(io, chatId, chatId);
   }
-
   const message = new Message({
     content,
     contentType,
@@ -48,6 +77,9 @@ export const handleSendMessage = async (
     media,
   });
   await message.save();
+  
+  const draftKey = `draft:${chatId}:${senderId}`;
+  await redisClient.del(draftKey); 
 
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
