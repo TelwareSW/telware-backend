@@ -418,7 +418,7 @@
  * @swagger
  * /FORWARD_MESSAGE:
  *   post:
- *     summary: Forwards a Message
+ *     summary: Forwards a Message.
  *     description: Forwards an existing message to a new chat. The forwarded message is saved and emitted to the new chat.
  *     tags: [Sockets]
  *     requestBody:
@@ -457,9 +457,11 @@
  *                 success:
  *                   type: boolean
  *                   description: Indicates if the operation was successful.
+ *                   example: true
  *                 message:
  *                   type: string
  *                   description: A message describing the result.
+ *                   example: "Message forwarded successfully."
  *                 res:
  *                   type: object
  *                   description: The result of the forward operation, containing the forwarded message ID.
@@ -467,6 +469,7 @@
  *                     messageId:
  *                       type: string
  *                       description: The unique ID of the forwarded message.
+ *                       example: "64b87d2f34e62a3b6d07b8d7"
  *       400:
  *         description: Missing required fields or invalid input.
  *         content:
@@ -476,13 +479,16 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   description: Indicates if the operation was successful.
+ *                   description: Indicates if the operation was unsuccessful.
+ *                   example: false
  *                 message:
  *                   type: string
  *                   description: An error message describing the problem.
+ *                   example: "Failed to send the message"
  *                 error:
  *                   type: string
  *                   description: Details about the error (e.g., missing fields).
+ *                   example: "missing required Fields"
  *       404:
  *         description: No message found with the provided ID or failed to forward the message.
  *         content:
@@ -492,13 +498,16 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   description: Indicates if the operation was successful.
+ *                   description: Indicates if the operation was unsuccessful.
+ *                   example: false
  *                 message:
  *                   type: string
  *                   description: An error message describing the result.
+ *                   example: "Failed to forward the message"
  *                 error:
  *                   type: string
  *                   description: Details about the error (e.g., message not found).
+ *                   example: "No message found with the provided id"
  */
 
 /**

@@ -30,27 +30,27 @@ const socketSetup = (server: HTTPServer) => {
     const { userId } = socket.handshake.query;
     console.log(`New client connected: ${socket.id}`);
     await joinRooms(socket, new mongoose.Types.ObjectId(userId as string));
-    socket.on('SEND_MESSAGE', (data: any, func: Function) =>
-      handleSendMessage(io, socket, data, func)
+    socket.on('SEND_MESSAGE', (data: any, ack: Function) =>
+      handleSendMessage(io, socket, data, ack)
     );
 
-    socket.on('EDIT_MESSAGE_CLIENT', (data: any, func: Function) =>
-      handleEditMessage(socket, data, func)
+    socket.on('EDIT_MESSAGE_CLIENT', (data: any, ack: Function) =>
+      handleEditMessage(socket, data, ack)
     );
 
-    socket.on('REPLY_MESSAGE', (data: any, func: Function) =>
-      handleReplyMessage(socket, data, func)
+    socket.on('REPLY_MESSAGE', (data: any, ack: Function) =>
+      handleReplyMessage(socket, data, ack)
     );
 
-    socket.on('DELETE_MESSAGE', (data: any, func: Function) =>
-      handleDeleteMessage(socket, data, func)
+    socket.on('DELETE_MESSAGE', (data: any, ack: Function) =>
+      handleDeleteMessage(socket, data, ack)
     );
 
-    socket.on('FORWARD_MESSAGE', (data: any, func: Function) =>
-      handleForwardMessage(socket, data, func)
+    socket.on('FORWARD_MESSAGE', (data: any, ack: Function) =>
+      handleForwardMessage(socket, data, ack)
     );
-    socket.on('UPDATE_DRAFT', (data: any, func: Function) =>
-      handleDraftMessage(socket, data, func)
+    socket.on('UPDATE_DRAFT', (data: any, ack: Function) =>
+      handleDraftMessage(socket, data, ack)
     );
 
     registerChatHandlers(io, socket);

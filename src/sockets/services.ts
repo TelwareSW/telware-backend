@@ -18,7 +18,7 @@ const joinRoom = (io: any, roomId: String, userId: ObjectId) => {
 export const handleDraftMessage = async (
   socket: Socket,
   data: any,
-  func: Function
+  ack: Function
 ) => {
   try {
     const { chatId, senderId, content, contentType, isFirstTime, chatType } =
@@ -42,9 +42,9 @@ export const handleDraftMessage = async (
     socket.emit('RECEIVE_DRAFT', draftMessage);
 
     const res = { messageId: draftKey };
-    func({ success: true, message: 'Draft saved', res });
+    ack({ success: true, message: 'Draft saved', res });
   } catch (error) {
-    func({
+    ack({
       success: false,
       message: 'Failed to save the draft',
     });
@@ -55,12 +55,12 @@ export const handleSendMessage = async (
   io: any,
   socket: Socket,
   data: any,
-  func: Function
+  ack: Function
 ) => {
   let { chatId } = data;
   const { media, content, contentType, senderId, isFirstTime, chatType } = data;
   if ((!content && !media) || !contentType || !senderId || !chatType || !chatId)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to send the message',
       error: 'missing required Fields',
@@ -93,17 +93,17 @@ export const handleSendMessage = async (
     messageId: message._id,
   };
   enableDestruction(socket, message, chatId);
-  func({ success: true, message: 'Message sent successfully', res });
+  ack({ success: true, message: 'Message sent successfully', res });
 };
 
 export const handleEditMessage = async (
   socket: Socket,
   data: any,
-  func: Function
+  ack: Function
 ) => {
   const { messageId, content, chatId } = data;
   if (!messageId || !content)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to edit the message',
       error: 'missing required Fields',
@@ -115,19 +115,19 @@ export const handleEditMessage = async (
   );
   console.log(message);
   if (!message)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to edit the message',
       error: 'no message found with the provided id',
     });
   if (message.isForward)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to edit the message',
       error: 'cannot edit a forwarded message',
     });
   socket.to(chatId).emit('EDIT_MESSAGE_SERVER', message);
-  func({
+  ack({
     success: true,
     message: 'Message edited successfully',
     res: { message },
@@ -137,41 +137,41 @@ export const handleEditMessage = async (
 export const handleDeleteMessage = async (
   socket: Socket,
   data: any,
-  func: Function
+  ack: Function
 ) => {
   const { messageId, chatId } = data;
   if (!messageId)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to delete the message',
       error: 'missing required Fields',
     });
   const message = await Message.findByIdAndDelete(messageId);
   if (!message)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to delete the message',
       error: 'no message found with the provided id',
     });
   socket.to(chatId).emit(messageId);
-  func({ success: true, message: 'Message deleted successfully' });
+  ack({ success: true, message: 'Message deleted successfully' });
 };
 
 export const handleForwardMessage = async (
   socket: Socket,
   data: any,
-  func: Function
+  ack: Function
 ) => {
   const { chatId, messageId, senderId, chatType } = data;
   if (!senderId || !chatType || !chatId || !messageId)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to send the message',
       error: 'missing required Fields',
     });
   const message = (await Message.findById(messageId)) as IMessage;
   if (!message)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to forward the message',
       error: 'No message found with the provided id',
@@ -188,13 +188,13 @@ export const handleForwardMessage = async (
   const res = {
     messageId: forwardMessage._id,
   };
-  func({ success: true, message: 'Message forwarded successfully', res });
+  ack({ success: true, message: 'Message forwarded successfully', res });
 };
 
 export const handleReplyMessage = async (
   socket: Socket,
   data: any,
-  func: Function
+  ack: Function
 ) => {
   const { chatId, content, contentType, senderId, parentMessageId, chatType } =
     data;
@@ -206,7 +206,7 @@ export const handleReplyMessage = async (
     !parentMessageId ||
     !chatType
   )
-    return func({
+    return ack({
       success: false,
       message: 'Failed to send the message',
       error: 'missing required Fields',
@@ -225,7 +225,7 @@ export const handleReplyMessage = async (
   const replyId = reply._id as mongoose.Types.ObjectId;
   const parentChannelMessage = await Message.findById(parentMessageId);
   if (!parentChannelMessage)
-    return func({
+    return ack({
       success: false,
       message: 'Failed to reply to the message',
       error: 'No message found with the provided parent message id',
@@ -237,5 +237,5 @@ export const handleReplyMessage = async (
   const res = {
     messageId: reply._id,
   };
-  func({ success: true, message: 'Reply sent successfully', res });
+  ack({ success: true, message: 'Reply sent successfully', res });
 };
