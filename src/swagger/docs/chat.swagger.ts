@@ -4,7 +4,6 @@
  *  name: Chat
  *  description: The Chat Managing API
  */
-
 /**
  * @swagger
  * /chats:
@@ -116,6 +115,19 @@
  *                               content:
  *                                 type: string
  *                                 example: Hello, how are you?
+ *                               media:
+ *                                 type: string
+ *                                 example: null
+ *                               contentType:
+ *                                 type: string
+ *                                 enum: [text, image, GIF, sticker, audio, video, file, link]
+ *                                 example: text
+ *                               isPinned:
+ *                                 type: boolean
+ *                                 example: false
+ *                               isForward:
+ *                                 type: boolean
+ *                                 example: false
  *                               senderId:
  *                                 type: string
  *                                 example: 64c2f8ad6f1e4e21a0f6a5d7
@@ -123,6 +135,21 @@
  *                                 type: string
  *                                 format: date-time
  *                                 example: 2024-12-01T12:34:56Z
+ *                               isAnnouncement:
+ *                                 type: boolean
+ *                                 example: false
+ *                               parentMessage:
+ *                                 type: string
+ *                                 example: null
+ *                               threadMessages:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                   example: null
+ *                               messageType:
+ *                                 type: string
+ *                                 enum: [channel, group, private]
+ *                                 example: private
  *       400:
  *         description: Bad request. User is not logged in.
  *         content:
