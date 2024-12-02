@@ -18,7 +18,8 @@
     "migrate:down": "npx migrate-mongo down",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint --fix .",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "static-analysis": "node src/utils/static-analysis-script.mjs"
   },
   "author": "TelWare",
   "license": "ISC",
