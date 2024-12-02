@@ -30,6 +30,6 @@ export const authorizeSocket = (socket: Socket, next: any) => {
   const sessionToken = socket.handshake.auth.sessionId;
   const req = socket.request;
 
-  req.headers['X-Session-Token'] = sessionToken;
+  req.headers['x-session-token'] = sessionToken;
   sessionMiddleware(req as any, {} as any, next);
 };
