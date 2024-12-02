@@ -27,7 +27,6 @@ export const getSession = (req: Request, sessionId: string) =>
 export const reloadSession = (req: any) =>
   new Promise((resolve, _reject) => {
     req.session.reload((_error: any) => {
-      if (_error) return _reject(_error);
       resolve(undefined);
     });
   });
