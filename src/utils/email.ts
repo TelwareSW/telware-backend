@@ -24,7 +24,7 @@ const createTransporter = (provider: string) => {
 };
 
 const sendEmail = async (options: any) => {
-  const transporter = createTransporter('mailtrap');
+  const transporter = createTransporter('gmail');
 
   const mailOptions: MailOptions = {
     from: telwareTeam,
