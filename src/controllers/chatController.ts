@@ -1,33 +1,37 @@
 import AppError from '@base/errors/AppError';
-import Chat from '@base/models/chatModel';
 import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
-import { getChats, getLastMessage } from '@base/services/chatService';
+import { getChats } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import redisClient from '@config/redis';
+import { ParsedQs } from 'qs';
 
 export const createChat = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { type, name } = req.body;
+    const { type, name, members } = req.body;
     const user: IUser = req.user as IUser;
     if (!user) return next(new AppError('you need to login first', 400));
 
-    const newChat = new GroupChannel({
-      name,
-      type,
-      members: [
-        {
-          _id: user._id,
-          Role: 'creator',
-        },
-      ],
-    });
-    user.chats.push(newChat._id as mongoose.Types.ObjectId);
+    if ((!name && type !== 'private') || !type || !members)
+      return next(new AppError('please provide all required fields', 400));
+
+    let newChat;
+    if (type && type === 'private')
+      newChat = new NormalChat({
+        members,
+        type,
+      });
+    else
+      newChat = new GroupChannel({
+        name,
+        members,
+        type,
+      });
 
     await newChat.save();
     res.status(201).json({
@@ -41,10 +45,9 @@ export const createChat = catchAsync(
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user: IUser = req.user as IUser;
-    const type = req.query.type as string;
+    const { type } = req.params;
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
-
     const chats = await getChats(userId, type);
     if (chats.length === 0)
       return res.status(200).json({
@@ -58,13 +61,10 @@ export const getAllChats = catchAsync(
       { _id: { $in: memberIds } },
       'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
     );
-
-    const lastMessages = await getLastMessage(chats);
-
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: { chats, members, lastMessages },
+      data: { chats, members },
     });
   }
 );
@@ -72,16 +72,14 @@ export const getAllChats = catchAsync(
 export const getMessages = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { chatId } = req.params;
-
     const page: number = parseInt(req.query.page as string, 10) || 1;
-    const limit: number = parseInt(req.query.limit as string, 10) || 20;
+    const limit: number = parseInt(req.query.limit as string, 10) || 100;
     const skip: number = (page - 1) * limit;
     const messages = await Message.find({ chatId }).limit(limit).skip(skip);
-
     res.status(200).json({
       status: 'success',
       message: 'messages retreived successfuly',
-      data: { messages, nextPage: page + 1 },
+      data: messages,
     });
   }
 );
@@ -134,10 +132,9 @@ export const disableSelfDestructing = catchAsync(
     });
   }
 );
-
 export const getAllDrafts = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.query.userId as string;
+    const {userId} = req.query;
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -146,8 +143,11 @@ export const getAllDrafts = catchAsync(
     }
 
     try {
-      const draftKey = `drafts:${userId}`;
+      const draftKey = `draft:${userId}`;
+      console.log(draftKey)
       const draftsData = await redisClient.get(draftKey);
+      console.log(draftsData)
+
       if (!draftsData) {
         return res.status(404).json({
           success: false,
@@ -161,49 +161,65 @@ export const getAllDrafts = catchAsync(
         drafts,
       });
     } catch (error) {
-      return next(error);
+      return next(error); 
     }
   }
 );
 
 export const getDraft = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.query.userId as string;
-    const chatId = req.query.chatId as string;
+    console.log(req.query);
+    const { userId, chatId } = req.query;
+
     if (!userId) {
       return res.status(400).json({
         success: false,
         message: 'User ID is required',
       });
     }
+
     try {
-      const draftKey = `drafts:${userId}`;
+      const draftKey = `draft:${userId}`;
       const draftsData = await redisClient.get(draftKey);
+
       if (!draftsData) {
         return res.status(404).json({
           success: false,
           message: 'No draft messages found for this user',
         });
       }
-      const drafts = JSON.parse(draftsData);
+
+      let drafts: any = null;
+      try {
+        drafts = JSON.parse(draftsData);
+      } catch (err) {
+        console.error('Failed to parse drafts data:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to parse draft data',
+        });
+      }
+
+      if (!Array.isArray(drafts)) {
+        drafts = [drafts]; 
+      }
 
       if (chatId) {
-        const filteredDrafts = drafts.filter(
-          (draft: any) => draft.chatId === chatId
-        );
-
+        const filteredDrafts = drafts.filter((draft: { chatId: string | ParsedQs | string[] | ParsedQs[]; }) => draft.chatId === chatId);
         if (filteredDrafts.length === 0) {
           return res.status(404).json({
             success: false,
             message: `No draft messages found for chat ${chatId}`,
           });
         }
+
         return res.json({
           success: true,
           message: `Draft messages for chat ${chatId} synced`,
           drafts: filteredDrafts,
         });
       }
+
       return res.json({
         success: true,
         message: 'All draft messages synced',
@@ -214,22 +230,3 @@ export const getDraft = catchAsync(
     }
   }
 );
-
-export const getChat = catchAsync(async (req: Request, res: Response) => {
-  const { chatId } = req.params;
-  const chat = await Chat.findById(chatId).populate(
-    'members',
-    'username screenFirstName screenLastName phoneNumber photo status isAdmin'
-  );
-  if (!chat) {
-    throw new AppError('No chat with the provided id', 404);
-  }
-
-  return res.status(200).json({
-    status: 'success',
-    message: 'Chat retrieved successfuly',
-    data: {
-      chat,
-    },
-  });
-});
