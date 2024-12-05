@@ -9,7 +9,7 @@ export const getSocketsByUserId = async (userId: ObjectId) =>
 
 export const generateSession = (req: any) => {
   const sessionId = req.headers
-    ? (req.headers['X-Session-Token'] as string)
+    ? (req.headers['x-session-token'] as string)
     : undefined;
   return sessionId || randomUUID();
 };
@@ -27,7 +27,6 @@ export const getSession = (req: Request, sessionId: string) =>
 export const reloadSession = (req: any) =>
   new Promise((resolve, _reject) => {
     req.session.reload((_error: any) => {
-      if (_error) return _reject(_error);
       resolve(undefined);
     });
   });

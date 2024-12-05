@@ -1,0 +1,1101 @@
+{
+  "totalFiles": 65,
+  "errorCount": 0,
+  "warningCount": 33,
+  "fixableErrorCount": 0,
+  "fixableWarningCount": 0,
+  "details": [
+    {
+      "filePath": "/src/app.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/config/cors.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/config/env.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/config/fileUploads.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/config/mongoDB.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 15,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 15,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "error"
+              },
+              "fix": {
+                "range": [424, 472],
+                "text": ""
+              },
+              "desc": "Remove the console.error()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 21,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 21,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [563, 620],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 23,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 23,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [643, 691],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 24,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 24,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [696, 713],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/config/passport.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 36,
+          "column": 9,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 36,
+          "endColumn": 20,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [968, 987],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 72,
+          "column": 9,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 72,
+          "endColumn": 20,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [1926, 1945],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/config/redis.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 12,
+          "column": 34,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 12,
+          "endColumn": 45
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 16,
+          "column": 15,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 16,
+          "endColumn": 26
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 17,
+          "column": 19,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 17,
+          "endColumn": 30
+        }
+      ]
+    },
+    {
+      "filePath": "/src/config/session.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/controllers/authController.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/controllers/chatController.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/controllers/handlerFactory.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/controllers/privacyController.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/controllers/storyController.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/controllers/userController.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/database/migrations/20241021134336-init-database.js",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/database/seed/seed.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 11,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 11,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [261, 300],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 13,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 13,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [329, 380],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 15,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 15,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [403, 445],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 16,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 16,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [450, 467],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 22,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 22,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [544, 585],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 26,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 26,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [735, 787],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 29,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 29,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [845, 887],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 30,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 30,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [892, 909],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 38,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 38,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [1040, 1107],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/database/seed/userSeed.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 110,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 110,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [2950, 3063],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 114,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 114,
+          "endColumn": 18,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "error"
+              },
+              "fix": {
+                "range": [3086, 3138],
+                "text": ""
+              },
+              "desc": "Remove the console.error()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 115,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 115,
+          "endColumn": 18,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "error"
+              },
+              "fix": {
+                "range": [3143, 3199],
+                "text": ""
+              },
+              "desc": "Remove the console.error()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/errors/AppError.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/errors/errorHandlers.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/errors/globalErrorHandler.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 18,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 18,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [410, 435],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/errors/uncaughtExceptionHandler.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 2,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 2,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [52, 88],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 3,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 3,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "error"
+              },
+              "fix": {
+                "range": [91, 128],
+                "text": ""
+              },
+              "desc": "Remove the console.error()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/errors/unhandledRejectionHandler.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 2,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 2,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [53, 90],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 3,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 3,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "error"
+              },
+              "fix": {
+                "range": [93, 130],
+                "text": ""
+              },
+              "desc": "Remove the console.error()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/index.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/middlewares/authMiddleware.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/middlewares/chatMiddlewares.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/chatModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/communicationModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/groupChannelModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/messageModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/normalChatModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/storyModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/userModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/models/voiceCallModel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/routes/apiRoute.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/routes/authRoute.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/routes/chatRoute.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/routes/oauthRoute.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/routes/privacyRoute.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/routes/storyRoute.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/routes/userRoute.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/server.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 16,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 16,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [420, 469],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/services/authService.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 85,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 85,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [2705, 2757],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/services/chatService.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/services/sessionService.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/services/storyService.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/services/userService.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/sockets/chat.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 5,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 5,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [150, 185],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/sockets/messages.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/sockets/middlewares.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 24,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 24,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [796, 815],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/sockets/services.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 131,
+          "column": 3,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 131,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [3562, 3583],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/sockets/socket.ts",
+      "errors": [],
+      "warnings": [
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 34,
+          "column": 5,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 34,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [1042, 1114],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        },
+        {
+          "ruleId": "no-console",
+          "severity": 1,
+          "message": "Unexpected console statement.",
+          "line": 54,
+          "column": 7,
+          "nodeType": "MemberExpression",
+          "messageId": "unexpected",
+          "endLine": 54,
+          "endColumn": 18,
+          "suggestions": [
+            {
+              "messageId": "removeConsole",
+              "data": {
+                "propertyName": "log"
+              },
+              "fix": {
+                "range": [1714, 1785],
+                "text": ""
+              },
+              "desc": "Remove the console.log()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "/src/tests/auth.test.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/chat.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/communication.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/groupChannel.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/message.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/normalChat.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/recaptchaResponse.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/story.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/user.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/types/voiceCall.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/utils/catchAsync.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/utils/email.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/utils/emailMessages.ts",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "filePath": "/src/utils/generateConfirmationCode.ts",
+      "errors": [],
+      "warnings": []
+    }
+  ]
+}

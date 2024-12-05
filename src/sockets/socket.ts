@@ -35,7 +35,7 @@ const socketSetup = (server: HTTPServer) => {
     await joinRooms(socket, new mongoose.Types.ObjectId(userId as string));
 
     socket.on('SEND_MESSAGE', (data: any, ack: Function) =>
-      handleMessaging(io, socket, data, ack)
+      handleMessaging(io, socket, data, ack, userId)
     );
 
     socket.on('EDIT_MESSAGE_CLIENT', (data: any, ack: Function) =>
@@ -47,7 +47,7 @@ const socketSetup = (server: HTTPServer) => {
     );
 
     socket.on('UPDATE_DRAFT', (data: any, ack: Function) =>
-      handleDraftMessage(socket, data, ack)
+      handleDraftMessage(socket, data, ack, userId)
     );
 
     socket.on('disconnect', async () => {
