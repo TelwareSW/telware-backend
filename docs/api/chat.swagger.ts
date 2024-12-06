@@ -4,11 +4,13 @@
  *  name: Chat
  *  description: The Chat Managing API
  */
+
 /**
  * @swagger
  * /chats:
  *   get:
- *     summary: Retrieve all chats for the logged-in user.
+ *     summary: Retrieve all chats for the authenticated user.
+ *     description: Fetches all chats associated with the authenticated user, including chat members and the last messages in each chat.
  *     tags:
  *       - Chat
  *     parameters:
@@ -16,11 +18,10 @@
  *         name: type
  *         schema:
  *           type: string
- *           enum: [private, group, channel]
- *         description: Filter chats by their type.
+ *         description: Filter chats by type (e.g., "group", "private").
  *     responses:
  *       200:
- *         description: Success. Returns a list of chats, members, and their last messages.
+ *         description: Successfully retrieved all chats.
  *         content:
  *           application/json:
  *             schema:
@@ -42,22 +43,19 @@
  *                         properties:
  *                           _id:
  *                             type: string
- *                             example: 64c2f99c6f1e4e21a0f6a5e8
+ *                             description: Unique identifier for the chat.
  *                           isSeen:
  *                             type: boolean
- *                             example: true
- *                           members:
- *                             type: array
- *                             items:
- *                               type: string
- *                               example: 64c2f8ad6f1e4e21a0f6a5d7
+ *                             description: Indicates if the chat has been seen.
  *                           type:
  *                             type: string
- *                             enum: [private, group, channel]
- *                             example: private
+ *                             description: Type of chat (e.g., "group", "private").
  *                           numberOfMembers:
  *                             type: integer
- *                             example: 3
+ *                             description: Total number of members in the chat.
+ *                           id:
+ *                             type: string
+ *                             description: Alias for `_id`.
  *                     members:
  *                       type: array
  *                       items:
@@ -65,39 +63,13 @@
  *                         properties:
  *                           _id:
  *                             type: string
- *                             example: 64c2f8ad6f1e4e21a0f6a5d7
- *                           username:
+ *                             description: Unique identifier for the member.
+ *                           Role:
  *                             type: string
- *                             example: john_doe
- *                           screenFirstName:
+ *                             description: Role of the member in the chat (e.g., "creator", "admin", "member").
+ *                           id:
  *                             type: string
- *                             example: John
- *                           screenLastName:
- *                             type: string
- *                             example: Doe
- *                           phoneNumber:
- *                             type: string
- *                             example: +123456789
- *                           photo:
- *                             type: string
- *                             example: john_doe.jpg
- *                           status:
- *                             type: string
- *                             enum: [online, connected, offline]
- *                             example: online
- *                           isAdmin:
- *                             type: boolean
- *                             example: false
- *                           stories:
- *                             type: array
- *                             items:
- *                               type: string
- *                               example: 64c2fb5e6f1e4e21a0f6a6c9
- *                           blockedUsers:
- *                             type: array
- *                             items:
- *                               type: string
- *                               example: 64c2fca96f1e4e21a0f6a7f0
+ *                             description: Alias for `_id`.
  *                     lastMessages:
  *                       type: array
  *                       items:
@@ -105,53 +77,24 @@
  *                         properties:
  *                           chatId:
  *                             type: string
- *                             example: 64c2f99c6f1e4e21a0f6a5e8
- *                           lastMessage:
- *                             type: object
- *                             properties:
- *                               _id:
- *                                 type: string
- *                                 example: 64c2f8ad6f1e4e21a0f6a5d7
- *                               content:
- *                                 type: string
- *                                 example: Hello, how are you?
- *                               media:
- *                                 type: string
- *                                 example: null
- *                               contentType:
- *                                 type: string
- *                                 enum: [text, image, GIF, sticker, audio, video, file, link]
- *                                 example: text
- *                               isPinned:
- *                                 type: boolean
- *                                 example: false
- *                               isForward:
- *                                 type: boolean
- *                                 example: false
- *                               senderId:
- *                                 type: string
- *                                 example: 64c2f8ad6f1e4e21a0f6a5d7
- *                               timestamp:
- *                                 type: string
- *                                 format: date-time
- *                                 example: 2024-12-01T12:34:56Z
- *                               isAnnouncement:
- *                                 type: boolean
- *                                 example: false
- *                               parentMessage:
- *                                 type: string
- *                                 example: null
- *                               threadMessages:
- *                                 type: array
- *                                 items:
- *                                   type: string
- *                                   example: null
- *                               messageType:
- *                                 type: string
- *                                 enum: [channel, group, private]
- *                                 example: private
- *       400:
- *         description: Bad request. User is not logged in.
+ *                             description: Unique identifier of the chat this message belongs to.
+ *                           _id:
+ *                             type: string
+ *                             description: Unique identifier for the message.
+ *                           content:
+ *                             type: string
+ *                             description: Content of the message.
+ *                           contentType:
+ *                             type: string
+ *                             description: Type of content (e.g., "text", "image").
+ *                           isPinned:
+ *                             type: boolean
+ *                             description: Indicates if the message is pinned.
+ *                           isForward:
+ *                             type: boolean
+ *                             description: Indicates if the message was forwarded.
+ *       401:
+ *         description: User is not logged in or the request is invalid.
  *         content:
  *           application/json:
  *             schema:
@@ -163,15 +106,18 @@
  *                 message:
  *                   type: string
  *                   example: You need to login first
+ *       500:
+ *         description: Server error occurred.
  */
 
 /**
  * @swagger
  * /chats:
  *   post:
- *     summary: Create a new chat
- *     tags: [Chat]
- *     description: Create a new private or group chat. Requires the user to be authenticated.
+ *     summary: Create a new chat.
+ *     description: Allows an authenticated user to create a new chat with specified members. The creator is automatically assigned as the "creator" role, and other members are assigned the "member" role.
+ *     tags:
+ *       - Chat
  *     requestBody:
  *       required: true
  *       content:
@@ -181,18 +127,18 @@
  *             properties:
  *               type:
  *                 type: string
- *                 description: The type of the chat ('private' or 'group').
- *                 example: "private"
+ *                 description: Type of the chat (e.g., "group", "private").
+ *                 example: group
  *               name:
  *                 type: string
- *                 description: The name of the chat (required for group or channel chats).
- *                 example: "Study Group"
+ *                 description: Name of the chat.
+ *                 example: Project Team
  *               members:
  *                 type: array
- *                 description: An array of member IDs to include in the chat.
  *                 items:
  *                   type: string
- *                 example: ["674add2a35039e9581d4d752", "674add2a35039e9581d4d753"]
+ *                   description: User IDs of the members to add to the chat.
+ *                 example: ["63e1f5c2d1234e0012345678", "63e1f5c2d1234e0012345679"]
  *     responses:
  *       201:
  *         description: Chat created successfully.
@@ -206,70 +152,37 @@
  *                   example: success
  *                 message:
  *                   type: string
- *                   example: Chat created successfuly
+ *                   example: Chat created successfully
  *                 data:
  *                   type: object
  *                   properties:
- *                     isSeen:
- *                       type: boolean
- *                       example: true
+ *                     _id:
+ *                       type: string
+ *                       description: The unique ID of the created chat.
+ *                       example: "63e1f5c2d1234e0012345678"
+ *                     name:
+ *                       type: string
+ *                       description: Name of the chat.
+ *                       example: Project Team
+ *                     type:
+ *                       type: string
+ *                       description: Type of the chat.
+ *                       example: group
  *                     members:
  *                       type: array
  *                       items:
- *                         type: string
- *                         example: "674b62b8595166a31cef6bad"
- *                     type:
- *                       type: string
- *                       example: private
- *                     _id:
- *                       type: string
- *                       example: "674cbe3338e993348d08ec2b"
- *                     chatType:
- *                       type: string
- *                       example: GroupChannel
- *                     name:
- *                       type: string
- *                       example: Study Group
- *                     messagnigPermession:
- *                       type: boolean
- *                       example: true
- *                     downloadingPermession:
- *                       type: boolean
- *                       example: true
- *                     privacy:
- *                       type: boolean
- *                       example: true
- *                     isFilterd:
- *                       type: boolean
- *                       example: false
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-12-01T19:51:15.947Z"
- *                     __v:
- *                       type: integer
- *                       example: 0
- *                     numberOfMembers:
- *                       type: integer
- *                       example: 1
- *                     id:
- *                       type: string
- *                       example: "674cbe3338e993348d08ec2b"
- *       400:
- *         description: Bad Request - Missing required fields or user not logged in.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "fail"
- *                 message:
- *                   type: string
- *                   example: "Please provide all required fields"
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             description: Member ID.
+ *                             example: "63e1f5c2d1234e0012345678"
+ *                           Role:
+ *                             type: string
+ *                             description: Role of the member in the chat.
+ *                             example: member
  *       401:
- *         description: Unauthorized - User not logged in.
+ *         description: User not logged in or invalid request.
  *         content:
  *           application/json:
  *             schema:
@@ -277,10 +190,12 @@
  *               properties:
  *                 status:
  *                   type: string
- *                   example: "error"
+ *                   example: error
  *                 message:
  *                   type: string
- *                   example: "You need to login first"
+ *                   example: You need to login first
+ *       500:
+ *         description: Server error occurred.
  */
 
 /**
@@ -747,4 +662,77 @@
  *                   type: string
  *                 content:
  *                   type: string
+ */
+
+/**
+ * @swagger
+ * /chats/{chatId}:
+ *   delete:
+ *     summary: Delete a group chat by ID.
+ *     description: Deletes a group chat and removes all members. Marks the chat as deleted. This action is only allowed for the creator of the chat.
+ *     tags:
+ *       - Chat
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the chat to be deleted.
+ *     responses:
+ *       204:
+ *         description: Successfully deleted the chat.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: chat deleted successfully
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: No chat found with the provided ID or chat is already deleted.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: no chat found with the provided id
+ *       403:
+ *         description: You are not authorized to delete this chat. You must be the creator of the chat.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: you do not have permission
+ *       500:
+ *         description: Server error occurred.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
  */
