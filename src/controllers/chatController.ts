@@ -4,32 +4,53 @@ import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
-import { getChats, getLastMessage } from '@base/services/chatService';
+import {
+  getChats,
+  getLastMessage,
+  leaveGroupChannel,
+} from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 import redisClient from '@config/redis';
 
 export const createChat = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { type, name } = req.body;
+    const { type, name, members } = req.body;
     const user: IUser = req.user as IUser;
     if (!user) return next(new AppError('you need to login first', 400));
+
+    const membersWithRoles = members.map((id: ObjectId) => ({
+      _id: id,
+      Role: 'member',
+    }));
+    const allMembers = [
+      ...membersWithRoles,
+      {
+        _id: user._id,
+        Role: 'creator',
+      },
+    ];
 
     const newChat = new GroupChannel({
       name,
       type,
-      members: [
-        {
-          _id: user._id,
-          Role: 'creator',
-        },
-      ],
+      members: allMembers,
     });
-    user.chats.push(newChat._id as mongoose.Types.ObjectId);
-
     await newChat.save();
+
+    user.chats.push(newChat._id as mongoose.Types.ObjectId);
+    await Promise.all(
+      allMembers.map(async (memberId) => {
+        await User.findByIdAndUpdate(
+          memberId,
+          { $push: { chats: newChat._id } },
+          { new: true }
+        );
+      })
+    );
+
     res.status(201).json({
       status: 'success',
       message: 'Chat created successfuly',
@@ -44,27 +65,30 @@ export const getAllChats = catchAsync(
     const type = req.query.type as string;
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
-
-    const chats = await getChats(userId, type);
-    if (chats.length === 0)
+    const allChats = (await getChats(userId, type)).chats;
+    if (allChats.length === 0)
       return res.status(200).json({
         status: 'success',
         message: 'no chats found',
         data: {},
       });
-
-    const memberIds = chats.flatMap((chat: any) => chat.members);
+    const memberIds = [
+      ...new Set(
+        allChats.flatMap((chat: any) =>
+          chat.members.map((member: any) => member._id)
+        )
+      ),
+    ];
     const members = await User.find(
       { _id: { $in: memberIds } },
       'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
     );
-
-    const lastMessages = await getLastMessage(chats);
+    const lastMessages = await getLastMessage(allChats);
 
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: { chats, members, lastMessages },
+      data: { chats: allChats, members, lastMessages },
     });
   }
 );
@@ -224,7 +248,6 @@ export const getChat = catchAsync(async (req: Request, res: Response) => {
   if (!chat) {
     throw new AppError('No chat with the provided id', 404);
   }
-
   return res.status(200).json({
     status: 'success',
     message: 'Chat retrieved successfuly',
@@ -233,3 +256,36 @@ export const getChat = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
+
+export const deleteGroupChannel = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const chat = await Chat.findById(chatId);
+
+    if (!chat || chat.isDeleted)
+      return next(new AppError('no chat found with the provided id', 400));
+
+    chat.members = [];
+    chat.isDeleted = true;
+    await chat.save();
+
+    res.status(204).json({
+      status: 'success',
+      message: 'chat deleted successfuly',
+      data: {},
+    });
+  }
+);
+
+export const leaveChat = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user: IUser = req.user as IUser;
+    const userId: string = user._id as string;
+    leaveGroupChannel(req.params.id, userId);
+    res.status(200).json({
+      status: 'success',
+      message: 'left the group successfuly',
+      data: {},
+    });
+  }
+);
