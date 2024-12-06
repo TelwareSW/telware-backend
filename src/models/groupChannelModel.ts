@@ -27,7 +27,7 @@ const groupChannelSchema = new mongoose.Schema<IGroupChannel>(
     isFilterd: {
       type: Boolean,
       default: false,
-    }
+    },
   },
   {
     toJSON: { virtuals: true },

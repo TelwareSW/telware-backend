@@ -22,6 +22,10 @@ const chatSchema = new mongoose.Schema<IChat>(
       enum: ['private', 'group', 'channel'],
       default: 'private',
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     discriminatorKey: 'chatType',
