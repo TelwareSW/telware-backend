@@ -1,4 +1,3 @@
-import Chat from '@base/models/chatModel';
 import mongoose from 'mongoose';
 import GroupChannel from '@base/models/groupChannelModel';
 import NormalChat from '@base/models/normalChatModel';
@@ -6,6 +5,7 @@ import IGroupChannel from '@base/types/groupChannel';
 import INormalChat from '@base/types/normalChat';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
+import User from '@base/models/userModel';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
@@ -22,13 +22,26 @@ export const getLastMessage = async (chats: any) => {
   return lastMessages;
 };
 
+// export const getChats = async (
+//   userId: mongoose.Types.ObjectId,
+//   type?: string
+// ): Promise<any> => {
+//   const filter: any = { members: { $elemMatch: { _id: userId } } };
+//   if (type) filter.type = type;
+//   const chats = await Chat.find(filter);
+//   return chats;
+// };
+
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
   type?: string
 ): Promise<any> => {
-  let chats;
-  if (!type) chats = await Chat.find({ members: userId });
-  else chats = await Chat.find({ members: userId, type });
+  const chats = await User.findById(userId)
+    .select('chats')
+    .populate({
+      path: 'chats',
+      match: type ? { type } : {},
+    });
   return chats;
 };
 
@@ -66,3 +79,5 @@ export const enableDestruction = async (
     }, chat.destructionDuration * 1000);
   }
 };
+
+// export const leaveGroupChannel = async (chatId: ObjectId) => {};
