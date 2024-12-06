@@ -282,5 +282,10 @@ export const leaveChat = catchAsync(
     const user: IUser = req.user as IUser;
     const userId: string = user._id as string;
     leaveGroupChannel(req.params.id, userId);
+    res.status(200).json({
+      status: 'success',
+      message: 'left the group successfuly',
+      data: {},
+    });
   }
 );

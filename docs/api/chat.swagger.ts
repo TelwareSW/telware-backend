@@ -736,3 +736,78 @@
  *                   type: string
  *                   example: Internal server error
  */
+
+/**
+ * @swagger
+ * /chats/leave/{id}:
+ *   delete:
+ *     summary: Leave a chat group.
+ *     description: Allows the authenticated user to leave a group chat. The user will be removed from the group chat's members list.
+ *     tags:
+ *       - Chat
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the chat the user wants to leave.
+ *     responses:
+ *       200:
+ *         description: Successfully left the group.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: left the group successfully
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: User is not logged in or the request is invalid.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: You need to login first
+ *       403:
+ *         description: User is not a member of the group or lacks permissions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: You are not a member of this chat
+ *       404:
+ *         description: Chat not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: No chat found with the provided ID
+ *       500:
+ *         description: Server error occurred.
+ */
