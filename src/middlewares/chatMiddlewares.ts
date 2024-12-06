@@ -16,28 +16,29 @@ const restrictTo =
     const user: IUser = req.user as IUser;
     const userId: any = user._id;
     const chat = await Chat.findById(chatId);
-    if (!chat)
-      return next(new AppError('this chat does no longer exists', 400));
-
-    const chatMembers = chat.members;
-    if (!chatMembers)
-      return next(
-        new AppError(
-          'the chat has no members, you cannot access it anymore',
-          403
-        )
-      );
-    const member: Member = chatMembers.find((m) =>
-      m._id.equals(userId)
-    ) as unknown as Member;
-    if (!member)
+    const userChats = user.chats;
+    if (!userChats.includes(new mongoose.Types.ObjectId(chatId)))
       return next(
         new AppError(
           'you are not a member of this chat, you are not allowed here',
           403
         )
       );
-    if (chat.type !== 'private' && !roles.includes(member.Role))
+
+    if (!chat)
+      return next(new AppError('this chat does no longer exists', 400));
+
+    const chatMembers = chat.members;
+    const member: Member = chatMembers.find((m) =>
+      m._id.equals(userId)
+    ) as unknown as Member;
+
+    if (
+      member &&
+      chat.type !== 'private' &&
+      roles.length !== 0 &&
+      !roles.includes(member.Role)
+    )
       return next(new AppError('you do not have permission', 403));
     next();
   };

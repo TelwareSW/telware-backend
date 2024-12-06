@@ -10,6 +10,7 @@ import {
   getDraft,
   getChat,
   deleteGroupChannel,
+  leaveChat,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -26,10 +27,10 @@ router.patch('/destruct/:chatId', restrictTo(), enableSelfDestructing);
 router.patch('/un-destruct/:chatId', restrictTo(), disableSelfDestructing);
 router.post('/media', upload.single('file'), postMediaFile);
 
-router.get('/get-all-drafts', restrictTo(), getAllDrafts);
+router.get('/get-all-drafts', getAllDrafts);
+router.get('/get-draft', getDraft);
+
 router.get('/:chatId', restrictTo(), getChat);
-router.get('/get-draft', restrictTo(), getDraft);
-
 router.delete('/:chatId', restrictTo('creator'), deleteGroupChannel);
-
+router.delete('/chats/leave/:id', leaveChat);
 export default router;

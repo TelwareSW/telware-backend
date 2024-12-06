@@ -6,6 +6,7 @@ import INormalChat from '@base/types/normalChat';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
 import User from '@base/models/userModel';
+import Chat from '@base/models/chatModel';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
@@ -21,16 +22,6 @@ export const getLastMessage = async (chats: any) => {
   );
   return lastMessages;
 };
-
-// export const getChats = async (
-//   userId: mongoose.Types.ObjectId,
-//   type?: string
-// ): Promise<any> => {
-//   const filter: any = { members: { $elemMatch: { _id: userId } } };
-//   if (type) filter.type = type;
-//   const chats = await Chat.find(filter);
-//   return chats;
-// };
 
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
@@ -80,4 +71,9 @@ export const enableDestruction = async (
   }
 };
 
-// export const leaveGroupChannel = async (chatId: ObjectId) => {};
+export const leaveGroupChannel = async (chatId: string, member: string) => {
+  await Chat.updateOne(
+    { _id: chatId },
+    { $pull: { members: { _id: member } } }
+  );
+};
