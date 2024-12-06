@@ -23,9 +23,9 @@ export const createChat = catchAsync(
       members: [
         {
           _id: user._id,
-          Role: 'creator',
         },
       ],
+      roles: ['creator'],
     });
     user.chats.push(newChat._id as mongoose.Types.ObjectId);
 
@@ -44,27 +44,30 @@ export const getAllChats = catchAsync(
     const type = req.query.type as string;
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
-
-    const chats = await getChats(userId, type);
-    if (chats.length === 0)
+    const allChats = (await getChats(userId, type)).chats;
+    if (allChats.length === 0)
       return res.status(200).json({
         status: 'success',
         message: 'no chats found',
         data: {},
       });
-
-    const memberIds = chats.flatMap((chat: any) => chat.members);
+    const memberIds = [
+      ...new Set(
+        allChats.flatMap((chat: any) =>
+          chat.members.map((member: any) => member._id)
+        )
+      ),
+    ];
     const members = await User.find(
       { _id: { $in: memberIds } },
       'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
     );
-
-    const lastMessages = await getLastMessage(chats);
+    const lastMessages = await getLastMessage(allChats);
 
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: { chats, members, lastMessages },
+      data: { allChats, members, lastMessages },
     });
   }
 );
@@ -233,3 +236,18 @@ export const getChat = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
+
+export const deleteGroupChannel = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const chat = await Chat.findByIdAndDelete(chatId);
+    if (!chat)
+      return next(new AppError('no chat found with the provided id', 400));
+
+    res.status(204).json({
+      status: 'success',
+      message: 'chat deleted successfuly',
+      data: {},
+    });
+  }
+);

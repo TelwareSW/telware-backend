@@ -9,24 +9,27 @@ import {
   getAllDrafts,
   getDraft,
   getChat,
+  deleteGroupChannel,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
-import restrictToMembers from '@base/middlewares/chatMiddlewares';
+import restrictTo from '@base/middlewares/chatMiddlewares';
 
 const router = Router();
 
 router.use(protect);
 router.get('/', getAllChats);
 router.post('/', createChat);
-router.get('/messages/:chatId', restrictToMembers, getMessages);
-router.get('/messages/:chatId', restrictToMembers, getMessages);
+router.get('/messages/:chatId', restrictTo(), getMessages);
 
-router.patch('/destruct/:chatId', restrictToMembers, enableSelfDestructing);
-router.patch('/un-destruct/:chatId', restrictToMembers, disableSelfDestructing);
+router.patch('/destruct/:chatId', restrictTo(), enableSelfDestructing);
+router.patch('/un-destruct/:chatId', restrictTo(), disableSelfDestructing);
 router.post('/media', upload.single('file'), postMediaFile);
 
-router.get('/get-all-drafts', getAllDrafts);
-router.get('/:chatId', getChat);
-router.get('/get-draft', getDraft);
+router.get('/get-all-drafts', restrictTo(), getAllDrafts);
+router.get('/:chatId', restrictTo(), getChat);
+router.get('/get-draft', restrictTo(), getDraft);
+
+router.delete('/:chatId', restrictTo('creator'), deleteGroupChannel);
+
 export default router;
