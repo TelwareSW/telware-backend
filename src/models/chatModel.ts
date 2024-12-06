@@ -9,8 +9,7 @@ const chatSchema = new mongoose.Schema<IChat>(
     },
     members: [
       {
-        type: mongoose.Types.ObjectId,
-        ref: 'User',
+        user: { type: mongoose.Types.ObjectId, ref: 'User' },
         Role: {
           type: String,
           enum: ['member', 'admin', 'creator'],
@@ -22,6 +21,10 @@ const chatSchema = new mongoose.Schema<IChat>(
       type: String,
       enum: ['private', 'group', 'channel'],
       default: 'private',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
