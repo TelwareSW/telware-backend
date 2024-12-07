@@ -22,13 +22,13 @@ export const createChat = catchAsync(
     if (!user) return next(new AppError('you need to login first', 400));
 
     const membersWithRoles = members.map((id: ObjectId) => ({
-      _id: id,
+      user: id,
       Role: 'member',
     }));
     const allMembers = [
       ...membersWithRoles,
       {
-        _id: user._id,
+        user: user._id,
         Role: 'creator',
       },
     ];
@@ -40,15 +40,14 @@ export const createChat = catchAsync(
     });
     await newChat.save();
 
-    user.chats.push(newChat._id as mongoose.Types.ObjectId);
     await Promise.all(
-      allMembers.map(async (memberId) => {
-        await User.findByIdAndUpdate(
+      allMembers.map((memberId) =>
+        User.findByIdAndUpdate(
           memberId,
-          { $push: { chats: newChat._id } },
+          { $push: { chats: { chat: newChat._id } } },
           { new: true }
-        );
-      })
+        )
+      )
     );
 
     res.status(201).json({
@@ -75,7 +74,10 @@ export const getAllChats = catchAsync(
     const memberIds = [
       ...new Set(
         allChats.flatMap((chat: any) =>
-          chat.members.map((member: any) => member._id)
+          chat.chat.members.map((member: any) => {
+            console.log(member);
+            return member.user._id;
+          })
         )
       ),
     ];
@@ -242,7 +244,7 @@ export const getDraft = catchAsync(
 export const getChat = catchAsync(async (req: Request, res: Response) => {
   const { chatId } = req.params;
   const chat = await Chat.findById(chatId).populate(
-    'members',
+    'members.user',
     'username screenFirstName screenLastName phoneNumber photo status isAdmin'
   );
   if (!chat) {

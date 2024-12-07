@@ -192,7 +192,7 @@ const userSchema = new mongoose.Schema<IUser>(
     ],
     chats: [
       {
-        chatId: {
+        chat: {
           type: mongoose.Types.ObjectId,
           ref: 'Chat',
         },
