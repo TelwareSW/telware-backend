@@ -192,14 +192,16 @@ const userSchema = new mongoose.Schema<IUser>(
     ],
     chats: [
       {
-        type: mongoose.Types.ObjectId,
-        ref: 'Chat',
+        chatId: {
+          type: mongoose.Types.ObjectId,
+          ref: 'Chat',
+        },
         isMuted: {
           type: Boolean,
           default: false,
         },
         unmuteDuration: Number,
-        Draft: {
+        draft: {
           type: String,
           default: '',
         },

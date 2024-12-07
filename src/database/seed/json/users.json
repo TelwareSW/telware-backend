@@ -1,40 +1,100 @@
 [
   {
-    "email": "test1@gmail.com",
-    "username": "test_user1",
+    "email": "front1@gmail.com",
+    "username": "Batman",
+    "screenFirstName": "Bruce",
+    "screenLastName": "Wayne",
     "phoneNumber": "+201051046611",
     "password": "12345678",
     "passwordConfirm": "12345678",
     "accountStatus": "active"
   },
   {
-    "email": "test2@gmail.com",
-    "username": "test_user2",
+    "email": "front2@gmail.com",
+    "username": "Spiderman",
+    "screenFirstName": "Peter",
+    "screenLastName": "Parker",
     "phoneNumber": "+201055445511",
     "password": "12345678",
     "passwordConfirm": "12345678",
     "accountStatus": "active"
   },
   {
-    "email": "test3@gmail.com",
-    "username": "test_user3",
+    "email": "front3@gmail.com",
+    "username": "Superman",
+    "screenFirstName": "Clark",
+    "screenLastName": "Kent",
     "phoneNumber": "+201055287611",
     "password": "12345678",
     "passwordConfirm": "12345678",
     "accountStatus": "active"
   },
   {
-    "email": "test4@gmail.com",
-    "username": "test_user4",
+    "email": "front4@gmail.com",
+    "username": "Ironman",
+    "screenFirstName": "Tony",
+    "screenLastName": "Stark",
+    "phoneNumber": "+201050007611",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "front5@gmail.com",
+    "username": "Captain_America",
+    "screenFirstName": "Steve",
+    "screenLastName": "Rogers",
+    "phoneNumber": "+201055289991",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "cross1@gmail.com",
+    "username": "Incredible_Hulk",
+    "screenFirstName": "Bruce",
+    "screenLastName": "Banner",
     "phoneNumber": "+201077446611",
     "password": "12345678",
     "passwordConfirm": "12345678",
     "accountStatus": "active"
   },
   {
-    "email": "test5@gmail.com",
-    "username": "test_user5",
+    "email": "cross2@gmail.com",
+    "username": "Black_Widow",
+    "screenFirstName": "Natasha",
+    "screenLastName": "Romanoff",
     "phoneNumber": "+201055446690",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "cross3@gmail.com",
+    "username": "The_Villain",
+    "screenFirstName": "Thanos",
+    "screenLastName": "The-Mad-Titan",
+    "phoneNumber": "+201055446690",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "cross4@gmail.com",
+    "username": "Red_Skull",
+    "screenFirstName": "Johann",
+    "screenLastName": "Schmidt",
+    "phoneNumber": "+201012346690",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active"
+  },
+  {
+    "email": "cross5@gmail.com",
+    "username": "Ugly_Loki",
+    "screenFirstName": "Loki",
+    "screenLastName": "Laufeyson",
+    "phoneNumber": "+201055987690",
     "password": "12345678",
     "passwordConfirm": "12345678",
     "accountStatus": "active"

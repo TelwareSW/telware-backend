@@ -1,5 +1,6 @@
 import IMessage from '@base/types/message';
 import mongoose from 'mongoose';
+import Communication from './communicationModel';
 
 const messageSchema = new mongoose.Schema<IMessage>(
   {
@@ -27,20 +28,6 @@ const messageSchema = new mongoose.Schema<IMessage>(
       type: Boolean,
       default: false,
     },
-    senderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: [true, 'message must have senderId'],
-      ref: 'User',
-    },
-    chatId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: [true, 'message must have chatId'],
-      ref: 'Chat',
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now(),
-    },
     isAnnouncement: {
       type: Boolean,
       default: false,
@@ -52,10 +39,6 @@ const messageSchema = new mongoose.Schema<IMessage>(
         default: [],
       },
     ],
-    messageType: {
-      type: String,
-      enum: ['channel', 'group', 'private'],
-    },
   },
   {
     toJSON: { virtuals: true },
@@ -63,5 +46,5 @@ const messageSchema = new mongoose.Schema<IMessage>(
   }
 );
 
-const Message = mongoose.model('Message', messageSchema);
+const Message = Communication.discriminator('Message', messageSchema);
 export default Message;

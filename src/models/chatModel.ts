@@ -9,7 +9,7 @@ const chatSchema = new mongoose.Schema<IChat>(
     },
     members: [
       {
-        user: { type: mongoose.Types.ObjectId, ref: 'User' },
+        userId: { type: mongoose.Types.ObjectId, ref: 'User' },
         Role: {
           type: String,
           enum: ['member', 'admin', 'creator'],
