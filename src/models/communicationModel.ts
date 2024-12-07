@@ -6,24 +6,15 @@ const communicationSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    chat: {
-      type: mongoose.Types.ObjectId,
-      ref: 'Chat',
-    },
-    receivers: [
-      {
-        type: mongoose.Types.ObjectId,
-        ref: 'User',
-        status: {
-          type: String,
-          enum: ['sent', 'delivered', 'read'],
-          default: 'sent',
-        },
-      },
-    ],
-    sender: {
-      type: mongoose.Types.ObjectId,
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, 'message must have senderId'],
       ref: 'User',
+    },
+    chatId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, 'message must have chatId'],
+      ref: 'Chat',
     },
   },
   {
