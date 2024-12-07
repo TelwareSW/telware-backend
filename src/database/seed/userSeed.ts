@@ -1,8 +1,9 @@
 import fs from 'fs';
 import { faker } from '@faker-js/faker';
 import User from '@models/userModel';
-import Chat from '@models/chatModel';
 import Message from '@models/messageModel';
+import GroupChannel from '@base/models/groupChannelModel';
+import NormalChat from '@base/models/normalChatModel';
 
 const existingUsers = JSON.parse(
   fs.readFileSync(`${__dirname}/json/users.json`, 'utf-8')
@@ -26,32 +27,10 @@ const createRandomUser = () => {
   };
 };
 
-const fakerUsers = faker.helpers.multiple(createRandomUser, { count: 20 });
+const fakerUsers: any = faker.helpers.multiple(createRandomUser, { count: 10 });
 
-const createRandomChat = async (users: any[]) => {
-  const members = faker.helpers.arrayElements(
-    users,
-    faker.number.int({ min: 2, max: 15 })
-  );
-  const chatType = faker.helpers.arrayElement(['private', 'group', 'channel']);
-  if (chatType === 'private') members.length = 2;
-
-  const chat = {
-    members: members.map((user: any, index: Number) => ({
-      _id: user._id,
-      Role:
-        index === 0
-          ? 'creator'
-          : faker.helpers.arrayElement(['member', 'admin', 'creator']),
-    })),
-    type: chatType,
-  };
-
-  return Chat.create(chat);
-};
-
-const createRandomMessage = async (users: any[], chat: any) => {
-  const sender = faker.helpers.arrayElement(users);
+const createRandomMessage = async (chat: any) => {
+  const sender: any = faker.helpers.arrayElement(chat.members);
   const message = {
     content: faker.lorem.sentence(),
     senderId: sender._id,
@@ -61,55 +40,110 @@ const createRandomMessage = async (users: any[], chat: any) => {
   return Message.create(message);
 };
 
+const generateGroupName = () => {
+  const adjective = faker.word.adjective();
+  const noun = faker.word.noun();
+  return `${adjective} ${noun}`;
+};
+
+const createPublicChat = async (
+  users: any[],
+  takeAll?: boolean,
+  cType?: String
+) => {
+  let members;
+  let chatType;
+
+  if (takeAll) {
+    members = users;
+    chatType = cType;
+  } else {
+    members = faker.helpers.arrayElements(
+      users,
+      faker.number.int({ min: 1, max: users.length })
+    );
+    chatType = faker.helpers.arrayElement(['group', 'channel']);
+  }
+
+  const chat = await GroupChannel.create({
+    members: members.map((user: any, index: Number) => ({
+      _id: user._id,
+      Role:
+        index === 0
+          ? 'creator'
+          : faker.helpers.arrayElement(['member', 'admin']),
+    })),
+    name: generateGroupName(),
+    type: chatType,
+  });
+
+  chat.members.forEach(async (userRef: any) => {
+    await User.findByIdAndUpdate(userRef._id, {
+      $push: { chats: chat._id },
+    });
+  });
+
+  await Promise.all(
+    Array.from({ length: 100 }).map(() => createRandomMessage(chat))
+  );
+};
+
+const createPrivateChat = async (users: any[]) => {
+  const chat = await NormalChat.create({
+    members: users,
+  });
+
+  chat.members.forEach(async (userRef: any) => {
+    await User.findByIdAndUpdate(userRef._id, {
+      $push: { chats: chat._id },
+    });
+  });
+
+  await Promise.all(
+    Array.from({ length: 100 }).map(() => createRandomMessage(chat))
+  );
+};
+
 const importData = async () => {
   try {
-    const allUsers = [...existingUsers, ...fakerUsers];
-    const createdUsers = await User.create(allUsers);
-
-    const chatsToSeed = await Promise.all(
-      Array.from({ length: 10 }).map(async () => {
-        const chat = await createRandomChat(createdUsers);
-        await Promise.all(
-          Array.from({ length: 10 }).map(() =>
-            createRandomMessage(chat.members, chat)
-          )
-        );
-        chat.members.forEach(async (userRef: any) => {
-          await User.findByIdAndUpdate(userRef._id, {
-            $push: { chats: chat._id },
-          });
-        });
-        return chat;
+    const knownUsers = ((await User.create(existingUsers)) as any).map(
+      (user: any) => ({
+        user: user._id,
       })
     );
 
-    const firstTwoUsers = createdUsers
-      .filter(
-        (user: any) =>
-          user.username === 'test_user1' || user.username === 'test_user2'
-      )
-      .map((user: any) => ({
-        _id: user._id,
-      }));
-    const longChat = await Chat.create({
-      members: firstTwoUsers,
-      type: 'private',
-    });
+    const randomUsers = ((await User.create(fakerUsers)) as any).map(
+      (user: any) => ({
+        user: user._id,
+      })
+    );
+
+    // Create private chats between every pair of known users
     await Promise.all(
-      Array.from({ length: 100 }).map(() =>
-        createRandomMessage(firstTwoUsers, longChat)
-      )
+      knownUsers.map(async (user: any, index: number) => {
+        for (let i = index + 1; i < knownUsers.length; i += 1) {
+          createPrivateChat([user, knownUsers[i]]);
+        }
+      })
     );
 
-    longChat.members.forEach(async (userRef: any) => {
-      await User.findByIdAndUpdate(userRef._id, {
-        $push: { chats: longChat._id },
-      });
-    });
+    // Create Groups and Channels between known users
+    await Promise.all([
+      Array.from({ length: 5 }).map(() => createPublicChat(knownUsers)),
+      createPublicChat(knownUsers, true, 'channel'),
+      createPublicChat(knownUsers, true, 'group'),
+    ]);
 
-    console.log(
-      `Successfully seeded ${createdUsers.length} users and ${chatsToSeed.length + 1} chats.`
-    );
+    // Create random chats between random users
+    await Promise.all([
+      [
+        Array.from({ length: 5 }).map(() =>
+          createPublicChat([...knownUsers, ...randomUsers])
+        ),
+        createPublicChat([...knownUsers, ...randomUsers], true, 'channel'),
+        createPublicChat([...knownUsers, ...randomUsers], true, 'group'),
+      ],
+    ]);
   } catch (err) {
     console.error('Failed to seed user and chat data:');
     console.error(err instanceof Error ? err.message : err);

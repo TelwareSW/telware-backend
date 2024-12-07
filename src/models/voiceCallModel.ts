@@ -4,7 +4,7 @@ import Communication from './communicationModel';
 
 const voiceCallSchema = new mongoose.Schema<IVoiceCall>(
   {
-    Duration: {
+    duration: {
       type: Number,
       default: 0,
     },
