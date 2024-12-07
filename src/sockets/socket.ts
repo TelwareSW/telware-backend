@@ -10,6 +10,8 @@ import {
   handleDeleteMessage,
   handleDraftMessage,
   handleMessaging,
+  addAdminsHandler,
+  addMembers,
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
@@ -49,6 +51,14 @@ const socketSetup = (server: HTTPServer) => {
     socket.on('UPDATE_DRAFT', (data: any, ack: Function) =>
       handleDraftMessage(socket, data, ack, userId)
     );
+
+    socket.on('ADD_ADMINS_CLIENT', (data: any, ack: Function) => {
+      addAdminsHandler(io, data, ack, userId);
+    });
+
+    socket.on('ADD_MEMBERS_CLIENT', (data: any, ack: Function) => {
+      addMembers(io, data, ack, userId);
+    });
 
     socket.on('disconnect', async () => {
       console.log(`Client with userID ${userId} disconnected: ${socket.id}`);

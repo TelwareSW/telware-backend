@@ -12,7 +12,7 @@ export const getLastMessage = async (chats: any) => {
         timestamp: -1,
       });
       return {
-        chatId: chat.chat,
+        chatId: chat.chat._id,
         lastMessage,
       };
     })
@@ -24,13 +24,14 @@ export const getChats = async (
   userId: mongoose.Types.ObjectId,
   type?: string
 ): Promise<any> => {
-  const chats = await User.findById(userId)
+  const user = await User.findById(userId)
     .select('chats')
     .populate({
       path: 'chats.chat',
       match: type ? { type } : {},
     });
-  return chats;
+  if (!user) return;
+  return user.chats;
 };
 
 export const getChatIds = async (
@@ -38,6 +39,7 @@ export const getChatIds = async (
   type?: string
 ) => {
   const chats = await getChats(userId, type);
+  console.log(chats);
   return chats.map((chat: any) => chat._id);
 };
 

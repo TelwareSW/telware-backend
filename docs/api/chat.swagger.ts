@@ -10,7 +10,7 @@
  * /chats:
  *   get:
  *     summary: Retrieve all chats for the authenticated user.
- *     description: Fetches all chats associated with the authenticated user, including chat members and the last messages in each chat.
+ *     description: Fetches all chats associated with the authenticated user, including chat members, last messages, and chat details.
  *     tags:
  *       - Chat
  *     parameters:
@@ -41,30 +41,15 @@
  *                       items:
  *                         type: object
  *                         properties:
- *                           _id:
- *                             type: string
- *                             description: Unique identifier for the chat.
- *                           isSeen:
- *                             type: boolean
- *                             description: Indicates if the chat has been seen.
- *                           type:
- *                             type: string
- *                             description: Type of chat (e.g., "group", "private").
- *                           numberOfMembers:
- *                             type: integer
- *                             description: Total number of members in the chat.
- *                           id:
- *                             type: string
- *                             description: Alias for `_id`.
  *                           chat:
  *                             type: object
  *                             properties:
  *                               _id:
  *                                 type: string
+ *                                 description: Unique identifier for the chat.
  *                               isSeen:
  *                                 type: boolean
- *                               type:
- *                                 type: string
+ *                                 description: Indicates if the chat has been seen.
  *                               members:
  *                                 type: array
  *                                 items:
@@ -72,18 +57,46 @@
  *                                   properties:
  *                                     user:
  *                                       type: string
+ *                                       description: Unique identifier for the user.
  *                                     Role:
  *                                       type: string
+ *                                       description: Role of the user in the chat (e.g., member, admin).
  *                                     _id:
  *                                       type: string
+ *                                       description: Unique identifier for the membership entry.
  *                                     id:
  *                                       type: string
+ *                                       description: Alias for `_id`.
+ *                               type:
+ *                                 type: string
+ *                                 description: Type of the chat (e.g., "private", "group").
+ *                               isDeleted:
+ *                                 type: boolean
+ *                                 description: Indicates if the chat has been deleted.
+ *                               chatType:
+ *                                 type: string
+ *                                 description: Specific type of the chat (e.g., "NormalChat").
+ *                               __v:
+ *                                 type: integer
+ *                                 description: Version key.
  *                               numberOfMembers:
  *                                 type: integer
  *                                 description: Total number of members in the chat.
- *                               chatType:
+ *                               id:
  *                                 type: string
- *                                 description: The type of the chat.
+ *                                 description: Alias for `_id`.
+ *                           isMuted:
+ *                             type: boolean
+ *                             description: Indicates if the chat is muted.
+ *                           draft:
+ *                             type: string
+ *                             description: Draft message saved for the chat.
+ *                           _id:
+ *                             type: string
+ *                             description: Unique identifier for the chat entry.
+ *                           id:
+ *                             type: string
+ *                             description: Alias for `_id`.
  *                     members:
  *                       type: array
  *                       items:
@@ -109,7 +122,7 @@
  *                             description: URL to the member's photo.
  *                           status:
  *                             type: string
- *                             description: Current status of the member.
+ *                             description: Current status of the member (e.g., "offline").
  *                           isAdmin:
  *                             type: boolean
  *                             description: Whether the member is an admin.
@@ -117,10 +130,15 @@
  *                             type: array
  *                             items:
  *                               type: string
+ *                               description: IDs of the member's stories.
  *                           blockedUsers:
  *                             type: array
  *                             items:
  *                               type: string
+ *                               description: IDs of users blocked by this member.
+ *                           id:
+ *                             type: string
+ *                             description: Alias for `_id`.
  *                     lastMessages:
  *                       type: array
  *                       items:
@@ -129,21 +147,51 @@
  *                           chatId:
  *                             type: string
  *                             description: Unique identifier of the chat this message belongs to.
- *                           _id:
- *                             type: string
- *                             description: Unique identifier for the message.
- *                           content:
- *                             type: string
- *                             description: Content of the message.
- *                           contentType:
- *                             type: string
- *                             description: Type of content (e.g., "text", "image").
- *                           isPinned:
- *                             type: boolean
- *                             description: Indicates if the message is pinned.
- *                           isForward:
- *                             type: boolean
- *                             description: Indicates if the message was forwarded.
+ *                           lastMessage:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                                 description: Unique identifier for the message.
+ *                               senderId:
+ *                                 type: string
+ *                                 description: Unique identifier of the sender.
+ *                               chatId:
+ *                                 type: string
+ *                                 description: Unique identifier of the chat the message belongs to.
+ *                               communicationType:
+ *                                 type: string
+ *                                 description: Type of communication (e.g., "Message").
+ *                               content:
+ *                                 type: string
+ *                                 description: The content of the message.
+ *                               contentType:
+ *                                 type: string
+ *                                 description: Type of the message content (e.g., "text").
+ *                               isPinned:
+ *                                 type: boolean
+ *                                 description: Indicates if the message is pinned.
+ *                               isForward:
+ *                                 type: boolean
+ *                                 description: Indicates if the message is forwarded.
+ *                               isAnnouncement:
+ *                                 type: boolean
+ *                                 description: Indicates if the message is an announcement.
+ *                               threadMessages:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                   description: IDs of thread messages linked to this message.
+ *                               timestamp:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 description: Timestamp when the message was sent.
+ *                               __v:
+ *                                 type: integer
+ *                                 description: Version key.
+ *                               id:
+ *                                 type: string
+ *                                 description: Alias for `_id`.
  *       401:
  *         description: User is not logged in or the request is invalid.
  *         content:
@@ -646,7 +694,7 @@
  *                               Role:
  *                                 type: string
  *                                 description: Role of the member in the chat.
- *                                 enum: 
+ *                                 enum:
  *                                   - "member"
  *                                   - "admin"
  *                                   - "creator"
@@ -681,7 +729,6 @@
  *                   type: string
  *                   example: "No chat with the provided id"
  */
-
 
 /**
  * @swagger
