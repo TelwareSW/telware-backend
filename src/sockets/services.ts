@@ -215,12 +215,10 @@ export const handleDraftMessage = async (
 
 const check = async (chatId: any, ack: Function, senderId: any) => {
   if (!chatId) {
-    console.log('!chatId');
     return ack({ success: false, message: 'provide the chatId' });
   }
   const chat = await Chat.findById(chatId);
   if (!chat) {
-    console.log('!chat');
     return ack({
       success: false,
       message: 'no chat found with the provided id',
@@ -242,7 +240,7 @@ const check = async (chatId: any, ack: Function, senderId: any) => {
     });
   }
   const admin: Member = chatMembers.find((m) =>
-    m._id.equals(senderId)
+    m.user.equals(senderId)
   ) as unknown as Member;
 
   if (!admin || admin.Role === 'member') {
@@ -289,7 +287,7 @@ export const addAdminsHandler = async (
     if (!socketIds || socketIds.length !== 0)
       socketIds.forEach((socketId: any) => {
         memberSocket = io.sockets.sockets.get(socketId);
-        if (memberSocket) memberSocket.emit('ADD_ADMINS_SERVER', {chatId});
+        if (memberSocket) memberSocket.emit('ADD_ADMINS_SERVER', { chatId });
       });
   });
 
@@ -315,7 +313,7 @@ export const addMembers = async (
       message: 'no chat found with the provided id',
     });
 
-  const chatMembers = chat.members;
+  // const chatMembers = chat.members;
   let user;
   users.map(async (userId: any) => {
     user = await User.findById(userId);
@@ -325,7 +323,7 @@ export const addMembers = async (
         message: `user with id: ${userId} is not found`,
       });
     if (!user.chats.includes(chatId)) user.chats.push(chatId);
-    const exists = chatMembers.some((member) => member._id === userId);
+    // const exists = chatMembers.some((member) => member.user === userId);
     // if(!exists)
     // chatMembers.push({_id: userId, Role: 'member'});
   });
