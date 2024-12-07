@@ -4,11 +4,6 @@ import IUser from '@base/types/user';
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 
-interface Member {
-  _id: mongoose.Types.ObjectId;
-  Role: 'member' | 'admin' | 'creator';
-}
-
 const restrictTo =
   (...roles: string[]) =>
   async (req: Request, res: Response, next: NextFunction) => {
@@ -17,7 +12,7 @@ const restrictTo =
     const userId: any = user._id;
     const chat = await Chat.findById(chatId);
     const userChats = user.chats;
-    if (!userChats.includes(new mongoose.Types.ObjectId(chatId)))
+    if (!userChats.some(userChat => userChat.chat.equals(new mongoose.Types.ObjectId(chatId))))
       return next(
         new AppError(
           'you are not a member of this chat, you are not allowed here',
@@ -29,9 +24,9 @@ const restrictTo =
       return next(new AppError('this chat does no longer exists', 400));
 
     const chatMembers = chat.members;
-    const member: Member = chatMembers.find((m) =>
-      m._id.equals(userId)
-    ) as unknown as Member;
+    const member = chatMembers.find((m: any) =>
+      m.user.equals(userId)
+    );
 
     if (
       member &&

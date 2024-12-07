@@ -50,7 +50,7 @@ export const handleMessaging = async (
     });
 
   if (isFirstTime) {
-    const members = [chatId, senderId];
+    const members = [{ user: chatId }, { user: senderId }];
     const chat = new NormalChat({ members });
     const id = String(chat._id);
     await chat.save();

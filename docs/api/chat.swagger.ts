@@ -56,6 +56,34 @@
  *                           id:
  *                             type: string
  *                             description: Alias for `_id`.
+ *                           chat:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                               isSeen:
+ *                                 type: boolean
+ *                               type:
+ *                                 type: string
+ *                               members:
+ *                                 type: array
+ *                                 items:
+ *                                   type: object
+ *                                   properties:
+ *                                     user:
+ *                                       type: string
+ *                                     Role:
+ *                                       type: string
+ *                                     _id:
+ *                                       type: string
+ *                                     id:
+ *                                       type: string
+ *                               numberOfMembers:
+ *                                 type: integer
+ *                                 description: Total number of members in the chat.
+ *                               chatType:
+ *                                 type: string
+ *                                 description: The type of the chat.
  *                     members:
  *                       type: array
  *                       items:
@@ -64,12 +92,35 @@
  *                           _id:
  *                             type: string
  *                             description: Unique identifier for the member.
- *                           Role:
+ *                           username:
  *                             type: string
- *                             description: Role of the member in the chat (e.g., "creator", "admin", "member").
- *                           id:
+ *                             description: Username of the member.
+ *                           screenFirstName:
  *                             type: string
- *                             description: Alias for `_id`.
+ *                             description: First name displayed on the screen.
+ *                           screenLastName:
+ *                             type: string
+ *                             description: Last name displayed on the screen.
+ *                           phoneNumber:
+ *                             type: string
+ *                             description: The phone number of the member.
+ *                           photo:
+ *                             type: string
+ *                             description: URL to the member's photo.
+ *                           status:
+ *                             type: string
+ *                             description: Current status of the member.
+ *                           isAdmin:
+ *                             type: boolean
+ *                             description: Whether the member is an admin.
+ *                           stories:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                           blockedUsers:
+ *                             type: array
+ *                             items:
+ *                               type: string
  *                     lastMessages:
  *                       type: array
  *                       items:
@@ -173,7 +224,7 @@
  *                       items:
  *                         type: object
  *                         properties:
- *                           _id:
+ *                           user:
  *                             type: string
  *                             description: Member ID.
  *                             example: "63e1f5c2d1234e0012345678"
@@ -584,47 +635,38 @@
  *                           example: true
  *                         members:
  *                           type: array
- *                           description: List of chat members.
+ *                           description: List of chat members with their roles.
  *                           items:
  *                             type: object
  *                             properties:
- *                               _id:
+ *                               user:
  *                                 type: string
  *                                 description: The user ID of the member.
- *                               username:
+ *                                 example: "63e1f5c2d1234e0012345678"
+ *                               Role:
  *                                 type: string
- *                                 description: Username of the member.
- *                               screenFirstName:
+ *                                 description: Role of the member in the chat.
+ *                                 enum: 
+ *                                   - "member"
+ *                                   - "admin"
+ *                                   - "creator"
+ *                                 default: "member"
+ *                               _id:
  *                                 type: string
- *                                 description: Screen first name of the member.
- *                               screenLastName:
+ *                                 description: The ID of the member record.
+ *                                 example: "63e1f5c2d1234e0012345679"
+ *                               id:
  *                                 type: string
- *                                 description: Screen last name of the member.
- *                               phoneNumber:
- *                                 type: string
- *                                 description: Phone number of the member.
- *                               photo:
- *                                 type: string
- *                                 description: Profile photo URL of the member.
- *                               status:
- *                                 type: string
- *                                 description: Status of the member.
- *                               isAdmin:
- *                                 type: boolean
- *                                 description: Whether the member is an admin in the chat.
- *                               stories:
- *                                 type: array
- *                                 description: List of user stories.
- *                               blockedUsers:
- *                                 type: array
- *                                 description: List of blocked users by this member.
+ *                                 description: Alias for `_id`.
+ *                                 example: "63e1f5c2d1234e0012345679"
  *                         type:
  *                           type: string
  *                           description: The type of the chat (e.g., private, group, channel).
  *                           example: "private"
  *                         numberOfMembers:
- *                           type: number
+ *                           type: integer
  *                           description: Number of members in the chat.
+ *                           example: 2
  *       404:
  *         description: Chat not found.
  *         content:
@@ -639,6 +681,7 @@
  *                   type: string
  *                   example: "No chat with the provided id"
  */
+
 
 /**
  * @swagger

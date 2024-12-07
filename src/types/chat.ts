@@ -2,7 +2,7 @@ import { Types, Document } from 'mongoose';
 
 interface IChat extends Document {
   isSeen: boolean;
-  members: Types.ObjectId[];
+  members: { user: Types.ObjectId; Role: string }[];
   type: string;
   isDeleted: boolean;
 }
