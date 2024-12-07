@@ -33,8 +33,31 @@ const fakerUsers: any = faker.helpers.multiple(createRandomUser, { count: 10 });
 
 const createRandomMessage = async (chat: any) => {
   const sender: any = faker.helpers.arrayElement(chat.members);
+  const patterns = [
+    `Hey, ${faker.person.firstName()}! How's it going?`,
+    `Just finished ${faker.word.verb()}ing, feeling great!`,
+    `Do you know any good places for ${faker.food.dish()} around here?`,
+    `I'm so ${faker.word.adjective()} about the ${faker.lorem.words(2)} tomorrow!`,
+    `You should really try ${faker.food.dish()}. It's amazing!`,
+    `Are you free this weekend for ${faker.word.verb()}ing?`,
+    `Sounds great! Let me know what time works for you.`,
+    `Wait, what does '${faker.word.noun()}' mean again?`,
+    `I was just thinking about ${faker.lorem.sentence()}.`,
+    `That's exactly what I was going to say!`,
+    `Sorry, I totally forgot about ${faker.lorem.words(2)}. My bad!`,
+    `Wow, your ${faker.commerce.product()} looks amazing today!`,
+    `What time works best for you on ${faker.date.weekday()}?`,
+    `I can't believe ${faker.lorem.sentence()} happened today!`,
+    `Did you know that ${faker.lorem.sentence()}?`,
+    `Why don’t we try ${faker.word.verb()}ing next weekend?`,
+    `Why did the ${faker.animal.type()} cross the road? To get to the other side!`,
+    `How’s your work on ${faker.company.name()} coming along?`,
+    `Let’s meet at ${faker.date.weekday()} at ${faker.location.city()}, sounds good?`,
+    `Thanks so much for the ${faker.commerce.productName()}, it really made my day!`,
+  ];
+  const content = faker.helpers.arrayElement(patterns);
   const message = {
-    content: faker.lorem.sentence(),
+    content,
     senderId: sender._id,
     chatId: chat._id,
   };
