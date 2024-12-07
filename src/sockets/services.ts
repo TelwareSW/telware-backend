@@ -7,6 +7,12 @@ import NormalChat from '@base/models/normalChatModel';
 import mongoose, { ObjectId } from 'mongoose';
 import { getSocketsByUserId } from '@base/services/sessionService';
 import User from '@base/models/userModel';
+import Chat from '@base/models/chatModel';
+
+interface Member {
+  _id: mongoose.Types.ObjectId;
+  Role: 'member' | 'admin' | 'creator';
+}
 
 const joinRoom = async (io: any, roomId: String, userId: ObjectId) => {
   const socketIds = await getSocketsByUserId(userId);
@@ -128,7 +134,6 @@ export const handleEditMessage = async (
     { content },
     { new: true }
   );
-  console.log(message);
   if (!message)
     return ack({
       success: false,
@@ -206,4 +211,71 @@ export const handleDraftMessage = async (
       message: 'Failed to save the draft',
     });
   }
+};
+
+export const addAdminsHandler = async (
+  io: any,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { members, chatId } = data;
+  const chat = await Chat.findById(chatId);
+  if (!chat) return ack({ success: false, message: 'provide the chatId' });
+  if (chat.type === 'private')
+    return ack({
+      success: false,
+      message: 'this is a private chat!',
+    });
+  const chatMembers = chat.members;
+  const chatMembersIds = chatMembers.map((m: any) => m._id);
+  if (chatMembersIds.length === 0)
+    return ack({
+      success: false,
+      message: 'this chat is deleted and it no longer exists',
+    });
+
+  const admin: Member = chatMembers.find((m) =>
+    m._id.equals(senderId)
+  ) as unknown as Member;
+
+  if (!admin || admin.Role === 'member')
+    return ack({
+      success: false,
+      message: 'you do not have permission to add admins to the group',
+    });
+
+  let memId: mongoose.Types.ObjectId;
+  let user;
+
+  members.map(async (m: Member) => {
+    memId = m._id;
+    user = await User.findById(memId);
+    if (!user)
+      return ack({
+        success: false,
+        message: `member with Id: ${memId} does no longer exists`,
+      });
+    if (user.chats.includes(chatId))
+      return ack({
+        success: false,
+        message: `member with Id: ${memId} is no longer a member of this chat`,
+      });
+    await Chat.updateOne(
+      { _id: chatId, 'members._id': m._id },
+      { $set: { 'members.$.Role': 'admin' } }
+    );
+    let memberSocket;
+    const socketIds = await getSocketsByUserId(memId);
+    if (socketIds.length !== 0)
+      socketIds.forEach((socketId: any) => {
+        memberSocket = io.sockets.sockets.get(socketId);
+        memberSocket.emit('ADD_ADMIN_SERVER', chatId);
+      });
+  });
+
+  ack({
+    success: true,
+    message: 'added admins successfuly',
+  });
 };

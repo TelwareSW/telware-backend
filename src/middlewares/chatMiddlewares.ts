@@ -11,6 +11,8 @@ const restrictTo =
     const user: IUser = req.user as IUser;
     const userId: any = user._id;
     const chat = await Chat.findById(chatId);
+    if (!chat)
+      return next(new AppError('this chat does no longer exists', 400));
     const userChats = user.chats;
     if (!userChats.some(userChat => userChat.chat.equals(new mongoose.Types.ObjectId(chatId))))
       return next(
@@ -19,9 +21,6 @@ const restrictTo =
           403
         )
       );
-
-    if (!chat)
-      return next(new AppError('this chat does no longer exists', 400));
 
     const chatMembers = chat.members;
     const member = chatMembers.find((m: any) =>
