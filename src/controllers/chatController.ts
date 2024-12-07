@@ -65,7 +65,8 @@ export const getAllChats = catchAsync(
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
     const allChats = (await getChats(userId, type)).chats;
-    if (allChats.length === 0)
+    console.log(allChats);
+    if (!allChats || allChats.length === 0)
       return res.status(200).json({
         status: 'success',
         message: 'no chats found',
