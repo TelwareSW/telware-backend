@@ -4,7 +4,7 @@ import { ObjectId } from 'mongoose';
 import redisClient from '@config/redis';
 import UAParser from 'ua-parser-js';
 
-export const getSocketsByUserId = async (userId: ObjectId) =>
+export const getSocketsByUserId = async (userId: any) =>
   redisClient.sMembers(`user:${userId}:sockets`);
 
 export const generateSession = (req: any) => {

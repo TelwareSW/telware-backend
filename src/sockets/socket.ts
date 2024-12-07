@@ -10,6 +10,7 @@ import {
   handleDeleteMessage,
   handleDraftMessage,
   handleMessaging,
+  addAdminsHandler,
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
@@ -50,6 +51,10 @@ const socketSetup = (server: HTTPServer) => {
       handleDraftMessage(socket, data, ack, userId)
     );
 
+    socket.on('ADD_ADMINS_CLIENT', (data: any, ack: Function) =>
+      addAdminsHandler(io, data, ack, userId)
+    );
+    
     socket.on('disconnect', async () => {
       console.log(`Client with userID ${userId} disconnected: ${socket.id}`);
       socket.request.session.user.lastSeenTime = Date.now();
