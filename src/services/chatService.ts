@@ -1,8 +1,5 @@
 import mongoose from 'mongoose';
-import GroupChannel from '@base/models/groupChannelModel';
 import NormalChat from '@base/models/normalChatModel';
-import IGroupChannel from '@base/types/groupChannel';
-import INormalChat from '@base/types/normalChat';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
 import User from '@base/models/userModel';
@@ -11,11 +8,11 @@ import Chat from '@base/models/chatModel';
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
     chats.map(async (chat: any) => {
-      const lastMessage = await Message.findOne({ chatId: chat._id }).sort({
+      const lastMessage = await Message.findOne({ chatId: chat.chat }).sort({
         timestamp: -1,
       });
       return {
-        chatId: chat._id,
+        chatId: chat.chat,
         lastMessage,
       };
     })
@@ -30,7 +27,7 @@ export const getChats = async (
   const chats = await User.findById(userId)
     .select('chats')
     .populate({
-      path: 'chats',
+      path: 'chats.chat',
       match: type ? { type } : {},
     });
   return chats;
@@ -42,18 +39,6 @@ export const getChatIds = async (
 ) => {
   const chats = await getChats(userId, type);
   return chats.map((chat: any) => chat._id);
-};
-
-export const createNewChat = async (
-  data: any
-): Promise<INormalChat | IGroupChannel> => {
-  const { name, members } = data;
-  const newChat = new GroupChannel({
-    name,
-    members,
-  });
-  await newChat.save();
-  return newChat;
 };
 
 export const enableDestruction = async (
@@ -74,6 +59,6 @@ export const enableDestruction = async (
 export const leaveGroupChannel = async (chatId: string, member: string) => {
   await Chat.updateOne(
     { _id: chatId },
-    { $pull: { members: { _id: member } } }
+    { $pull: { members: { user: member } } }
   );
 };

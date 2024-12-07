@@ -20,6 +20,8 @@ const createRandomUser = () => {
       .padEnd(2, '_')
       .padStart(2, '_')
       .substring(0, 15),
+    screenFirstName: faker.person.firstName(),
+    screenLastName: faker.person.lastName(),
     phoneNumber: faker.phone.number({ style: 'international' }),
     password,
     passwordConfirm: password,
@@ -67,7 +69,7 @@ const createPublicChat = async (
 
   const chat = await GroupChannel.create({
     members: members.map((user: any, index: Number) => ({
-      _id: user._id,
+      user: user.user,
       Role:
         index === 0
           ? 'creator'
@@ -77,11 +79,13 @@ const createPublicChat = async (
     type: chatType,
   });
 
-  chat.members.forEach(async (userRef: any) => {
-    await User.findByIdAndUpdate(userRef._id, {
-      $push: { chats: chat._id },
-    });
-  });
+  await Promise.all(
+    users.map((user: any) =>
+      User.findByIdAndUpdate(user.user, {
+        $push: { chats: { chat: chat._id } },
+      })
+    )
+  );
 
   await Promise.all(
     Array.from({ length: 100 }).map(() => createRandomMessage(chat))
@@ -93,11 +97,13 @@ const createPrivateChat = async (users: any[]) => {
     members: users,
   });
 
-  chat.members.forEach(async (userRef: any) => {
-    await User.findByIdAndUpdate(userRef._id, {
-      $push: { chats: chat._id },
-    });
-  });
+  await Promise.all(
+    users.map((user: any) =>
+      User.findByIdAndUpdate(user.user, {
+        $push: { chats: { chat: chat._id } },
+      })
+    )
+  );
 
   await Promise.all(
     Array.from({ length: 100 }).map(() => createRandomMessage(chat))

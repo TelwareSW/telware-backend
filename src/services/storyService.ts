@@ -49,9 +49,9 @@ export const deleteStoryFile = async (storyId: mongoose.Types.ObjectId) => {
 export const getUserContacts = async (
   userId: mongoose.Types.ObjectId | string
 ) => {
-  let userIdObj = userId;
+  let userIdObj = { user: userId };
   if (typeof userId === 'string') {
-    userIdObj = new mongoose.Types.ObjectId(userId);
+    userIdObj = { user: new mongoose.Types.ObjectId(userId) };
   }
 
   // Get the private chats that the user is in
@@ -64,8 +64,9 @@ export const getUserContacts = async (
   const contacts: Set<string> = new Set();
   chats.forEach((chat) => {
     const { members } = chat;
-    members.forEach((memberId) => {
-      if (memberId.toString() !== userId) contacts.add(memberId.toString());
+    members.forEach((member) => {
+      if (member.user.toString() !== userId)
+        contacts.add(member.user.toString());
     });
   });
 

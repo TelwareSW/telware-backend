@@ -25,14 +25,19 @@ interface IUser extends Document {
   stories: Types.ObjectId[];
   blockedUsers: Types.ObjectId[];
   contacts: Types.ObjectId[];
-  chats: Types.ObjectId[];
+  chats: {
+    chat: Types.ObjectId;
+    isMuted: boolean;
+    unmuteDuration: number;
+    draft: string;
+  }[];
   changedPasswordAt: Date | undefined;
   emailVerificationCode: string | undefined;
   emailVerificationCodeExpires: number | undefined;
   verificationAttempts: number | undefined;
   resetPasswordToken: string | undefined;
   resetPasswordExpires: number | undefined;
-  messages:Types.ObjectId[];
+  messages: Types.ObjectId[];
 
   generateSaveConfirmationCode: () => string;
   isCorrectPassword: (_candidatePass: string) => Promise<boolean>;
