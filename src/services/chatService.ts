@@ -12,7 +12,7 @@ export const getLastMessage = async (chats: any) => {
         timestamp: -1,
       });
       return {
-        chatId: chat.chat,
+        chatId: chat.chat._id,
         lastMessage,
       };
     })
@@ -30,7 +30,6 @@ export const getChats = async (
       path: 'chats.chat',
       match: type ? { type } : {},
     });
-  console.log(user);
   if (!user) return;
   return user.chats;
 };
