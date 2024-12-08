@@ -58,7 +58,7 @@ const createRandomMessage = async (chat: any) => {
   const content = faker.helpers.arrayElement(patterns);
   const message = {
     content,
-    senderId: sender._id,
+    senderId: sender.user,
     chatId: chat._id,
   };
 
