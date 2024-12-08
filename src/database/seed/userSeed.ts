@@ -91,12 +91,9 @@ const createPublicChat = async (
   }
 
   const chat = await GroupChannel.create({
-    members: members.map((user: any, index: Number) => ({
+    members: members.map((user: any) => ({
       user: user.user,
-      Role:
-        index === 0
-          ? 'admin'
-          : faker.helpers.arrayElement(['member', 'admin']),
+      Role: faker.helpers.arrayElement(['member', 'admin']),
     })),
     name: generateGroupName(),
     type: chatType,
