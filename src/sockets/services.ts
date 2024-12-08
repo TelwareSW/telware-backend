@@ -293,7 +293,7 @@ export const handleAddAdmins = async (
 
       if (!user) {
         forbiddenUsers.push(memId);
-        return; 
+        return;
       }
 
       const isMemberOfChat = chat.members.some((m) => m.user.equals(memId));
@@ -540,6 +540,77 @@ export const handleLeaveGroupChannel = async (
   ack({
     success: true,
     message: 'left the group successfuly',
+    data: {},
+  });
+};
+
+export const handleRemoveMembers = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId, members } = data;
+  const forbiddenUsers: string[] = [];
+
+  const chat = await Chat.findById(chatId);
+  if (!chat)
+    return ack({
+      success: false,
+      message: 'could not remove members from the group',
+      error: 'this chat does no longer exist',
+    });
+
+  const admin: Member = chat.members.find((m) =>
+    m.user.equals(senderId)
+  ) as unknown as Member;
+
+  if(!admin)
+    return ack({
+      success: false,
+      message: 'could not remove members from the group',
+      error: 'you are no longer a member of this group',
+    });
+
+  if (admin.Role === 'member')
+    return ack({
+      success: false,
+      message: 'could not remove members from the group',
+      error: 'you do not have permission',
+    });
+
+  await Promise.all(
+    members.map(async (memberId: any) => {
+      const user = await User.findById(memberId);
+      if (!user) {
+        forbiddenUsers.push(memberId);
+        return;
+      }
+
+      const isMember = chat.members.some((m: any) => m.user.equals(memberId));
+      if (!isMember) {
+        forbiddenUsers.push(memberId);
+        return;
+      }
+
+      await Chat.updateOne(
+        { _id: chatId },
+        { $pull: { members: { user: memberId } } }
+      );
+
+      await inform(io, memberId, chatId, 'REMOVE_MEMBERS_SERVER');
+    })
+  );
+  if (forbiddenUsers.length > 0)
+    return ack({
+      success: false,
+      message: 'Some users could not be added',
+      error: `Could not remove users with IDs: ${forbiddenUsers.join(', ')}`,
+    });
+  ack({
+    success: true,
+    message: 'Members removed successfully',
     data: {},
   });
 };
