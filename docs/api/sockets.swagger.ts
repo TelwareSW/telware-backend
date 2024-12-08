@@ -589,3 +589,62 @@
  *                   type: string
  *                   description: "Detailed error message."
  */
+
+/**
+ * @swagger
+ * ADD_ADMINS_CLIENT:
+ *   patch:
+ *     summary: "Add admins to a group chat"
+ *     description: "Allows the creator or an authorized admin of a group chat to promote members to admin role."
+ *     tags:
+ *       - Sockets
+ *     operationId: "addAdmins"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The unique ID of the group chat where members will be promoted to admin."
+ *               members:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   description: "User ID of the member to be promoted to admin."
+ *             required:
+ *               - chatId
+ *               - members
+ *     responses:
+ *       200:
+ *         description: "Successfully added admins to the group chat."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Added admins successfully."
+ *       400:
+ *         description: "Failed to add admins due to invalid input, unauthorized access, or membership issues."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Member with Id: <memberId> is no longer a member of this chat."
+ *                 error:
+ *                   type: string
+ *                   description: "Detailed error message (if applicable)."
+ */
