@@ -280,7 +280,7 @@ export const handleAddAdmins = async (
 
   if (func) return func;
 
-  if (!chat)
+  if (!chat || chat.isDeleted)
     return ack({
       success: false,
       message: 'Could not add admins to the group',
@@ -344,7 +344,7 @@ export const handleAddMembers = async (
   if (func) return func;
 
   const chat = await Chat.findById(chatId);
-  if (!chat)
+  if (!chat || chat.isDeleted)
     return ack({
       success: false,
       message: 'No chat found with the provided ID',
@@ -513,7 +513,7 @@ export const handleLeaveGroupChannel = async (
 ) => {
   const { chatId } = data;
   const chat = await Chat.findById(chatId);
-  if (!chat)
+  if (!chat || chat.isDeleted)
     return ack({
       success: false,
       message: 'could not leave the group',
@@ -555,7 +555,7 @@ export const handleRemoveMembers = async (
   const forbiddenUsers: string[] = [];
 
   const chat = await Chat.findById(chatId);
-  if (!chat)
+  if (!chat || chat.isDeleted)
     return ack({
       success: false,
       message: 'could not remove members from the group',
@@ -566,7 +566,7 @@ export const handleRemoveMembers = async (
     m.user.equals(senderId)
   ) as unknown as Member;
 
-  if(!admin)
+  if (!admin)
     return ack({
       success: false,
       message: 'could not remove members from the group',
@@ -611,6 +611,67 @@ export const handleRemoveMembers = async (
   ack({
     success: true,
     message: 'Members removed successfully',
+    data: {},
+  });
+};
+
+export const handleSetPermission = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId, type, who } = data;
+
+  if (!type || !who)
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'missing required fields',
+    });
+
+  const chat = await GroupChannel.findById(chatId);
+  if (!chat || chat.isDeleted)
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'this chat does no longer exist',
+    });
+
+  if (chat.type === 'private')
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'cannot change permissions for private chats',
+    });
+
+  const admin: Member = chat.members.find((m: any) =>
+    m.user.equals(senderId)
+  ) as unknown as Member;
+
+  if (!admin)
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'you are no longer a member of this group',
+    });
+
+  if (admin.Role === 'member')
+    return ack({
+      success: false,
+      message: 'could not change group permissions',
+      error: 'you do not have permission',
+    });
+
+  if (type === 'post') chat.messagnigPermission = who === 'everyone';
+  else if (type === 'download') chat.downloadingPermission = who === 'everyone';
+  await chat.save();
+  socket.to(chatId).emit('SET_PERMISSION_SERVER', { chatId, type, who });
+
+  ack({
+    success: true,
+    message: 'permissions updated successfully',
     data: {},
   });
 };

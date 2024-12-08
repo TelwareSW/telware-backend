@@ -16,6 +16,7 @@ import {
   handleLeaveGroupChannel,
   handleAddMembers,
   handleRemoveMembers,
+  handleSetPermission,
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
@@ -78,6 +79,14 @@ const socketSetup = (server: HTTPServer) => {
 
     socket.on('REMOVE_MEMBERS_CLIENT', (data: any, ack: Function) => {
       handleRemoveMembers(io, socket, data, ack, userId);
+    });
+
+    socket.on('REMOVE_MEMBERS_CLIENT', (data: any, ack: Function) => {
+      handleRemoveMembers(io, socket, data, ack, userId);
+    });
+
+    socket.on('SET_PERMISSION_CLIENT', (data: any, ack: Function) => {
+      handleSetPermission(io, socket, data, ack, userId);
     });
 
     socket.on('disconnect', async () => {
