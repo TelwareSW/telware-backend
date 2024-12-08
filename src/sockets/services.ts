@@ -293,14 +293,14 @@ export const handleAddAdmins = async (
 
       if (!user) {
         forbiddenUsers.push(memId);
-        return; // Skip the current iteration
+        return; 
       }
 
       const isMemberOfChat = chat.members.some((m) => m.user.equals(memId));
 
       if (!isMemberOfChat) {
         forbiddenUsers.push(memId);
-        return; // Skip the current iteration
+        return;
       }
 
       await Chat.findByIdAndUpdate(
