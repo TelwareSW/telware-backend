@@ -12,7 +12,7 @@ const chatSchema = new mongoose.Schema<IChat>(
         user: { type: mongoose.Types.ObjectId, ref: 'User' },
         Role: {
           type: String,
-          enum: ['member', 'admin', 'creator'],
+          enum: ['member', 'admin'],
           default: 'member',
         },
       },

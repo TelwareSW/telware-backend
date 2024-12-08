@@ -30,5 +30,5 @@ router.get('/get-all-drafts', getAllDrafts);
 router.get('/get-draft', getDraft);
 
 router.get('/:chatId', restrictTo(), getChat);
-router.delete('/:chatId', restrictTo('creator'), deleteGroupChannel);
+router.delete('/:chatId', restrictTo('admin'), deleteGroupChannel);
 export default router;

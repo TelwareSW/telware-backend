@@ -214,7 +214,7 @@
  * /chats:
  *   post:
  *     summary: Create a new chat.
- *     description: Allows an authenticated user to create a new chat with specified members. The creator is automatically assigned as the "creator" role, and other members are assigned the "member" role.
+ *     description: Allows an authenticated user to create a new chat with specified members. The creator is automatically assigned as the "admin" role, and other members are assigned the "member" role.
  *     tags:
  *       - Chat
  *     requestBody:
@@ -697,7 +697,6 @@
  *                                 enum:
  *                                   - "member"
  *                                   - "admin"
- *                                   - "creator"
  *                                 default: "member"
  *                               _id:
  *                                 type: string
@@ -759,7 +758,7 @@
  * /chats/{chatId}:
  *   delete:
  *     summary: Delete a group chat by ID.
- *     description: Deletes a group chat and removes all members. Marks the chat as deleted. This action is only allowed for the creator of the chat.
+ *     description: Deletes a group chat and removes all members. Marks the chat as deleted. This action is only allowed for the admins of the chat.
  *     tags:
  *       - Chat
  *     parameters:
@@ -800,7 +799,7 @@
  *                   type: string
  *                   example: no chat found with the provided id
  *       403:
- *         description: You are not authorized to delete this chat. You must be the creator of the chat.
+ *         description: You are not authorized to delete this chat. You must be an admin of the chat.
  *         content:
  *           application/json:
  *             schema:

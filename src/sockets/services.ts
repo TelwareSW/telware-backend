@@ -12,7 +12,7 @@ import GroupChannel from '@base/models/groupChannelModel';
 
 interface Member {
   _id: mongoose.Types.ObjectId;
-  Role: 'member' | 'admin' | 'creator';
+  Role: 'member' | 'admin';
 }
 
 const check = async (chatId: any, ack: Function, senderId: any) => {
@@ -294,7 +294,6 @@ export const addAdminsHandler = async (
         message: `Member with Id: ${memId} is no longer a member of this chat.`,
       });
     }
-    //TODO: handle the case where someone tries to set the creator as an admin
     await Chat.findByIdAndUpdate(
       chatId,
       { $set: { 'members.$[elem].Role': 'admin' } },
@@ -382,7 +381,7 @@ export const createGroupChannel = async (
     ...membersWithRoles,
     {
       user: senderId,
-      Role: 'creator',
+      Role: 'admin',
     },
   ];
   const newChat = new GroupChannel({
@@ -431,7 +430,7 @@ export const deleteGroupChannel = async (
 
   const chatMembers = chat.members;
   const isCreator = chatMembers.some(
-    (member) => member.user.toString() === senderId && member.Role === 'creator'
+    (member) => member.user.toString() === senderId && member.Role === 'admin'
   );
 
   if (!isCreator)
