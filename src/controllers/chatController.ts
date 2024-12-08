@@ -80,6 +80,7 @@ export const getAllChats = catchAsync(
         message: 'no chats found',
         data: {},
       });
+    console.log(allChats);
     const memberIds = [
       ...new Set(
         allChats.flatMap((chat: any) =>

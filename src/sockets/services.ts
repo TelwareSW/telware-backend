@@ -403,11 +403,55 @@ export const createGroupChannel = async (
   );
   socket
     .to(newChat._id as string)
-    .emit('JOIN_GROUP_CHANNEL', {chatId: newChat._id as string});
+    .emit('JOIN_GROUP_CHANNEL', { chatId: newChat._id as string });
 
   ack({
     success: true,
     message: 'Chat created successfuly',
     data: newChat,
+  });
+};
+
+export const deleteGroupChannel = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId } = data;
+  const chat = await Chat.findById(chatId);
+
+  if (!chat || chat.isDeleted)
+    return ack({
+      success: false,
+      message: 'Could not delete the group',
+      error: 'no chat found with the provided id',
+    });
+
+  const chatMembers = chat.members;
+  const isCreator = chatMembers.some(
+    (member) => member.user === senderId && member.Role === 'creator'
+  );
+
+  if (!isCreator)
+    return ack({
+      success: false,
+      message: 'Could not delete the group',
+      error: 'you are not authorized to delete the group',
+    });
+
+  chatMembers.map(async (member: any) => {
+    await inform(io, member.user, chatId, 'DELETE_GROUP_CHANNEL_SERVER');
+  });
+
+  chat.members = [];
+  chat.isDeleted = true;
+  await chat.save();
+
+  ack({
+    success: true,
+    message: 'chat deleted successfuly',
+    data: chatId,
   });
 };

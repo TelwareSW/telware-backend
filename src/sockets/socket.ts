@@ -13,6 +13,7 @@ import {
   addAdminsHandler,
   addMembers,
   createGroupChannel,
+  deleteGroupChannel,
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
@@ -63,6 +64,10 @@ const socketSetup = (server: HTTPServer) => {
 
     socket.on('CREATE_GROUP_CHANNEL', (data: any, ack: Function) => {
       createGroupChannel(io, socket, data, ack, userId);
+    });
+
+    socket.on('DELETE_GROUP_CHANNEL_CLIENT', (data: any, ack: Function) => {
+      deleteGroupChannel(io, socket, data, ack, userId);
     });
 
     socket.on('disconnect', async () => {
