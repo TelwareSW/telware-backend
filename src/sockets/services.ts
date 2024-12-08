@@ -267,7 +267,7 @@ export const handleDraftMessage = async (
   }
 };
 
-export const addAdminsHandler = async (
+export const handleAddAdmins = async (
   io: any,
   data: any,
   ack: Function,
@@ -316,10 +316,10 @@ export const addAdminsHandler = async (
     })
   );
 
-  if (forbiddenUsers.length !== 0) {
+  if (forbiddenUsers.length > 0) {
     return ack({
       success: false,
-      message: 'Not all users were added as admins',
+      message: 'Some users could not be added as admins',
       error: `Could not add users with IDs: ${forbiddenUsers.join(', ')}`,
     });
   }
@@ -331,44 +331,68 @@ export const addAdminsHandler = async (
   });
 };
 
-export const addMembers = async (
+export const handleAddMembers = async (
   io: any,
   data: any,
   ack: Function,
   senderId: any
 ) => {
   const { chatId, users } = data;
-  check(chatId, ack, senderId);
+  const forbiddenUsers: string[] = [];
+
+  const func = await check(chatId, ack, senderId);
+  if (func) return func;
 
   const chat = await Chat.findById(chatId);
   if (!chat)
     return ack({
       success: false,
-      message: 'no chat found with the provided id',
+      message: 'No chat found with the provided ID',
     });
 
-  let user;
-  users.map(async (userId: any) => {
-    user = await User.findById(userId);
-    if (!user)
-      return ack({
-        success: false,
-        message: `user with id: ${userId} is not found`,
-      });
-    const isAlreadyMember = chat.members.some((m: any) => m.user === userId);
-    if (isAlreadyMember)
-      return ack({
-        success: false,
-        message: `user with id: ${userId} is already a member`,
-      });
-    chat.members.push({ user: userId, Role: 'member' });
+  await Promise.all(
+    users.map(async (userId: any) => {
+      const user = await User.findById(userId);
 
-    const userWasMember = user.chats.some((c: any) => c.chat === chatId);
-    if (!userWasMember) user.chats.push(chatId);
+      if (!user) {
+        forbiddenUsers.push(userId);
+        return;
+      }
+
+      const isAlreadyMember = chat.members.some((m: any) =>
+        m.user.equals(userId)
+      );
+      if (!isAlreadyMember) chat.members.push({ user: userId, Role: 'member' });
+      const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
+      if (!userWasMember) user.chats.push(chatId);
+      console.log(user.chats);
+      if (isAlreadyMember) {
+        forbiddenUsers.push(userId);
+        return;
+      }
+
+      await inform(io, userId, chatId, 'ADD_MEMBERS_SERVER');
+    })
+  );
+
+  if (forbiddenUsers.length > 0) {
+    return ack({
+      success: false,
+      message: 'Some users could not be added',
+      error: `Could not add users with IDs: ${forbiddenUsers.join(', ')}`,
+    });
+  }
+
+  await chat.save();
+
+  ack({
+    success: true,
+    message: 'Members added successfully',
+    data: {},
   });
 };
 
-export const createGroupChannel = async (
+export const handleCreateGroupChannel = async (
   io: any,
   socket: Socket,
   data: any,
@@ -436,7 +460,7 @@ export const createGroupChannel = async (
   });
 };
 
-export const deleteGroupChannel = async (
+export const handleDeleteGroupChannel = async (
   io: any,
   socket: Socket,
   data: any,
@@ -480,7 +504,7 @@ export const deleteGroupChannel = async (
   });
 };
 
-export const leaveGroupChannel = async (
+export const handleLeaveGroupChannel = async (
   io: any,
   socket: Socket,
   data: any,

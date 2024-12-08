@@ -648,3 +648,60 @@
  *                   type: string
  *                   description: "Detailed error message (if applicable)."
  */
+
+/**
+ * @swagger
+ * ADD_MEMBERS_CLIENT:
+ *   patch:
+ *     summary: Add members to a chat group
+ *     description: Adds multiple users to a chat group, ensuring they are not already members and the chat exists.
+ *     tags:
+ *       - Sockets
+ *     parameters:
+ *       - in: body
+ *         name: data
+ *         description: Data required to add users to the chat group.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             chatId:
+ *               type: string
+ *               description: The ID of the chat to which users are being added.
+ *               example: '60f6c72ef56d9e0020f290f2'
+ *             users:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               description: List of user IDs to be added to the chat.
+ *               example: ['60f6c72ef56d9e0020f290f3', '60f6c72ef56d9e0020f290f4']
+ *     responses:
+ *       200:
+ *         description: Members added successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Members added successfully
+ *       400:
+ *         description: Error in adding members to the chat.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Some users could not be added
+ *                 error:
+ *                   type: string
+ *                   example: Could not add users with IDs 60f6c72ef56d9e0020f290f3, 60f6c72ef56d9e0020f290f4
+ */
