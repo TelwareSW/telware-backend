@@ -390,3 +390,90 @@
  *                   type: string
  *                   description: Details about the error (e.g., draft not found).
  */
+
+/**
+ * @swagger
+ * /CREATE_GROUP_CHANNEL:
+ *   post:
+ *     summary: "Create a new group channel"
+ *     description: "This socket event allows a user to create a new group channel. It validates the user's login status, group size, and adds members with roles."
+ *     tags:
+ *       - Sockets
+ *     operationId: "createGroupChannel"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [group, otherType]
+ *                 description: "Type of the channel (e.g., 'group')."
+ *               name:
+ *                 type: string
+ *                 description: "Name of the group channel."
+ *               members:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: "Array of user IDs to be added as members."
+ *             required:
+ *               - type
+ *               - name
+ *               - members
+ *     responses:
+ *       200:
+ *         description: "Group channel created successfully."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Chat created successfully."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: "ID of the newly created group channel."
+ *                     name:
+ *                       type: string
+ *                       description: "Name of the group channel."
+ *                     type:
+ *                       type: string
+ *                       description: "Type of the group channel."
+ *                     members:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: string
+ *                             description: "ID of the user."
+ *                           Role:
+ *                             type: string
+ *                             description: "Role of the user in the group (e.g., 'creator', 'member')."
+ *       400:
+ *         description: "Invalid input or constraints violated."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to create the chat."
+ *                 error:
+ *                   type: string
+ *                   description: "Error message describing the issue."
+ */
