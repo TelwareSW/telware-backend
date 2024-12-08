@@ -327,7 +327,6 @@ export const addMembers = async (
       message: 'no chat found with the provided id',
     });
 
-  // const chatMembers = chat.members;
   let user;
   users.map(async (userId: any) => {
     user = await User.findById(userId);
@@ -336,10 +335,17 @@ export const addMembers = async (
         success: false,
         message: `user with id: ${userId} is not found`,
       });
-    if (!user.chats.includes(chatId)) user.chats.push(chatId);
-    // const exists = chatMembers.some((member) => member.user === userId);
-    // if(!exists)
-    // chatMembers.push({_id: userId, Role: 'member'});
+    const isAlreadyMember = chat.members.some((m: any) => m.user === userId);
+    if (isAlreadyMember)
+      return ack({
+        success: false,
+        message: `user with id: ${userId} is already a member`,
+      });
+    chat.members.push({ user: userId, Role: 'member' });
+
+    const userWasMember = user.chats.some((c: any) => c.chat === chatId);
+    if (!userWasMember) user.chats.push(chatId);
+    
   });
 };
 
