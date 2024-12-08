@@ -477,3 +477,59 @@
  *                   type: string
  *                   description: "Error message describing the issue."
  */
+
+/**
+ * @swagger
+ * /DELETE_GROUP_CHANNEL_CLIENT:
+ *   delete:
+ *     summary: "Delete a group or channel"
+ *     description: "This socket event allows the creator of a group channel to delete the group. All members will be informed about the deletion."
+ *     tags:
+ *       - Sockets
+ *     operationId: "deleteGroupChannel"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The unique ID of the group channel to be deleted."
+ *             required:
+ *               - chatId
+ *     responses:
+ *       200:
+ *         description: "Group channel deleted successfully."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Chat deleted successfully."
+ *                 data:
+ *                   type: string
+ *                   description: "The ID of the deleted group channel."
+ *       400:
+ *         description: "Group deletion failed due to invalid input or unauthorized access."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Could not delete the group."
+ *                 error:
+ *                   type: string
+ *                   description: "Error message describing the issue."
+ */

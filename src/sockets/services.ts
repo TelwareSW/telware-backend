@@ -431,7 +431,7 @@ export const deleteGroupChannel = async (
 
   const chatMembers = chat.members;
   const isCreator = chatMembers.some(
-    (member) => member.user === senderId && member.Role === 'creator'
+    (member) => member.user.toString() === senderId && member.Role === 'creator'
   );
 
   if (!isCreator)
@@ -449,9 +449,17 @@ export const deleteGroupChannel = async (
   chat.isDeleted = true;
   await chat.save();
 
-  ack({
+  return ack({
     success: true,
     message: 'chat deleted successfuly',
     data: chatId,
   });
+};
+
+
+const leaveGroupChannel = async (chatId: string, member: string) => {
+  await Chat.updateOne(
+    { _id: chatId },
+    { $pull: { members: { user: member } } }
+  );
 };

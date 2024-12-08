@@ -57,9 +57,3 @@ export const enableDestruction = async (
   }
 };
 
-export const leaveGroupChannel = async (chatId: string, member: string) => {
-  await Chat.updateOne(
-    { _id: chatId },
-    { $pull: { members: { user: member } } }
-  );
-};
