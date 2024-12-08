@@ -31,7 +31,6 @@ export const handleMessaging = async (
 ) => {
   let { chatId, media, content, contentType, parentMessageId } = data;
   const { isFirstTime, chatType, isReply, isForward } = data;
-
   if (
     (!isForward &&
       !content &&
@@ -54,7 +53,6 @@ export const handleMessaging = async (
       message: 'Failed to send the message',
       error: 'conflicting fields',
     });
-
   if (isFirstTime) {
     const members = [{ user: chatId }, { user: senderId }];
     const chat = new NormalChat({ members });
@@ -62,8 +60,16 @@ export const handleMessaging = async (
     await chat.save();
     socket.join(id);
     await joinRoom(io, id, chatId);
-    await User.findByIdAndUpdate(senderId, { chats: id });
-    await User.findByIdAndUpdate(chatId, { chats: id });
+    await User.findByIdAndUpdate(senderId, {
+      $push: {
+        chats: { chat: id },
+      },
+    });
+    await User.findByIdAndUpdate(chatId, {
+      $push: {
+        chats: { chat: id },
+      },
+    });
     chatId = id;
   }
 
@@ -100,7 +106,6 @@ export const handleMessaging = async (
     messageType: chatType,
   });
   await message.save();
-
   if (parentMessage && isReply && chatType === 'channel') {
     parentMessage.threadMessages.push(message._id as mongoose.Types.ObjectId);
     await parentMessage.save();
@@ -108,7 +113,6 @@ export const handleMessaging = async (
 
   const draftKey = `draft:${chatId}:${senderId}`;
   await redisClient.del(draftKey);
-
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
     messageId: message._id,
@@ -240,13 +244,11 @@ const check = async (chatId: any, ack: Function, senderId: any) => {
     m.user.equals(senderId)
   ) as unknown as Member;
 
-  if (!admin || admin.Role === 'member') {
-    console.log('not an admin');
+  if (!admin || admin.Role === 'member')
     return ack({
       success: false,
       message: 'you do not have permission',
     });
-  }
 };
 
 export const addAdminsHandler = async (
@@ -276,9 +278,8 @@ export const addAdminsHandler = async (
         message: `Member with Id: ${memId} is no longer a member of this chat.`,
       });
     }
-
     //TODO: handle the case where someone tries to set the creator as an admin
-    const chat = await Chat.findByIdAndUpdate(
+    await Chat.findByIdAndUpdate(
       chatId,
       { $set: { 'members.$[elem].Role': 'admin' } },
       {
@@ -286,13 +287,11 @@ export const addAdminsHandler = async (
         arrayFilters: [{ 'elem.user': memId }],
       }
     );
-    console.log(chat);
-    
+
     let memberSocket;
     const socketIds = await getSocketsByUserId(memId);
     if (!socketIds || socketIds.length !== 0)
       socketIds.forEach((socketId: any) => {
-        console.log(socketId);
         memberSocket = io.sockets.sockets.get(socketId);
         if (memberSocket) memberSocket.emit('ADD_ADMINS_SERVER', { chatId });
       });

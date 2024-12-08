@@ -21,6 +21,17 @@ export const createChat = catchAsync(
     const user: IUser = req.user as IUser;
     if (!user) return next(new AppError('you need to login first', 400));
 
+    if (!process.env.GROUP_SIZE)
+      return next(new AppError('define GROUP_SIZE in your .env file', 500));
+
+    if (type === 'group' && members.length > process.env.GROUP_SIZE)
+      return next(
+        new AppError(
+          `groups cannot have more than ${process.env.GROUP_SIZE} members`,
+          400
+        )
+      );
+
     const membersWithRoles = members.map((id: ObjectId) => ({
       user: id,
       Role: 'member',
@@ -47,8 +58,7 @@ export const createChat = catchAsync(
         )
       )
     );
-    const u = await User.findById(allMembers[0].user);
-    console.log(u);
+    await User.findById(allMembers[0].user);
     res.status(201).json({
       status: 'success',
       message: 'Chat created successfuly',
