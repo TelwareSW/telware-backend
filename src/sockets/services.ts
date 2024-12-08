@@ -8,11 +8,63 @@ import mongoose, { ObjectId } from 'mongoose';
 import { getSocketsByUserId } from '@base/services/sessionService';
 import User from '@base/models/userModel';
 import Chat from '@base/models/chatModel';
+import GroupChannel from '@base/models/groupChannelModel';
 
 interface Member {
   _id: mongoose.Types.ObjectId;
   Role: 'member' | 'admin' | 'creator';
 }
+
+const check = async (chatId: any, ack: Function, senderId: any) => {
+  if (!chatId) {
+    return ack({ success: false, message: 'provide the chatId' });
+  }
+  const chat = await Chat.findById(chatId);
+  if (!chat) {
+    return ack({
+      success: false,
+      message: 'no chat found with the provided id',
+    });
+  }
+
+  if (chat.type === 'private')
+    return ack({
+      success: false,
+      message: 'this is a private chat!',
+    });
+  const chatMembers = chat.members;
+  const chatMembersIds = chatMembers.map((m: any) => m._id);
+  if (chatMembersIds.length === 0)
+    return ack({
+      success: false,
+      message: 'this chat is deleted and it no longer exists',
+    });
+
+  const admin: Member = chatMembers.find((m) =>
+    m.user.equals(senderId)
+  ) as unknown as Member;
+
+  if (!admin || admin.Role === 'member')
+    return ack({
+      success: false,
+      message: 'you do not have permission',
+    });
+};
+
+const inform = async (
+  io: any,
+  userId: string,
+  chatId: string,
+  event: string
+) => {
+  let memberSocket;
+  const socketIds = await getSocketsByUserId(userId);
+  if (!socketIds || socketIds.length !== 0)
+    socketIds.forEach((socketId: any) => {
+      memberSocket = io.sockets.sockets.get(socketId);
+      if (memberSocket) memberSocket.emit(event, { chatId });
+    });
+};
 
 const joinRoom = async (io: any, roomId: String, userId: ObjectId) => {
   const socketIds = await getSocketsByUserId(userId);
@@ -215,42 +267,6 @@ export const handleDraftMessage = async (
   }
 };
 
-const check = async (chatId: any, ack: Function, senderId: any) => {
-  if (!chatId) {
-    return ack({ success: false, message: 'provide the chatId' });
-  }
-  const chat = await Chat.findById(chatId);
-  if (!chat) {
-    return ack({
-      success: false,
-      message: 'no chat found with the provided id',
-    });
-  }
-
-  if (chat.type === 'private')
-    return ack({
-      success: false,
-      message: 'this is a private chat!',
-    });
-  const chatMembers = chat.members;
-  const chatMembersIds = chatMembers.map((m: any) => m._id);
-  if (chatMembersIds.length === 0)
-    return ack({
-      success: false,
-      message: 'this chat is deleted and it no longer exists',
-    });
-
-  const admin: Member = chatMembers.find((m) =>
-    m.user.equals(senderId)
-  ) as unknown as Member;
-
-  if (!admin || admin.Role === 'member')
-    return ack({
-      success: false,
-      message: 'you do not have permission',
-    });
-};
-
 export const addAdminsHandler = async (
   io: any,
   data: any,
@@ -287,14 +303,7 @@ export const addAdminsHandler = async (
         arrayFilters: [{ 'elem.user': memId }],
       }
     );
-
-    let memberSocket;
-    const socketIds = await getSocketsByUserId(memId);
-    if (!socketIds || socketIds.length !== 0)
-      socketIds.forEach((socketId: any) => {
-        memberSocket = io.sockets.sockets.get(socketId);
-        if (memberSocket) memberSocket.emit('ADD_ADMINS_SERVER', { chatId });
-      });
+    await inform(io, memId, chatId, 'ADD_ADMINS_SERVER');
   });
 
   ack({
@@ -332,5 +341,73 @@ export const addMembers = async (
     // const exists = chatMembers.some((member) => member.user === userId);
     // if(!exists)
     // chatMembers.push({_id: userId, Role: 'member'});
+  });
+};
+
+export const createGroupChannel = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { type, name, members } = data;
+  const user = User.findById(senderId);
+  if (!user)
+    return ack({
+      success: false,
+      message: 'Faild to create the chat',
+      error: 'you need to login first',
+    });
+
+  if (!process.env.GROUP_SIZE)
+    return ack({
+      success: false,
+      message: 'Faild to create the chat',
+      error: 'define GROUP_SIZE in your .env file',
+    });
+
+  if (type === 'group' && members.length > process.env.GROUP_SIZE)
+    return ack({
+      success: false,
+      message: 'Faild to create the chat',
+      error: `groups cannot have more than ${process.env.GROUP_SIZE} members`,
+    });
+
+  const membersWithRoles = members.map((id: ObjectId) => ({
+    user: id,
+    Role: 'member',
+  }));
+  const allMembers = [
+    ...membersWithRoles,
+    {
+      user: senderId,
+      Role: 'creator',
+    },
+  ];
+  const newChat = new GroupChannel({
+    name,
+    type,
+    members: allMembers,
+  });
+  await newChat.save();
+  await Promise.all(
+    allMembers.map(async (member) => {
+      await joinRoom(io, newChat._id as string, member.user);
+      return User.findByIdAndUpdate(
+        member.user,
+        { $push: { chats: { chat: newChat._id } } },
+        { new: true }
+      );
+    })
+  );
+  socket
+    .to(newChat._id as string)
+    .emit('JOIN_GROUP_CHANNEL', {chatId: newChat._id as string});
+
+  ack({
+    success: true,
+    message: 'Chat created successfuly',
+    data: newChat,
   });
 };
