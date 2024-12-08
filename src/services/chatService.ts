@@ -23,14 +23,14 @@ export const getChats = async (
   userId: mongoose.Types.ObjectId,
   type?: string
 ): Promise<any> => {
-  const user = await User.findById(userId)
+  const userChats = await User.findById(userId)
     .select('chats')
     .populate({
       path: 'chats.chat',
       match: type ? { type } : {},
     });
-  if (!user) return [];
-  return user.chats.filter((chatEntry) => chatEntry.chat !== null);
+  if (!userChats) return [];
+  return userChats;
 };
 
 export const getChatIds = async (

@@ -219,14 +219,14 @@ const userSchema = new mongoose.Schema<IUser>(
       virtuals: true,
       transform(doc, ret) {
         delete ret.__v;
-        console.log(ret);
         if (ret.chats) {
           ret.chats.forEach((chat: any) => {
             delete chat.id;
             delete chat._id;
           });
         }
-        return ret;
+        if (ret.username) return ret;
+        return ret.chats;
       },
     },
     toObject: { virtuals: true },
