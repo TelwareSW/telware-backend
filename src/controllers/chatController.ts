@@ -4,11 +4,7 @@ import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
-import {
-  getChats,
-  getLastMessage,
-  leaveGroupChannel,
-} from '@base/services/chatService';
+import { getChats, getLastMessage } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
@@ -280,19 +276,6 @@ export const deleteGroupChannel = catchAsync(
     res.status(204).json({
       status: 'success',
       message: 'chat deleted successfuly',
-      data: {},
-    });
-  }
-);
-
-export const leaveChat = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user: IUser = req.user as IUser;
-    const userId: string = user._id as string;
-    leaveGroupChannel(req.params.id, userId);
-    res.status(200).json({
-      status: 'success',
-      message: 'left the group successfuly',
       data: {},
     });
   }

@@ -533,3 +533,59 @@
  *                   type: string
  *                   description: "Error message describing the issue."
  */
+
+/**
+ * @swagger
+ * /LEAVE_GROUP_CHANNEL_CLIENT:
+ *   delete:
+ *     summary: "Leave a group channel"
+ *     description: "Allows a user to leave a group channel. Other members in the group will be notified of the member's departure."
+ *     tags:
+ *       - Sockets
+ *     operationId: "leaveGroupChannel"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The unique ID of the group channel the user wants to leave."
+ *             required:
+ *               - chatId
+ *     responses:
+ *       200:
+ *         description: "Successfully left the group."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Left the group successfully."
+ *                 data:
+ *                   type: object
+ *                   description: "Additional data (if any)."
+ *       400:
+ *         description: "Failed to leave the group due to invalid input or authorization issues."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Could not leave the group."
+ *                 error:
+ *                   type: string
+ *                   description: "Detailed error message."
+ */
