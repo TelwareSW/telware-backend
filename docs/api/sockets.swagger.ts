@@ -705,3 +705,153 @@
  *                   type: string
  *                   example: Could not add users with IDs 60f6c72ef56d9e0020f290f3, 60f6c72ef56d9e0020f290f4
  */
+
+/**
+ * @swagger
+ * REMOVE_MEMBERS_CLIENT:
+ *   delete:
+ *     summary: Remove members from a group or channel chat
+ *     description: Removes specified members from a group or channel chat. Only admins or creators can perform this action.
+ *     tags:
+ *       - Sockets
+ *     operationId: "removeMembers"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The ID of the group chat."
+ *                 example: "64f123abc456def789012345"
+ *               members:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: "An array of user IDs to be removed from the group."
+ *                 example: ["64f123abc456def789012346", "64f123abc456def789012347"]
+ *     responses:
+ *       200:
+ *         description: "Successfully removed members."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Members removed successfully"
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: "Failed to remove members due to invalid input or permissions."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Some users could not be removed"
+ *                 error:
+ *                   type: string
+ *                   example: "Could not remove users with IDs: 64f123abc456def789012346"
+ */
+
+/**
+ * @swagger
+ * SET_PERMISSION_CLIENT:
+ *   patch:
+ *     summary: Update permissions for a group or channel chat
+ *     description: Allows an admin to update messaging or downloading permissions in a group chat or channel. Only users with admin privileges can perform this action.
+ *     tags:
+ *       - Sockets
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chatId
+ *               - type
+ *               - who
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique identifier of the group chat.
+ *               type:
+ *                 type: string
+ *                 enum: [post, download]
+ *                 description: The type of permission to update (`post` for messaging, `download` for downloading files).
+ *               who:
+ *                 type: string
+ *                 enum: [everyone, admin-only]
+ *                 description: Defines who can perform the specified action (`everyone` or `admin-only`).
+ *     responses:
+ *       200:
+ *         description: Permissions updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Permissions updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     chatId:
+ *                       type: string
+ *                       description: The ID of the chat where permissions were updated.
+ *                     type:
+ *                       type: string
+ *                       description: The permission type that was updated.
+ *                     who:
+ *                       type: string
+ *                       description: The updated permission scope.
+ *       400:
+ *         description: Invalid input or insufficient permissions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Could not update permissions
+ *                 error:
+ *                   type: string
+ *                   example: Invalid permission type or you do not have admin rights
+ *       404:
+ *         description: Chat not found or deleted.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Could not update permissions
+ *                 error:
+ *                   type: string
+ *                   example: This chat does not exist or has been deleted
+ */

@@ -7,11 +7,11 @@ const groupChannelSchema = new mongoose.Schema<IGroupChannel>({
     type: String,
     required: [true, 'chat must have a name'],
   },
-  messagnigPermession: {
+  messagnigPermission: {
     type: Boolean,
     default: true,
   },
-  downloadingPermession: {
+  downloadingPermission: {
     type: Boolean,
     default: true,
   },
