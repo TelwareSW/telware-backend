@@ -200,7 +200,7 @@ const userSchema = new mongoose.Schema<IUser>(
           type: Boolean,
           default: false,
         },
-        unmuteDuration: Number,
+        muteDuration: Number,
         draft: {
           type: String,
           default: '',
@@ -215,12 +215,27 @@ const userSchema = new mongoose.Schema<IUser>(
     resetPasswordExpires: { type: String, select: false },
   },
   {
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        delete ret.__v;
+        console.log(ret);
+        if (ret.chats) {
+          ret.chats.forEach((chat: any) => {
+            delete chat.id;
+            delete chat._id;
+          });
+        }
+        return ret;
+      },
+    },
     toObject: { virtuals: true },
   }
 );
 
-//TODO: Add index
+//TODO: unreadMessages virtual property
+
+userSchema.index({ email: 1 }, { unique: true, background: true });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();
