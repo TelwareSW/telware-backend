@@ -125,6 +125,38 @@ export const handleMessaging = async (
     chatId = id;
   }
 
+  if (chatType !== 'private') {
+    const chat = GroupChannel.findById(chatId);
+    if (!chat)
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'this chat does not exist',
+      });
+
+    const sender = chat.members.find((member: any) =>
+      member.user.equals(senderId)
+    );
+    if (!sender)
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'you are not a member of this chat',
+      });
+    if (sender.Role !== 'admin' && !chat.messagnigPermission)
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'only admins can post and reply to this chat',
+      });
+    if (sender.Role !== 'admin' && !isReply && chatType === 'channel')
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'only admins can post to this channel',
+      });
+  }
+
   let parentMessage;
   if (isForward || isReply) {
     parentMessage = (await Message.findById(parentMessageId)) as IMessage;
