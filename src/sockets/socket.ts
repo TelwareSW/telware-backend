@@ -10,11 +10,11 @@ import {
   handleDeleteMessage,
   handleDraftMessage,
   handleMessaging,
-  addAdminsHandler,
-  addMembers,
-  createGroupChannel,
-  deleteGroupChannel,
-  leaveGroupChannel,
+  handleAddAdmins,
+  handleCreateGroupChannel,
+  handleDeleteGroupChannel,
+  handleLeaveGroupChannel,
+  handleAddMembers,
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
@@ -56,11 +56,23 @@ const socketSetup = (server: HTTPServer) => {
     );
 
     socket.on('ADD_ADMINS_CLIENT', (data: any, ack: Function) => {
-      addAdminsHandler(io, data, ack, userId);
+      handleAddAdmins(io, data, ack, userId);
     });
 
     socket.on('ADD_MEMBERS_CLIENT', (data: any, ack: Function) => {
-      addMembers(io, data, ack, userId);
+      handleAddMembers(io, data, ack, userId);
+    });
+
+    socket.on('CREATE_GROUP_CHANNEL', (data: any, ack: Function) => {
+      handleCreateGroupChannel(io, socket, data, ack, userId);
+    });
+
+    socket.on('DELETE_GROUP_CHANNEL_CLIENT', (data: any, ack: Function) => {
+      handleDeleteGroupChannel(io, socket, data, ack, userId);
+    });
+
+    socket.on('LEAVE_GROUP_CHANNEL_CLIENT', (data: any, ack: Function) => {
+      handleLeaveGroupChannel(io, socket, data, ack, userId);
     });
 
     socket.on('CREATE_GROUP_CHANNEL', (data: any, ack: Function) => {
