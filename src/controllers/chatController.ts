@@ -83,7 +83,7 @@ export const getAllChats = catchAsync(
     const memberIds = [
       ...new Set(
         allChats.flatMap((chat: any) =>
-          chat.chat.members.map((member: any) => member.user._id)
+          chat.chat.members.map((member: any) => member.user)
         )
       ),
     ];

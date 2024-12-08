@@ -12,6 +12,7 @@ import {
   handleMessaging,
   addAdminsHandler,
   addMembers,
+  createGroupChannel,
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
@@ -19,8 +20,7 @@ import { authorizeSocket, protectSocket } from './middlewares';
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
   const chatIds = await getChatIds(userId);
   chatIds.forEach((chatId: mongoose.Types.ObjectId) => {
-    console.log('chatId', chatId);
-    socket.join(chatId._id.toString());
+    socket.join(chatId.toString());
   });
 };
 
@@ -59,6 +59,10 @@ const socketSetup = (server: HTTPServer) => {
 
     socket.on('ADD_MEMBERS_CLIENT', (data: any, ack: Function) => {
       addMembers(io, data, ack, userId);
+    });
+
+    socket.on('CREATE_GROUP_CHANNEL', (data: any, ack: Function) => {
+      createGroupChannel(io, socket, data, ack, userId);
     });
 
     socket.on('disconnect', async () => {
