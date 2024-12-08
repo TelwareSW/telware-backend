@@ -28,7 +28,7 @@ interface IUser extends Document {
   chats: {
     chat: Types.ObjectId;
     isMuted: boolean;
-    unmuteDuration: number;
+    muteDuration: number;
     draft: string;
   }[];
   changedPasswordAt: Date | undefined;

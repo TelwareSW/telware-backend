@@ -75,18 +75,6 @@ const socketSetup = (server: HTTPServer) => {
       handleLeaveGroupChannel(io, socket, data, ack, userId);
     });
 
-    socket.on('CREATE_GROUP_CHANNEL', (data: any, ack: Function) => {
-      createGroupChannel(io, socket, data, ack, userId);
-    });
-
-    socket.on('DELETE_GROUP_CHANNEL_CLIENT', (data: any, ack: Function) => {
-      deleteGroupChannel(io, socket, data, ack, userId);
-    });
-
-    socket.on('LEAVE_GROUP_CHANNEL_CLIENT', (data: any, ack: Function) => {
-      leaveGroupChannel(io, socket, data, ack, userId);
-    });
-
     socket.on('disconnect', async () => {
       console.log(`Client with userID ${userId} disconnected: ${socket.id}`);
       socket.request.session.user.lastSeenTime = Date.now();

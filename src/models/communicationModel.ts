@@ -20,7 +20,14 @@ const communicationSchema = new mongoose.Schema(
   {
     discriminatorKey: 'communicationType',
     collection: 'Communication',
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        delete ret.__v;
+        delete ret.communicationType;
+        return ret;
+      },
+    },
     toObject: { virtuals: true },
   }
 );
