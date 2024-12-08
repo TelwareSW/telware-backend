@@ -31,7 +31,6 @@ export const handleMessaging = async (
 ) => {
   let { chatId, media, content, contentType, parentMessageId } = data;
   const { isFirstTime, chatType, isReply, isForward } = data;
-
   if (
     (!isForward &&
       !content &&
@@ -54,7 +53,6 @@ export const handleMessaging = async (
       message: 'Failed to send the message',
       error: 'conflicting fields',
     });
-
   if (isFirstTime) {
     const members = [{ user: chatId }, { user: senderId }];
     const chat = new NormalChat({ members });
@@ -62,8 +60,16 @@ export const handleMessaging = async (
     await chat.save();
     socket.join(id);
     await joinRoom(io, id, chatId);
-    await User.findByIdAndUpdate(senderId, { chats: id });
-    await User.findByIdAndUpdate(chatId, { chats: id });
+    await User.findByIdAndUpdate(senderId, {
+      $push: {
+        chats: { chat: id },
+      },
+    });
+    await User.findByIdAndUpdate(chatId, {
+      $push: {
+        chats: { chat: id },
+      },
+    });
     chatId = id;
   }
 
@@ -100,7 +106,6 @@ export const handleMessaging = async (
     messageType: chatType,
   });
   await message.save();
-
   if (parentMessage && isReply && chatType === 'channel') {
     parentMessage.threadMessages.push(message._id as mongoose.Types.ObjectId);
     await parentMessage.save();
@@ -108,7 +113,6 @@ export const handleMessaging = async (
 
   const draftKey = `draft:${chatId}:${senderId}`;
   await redisClient.del(draftKey);
-
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
     messageId: message._id,
@@ -185,8 +189,6 @@ export const handleDraftMessage = async (
 ) => {
   try {
     const { chatId, content, contentType, isFirstTime, chatType } = data;
-
-    // Store draft in Redis
     const draftKey = `draft:${chatId}:${senderId}`;
     const draftMessage = {
       content,
@@ -232,24 +234,21 @@ const check = async (chatId: any, ack: Function, senderId: any) => {
     });
   const chatMembers = chat.members;
   const chatMembersIds = chatMembers.map((m: any) => m._id);
-  if (chatMembersIds.length === 0) {
-    console.log('!chatMembersIds');
+  if (chatMembersIds.length === 0)
     return ack({
       success: false,
       message: 'this chat is deleted and it no longer exists',
     });
-  }
+
   const admin: Member = chatMembers.find((m) =>
     m.user.equals(senderId)
   ) as unknown as Member;
 
-  if (!admin || admin.Role === 'member') {
-    console.log('not an admin');
+  if (!admin || admin.Role === 'member')
     return ack({
       success: false,
       message: 'you do not have permission',
     });
-  }
 };
 
 export const addAdminsHandler = async (
@@ -262,26 +261,33 @@ export const addAdminsHandler = async (
   let user;
   const func = await check(chatId, ack, senderId);
   if (func) return func;
-  members.map(async (memId: Member) => {
+  members.map(async (memId: string) => {
     user = await User.findById(memId);
     if (!user)
       return ack({
         success: false,
         message: `member with Id: ${memId} does no longer exists`,
       });
-    if (!user.chats.includes(chatId))
+
+    const isMemberOfChat = user.chats.some((chatEntry) =>
+      chatEntry.chat.equals(chatId)
+    );
+    if (!isMemberOfChat) {
       return ack({
         success: false,
-        message: `member with Id: ${memId} is no longer a member of this chat`,
+        message: `Member with Id: ${memId} is no longer a member of this chat.`,
       });
+    }
     //TODO: handle the case where someone tries to set the creator as an admin
-    const chat = await Chat.findOneAndUpdate(
-      { _id: chatId, 'members._id': memId },
-      { $set: { 'members.$.Role': 'admin' } },
-      { new: true }
+    await Chat.findByIdAndUpdate(
+      chatId,
+      { $set: { 'members.$[elem].Role': 'admin' } },
+      {
+        new: true,
+        arrayFilters: [{ 'elem.user': memId }],
+      }
     );
 
-    console.log(chat);
     let memberSocket;
     const socketIds = await getSocketsByUserId(memId);
     if (!socketIds || socketIds.length !== 0)

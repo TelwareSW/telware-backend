@@ -21,6 +21,17 @@ export const createChat = catchAsync(
     const user: IUser = req.user as IUser;
     if (!user) return next(new AppError('you need to login first', 400));
 
+    if (!process.env.GROUP_SIZE)
+      return next(new AppError('define GROUP_SIZE in your .env file', 500));
+
+    if (type === 'group' && members.length > process.env.GROUP_SIZE)
+      return next(
+        new AppError(
+          `groups cannot have more than ${process.env.GROUP_SIZE} members`,
+          400
+        )
+      );
+
     const membersWithRoles = members.map((id: ObjectId) => ({
       user: id,
       Role: 'member',
@@ -32,24 +43,22 @@ export const createChat = catchAsync(
         Role: 'creator',
       },
     ];
-
     const newChat = new GroupChannel({
       name,
       type,
       members: allMembers,
     });
     await newChat.save();
-
     await Promise.all(
-      allMembers.map((memberId) =>
+      allMembers.map((member) =>
         User.findByIdAndUpdate(
-          memberId,
+          member.user,
           { $push: { chats: { chat: newChat._id } } },
           { new: true }
         )
       )
     );
-
+    await User.findById(allMembers[0].user);
     res.status(201).json({
       status: 'success',
       message: 'Chat created successfuly',
@@ -65,7 +74,6 @@ export const getAllChats = catchAsync(
     if (!user) return next(new AppError('you need to login first', 400));
     const userId: mongoose.Types.ObjectId = user._id as mongoose.Types.ObjectId;
     const allChats = await getChats(userId, type);
-    console.log(allChats);
     if (!allChats || allChats.length === 0)
       return res.status(200).json({
         status: 'success',

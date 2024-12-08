@@ -39,8 +39,7 @@ export const getChatIds = async (
   type?: string
 ) => {
   const chats = await getChats(userId, type);
-  console.log(chats);
-  return chats.map((chat: any) => chat._id);
+  return chats.map((chat: any) => chat.chat);
 };
 
 export const enableDestruction = async (
