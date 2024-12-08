@@ -274,40 +274,60 @@ export const addAdminsHandler = async (
   senderId: any
 ) => {
   const { members, chatId } = data;
-  let user;
+  const forbiddenUsers: string[] = [];
   const func = await check(chatId, ack, senderId);
-  if (func) return func;
-  members.map(async (memId: string) => {
-    user = await User.findById(memId);
-    if (!user)
-      return ack({
-        success: false,
-        message: `member with Id: ${memId} does no longer exists`,
-      });
+  const chat = await Chat.findById(chatId);
 
-    const isMemberOfChat = user.chats.some((chatEntry) =>
-      chatEntry.chat.equals(chatId)
-    );
-    if (!isMemberOfChat) {
-      return ack({
-        success: false,
-        message: `Member with Id: ${memId} is no longer a member of this chat.`,
-      });
-    }
-    await Chat.findByIdAndUpdate(
-      chatId,
-      { $set: { 'members.$[elem].Role': 'admin' } },
-      {
-        new: true,
-        arrayFilters: [{ 'elem.user': memId }],
+  if (func) return func;
+
+  if (!chat)
+    return ack({
+      success: false,
+      message: 'Could not add admins to the group',
+      error: 'Chat not found',
+    });
+
+  await Promise.all(
+    members.map(async (memId: string) => {
+      const user = await User.findById(memId);
+
+      if (!user) {
+        forbiddenUsers.push(memId);
+        return; // Skip the current iteration
       }
-    );
-    await inform(io, memId, chatId, 'ADD_ADMINS_SERVER');
-  });
+
+      const isMemberOfChat = chat.members.some((m) => m.user.equals(memId));
+
+      if (!isMemberOfChat) {
+        forbiddenUsers.push(memId);
+        return; // Skip the current iteration
+      }
+
+      await Chat.findByIdAndUpdate(
+        chatId,
+        { $set: { 'members.$[elem].Role': 'admin' } },
+        {
+          new: true,
+          arrayFilters: [{ 'elem.user': memId }],
+        }
+      );
+
+      await inform(io, memId, chatId, 'ADD_ADMINS_SERVER');
+    })
+  );
+
+  if (forbiddenUsers.length !== 0) {
+    return ack({
+      success: false,
+      message: 'Not all users were added as admins',
+      error: `Could not add users with IDs: ${forbiddenUsers.join(', ')}`,
+    });
+  }
 
   ack({
     success: true,
-    message: 'added admins successfuly',
+    message: 'Added admins successfully',
+    data: {},
   });
 };
 
@@ -345,7 +365,6 @@ export const addMembers = async (
 
     const userWasMember = user.chats.some((c: any) => c.chat === chatId);
     if (!userWasMember) user.chats.push(chatId);
-    
   });
 };
 
