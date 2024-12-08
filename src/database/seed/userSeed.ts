@@ -95,7 +95,7 @@ const createPublicChat = async (
       user: user.user,
       Role:
         index === 0
-          ? 'creator'
+          ? 'admin'
           : faker.helpers.arrayElement(['member', 'admin']),
     })),
     name: generateGroupName(),

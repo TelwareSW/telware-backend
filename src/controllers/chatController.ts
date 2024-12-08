@@ -36,7 +36,7 @@ export const createChat = catchAsync(
       ...membersWithRoles,
       {
         user: user._id,
-        Role: 'creator',
+        Role: 'admin',
       },
     ];
     const newChat = new GroupChannel({

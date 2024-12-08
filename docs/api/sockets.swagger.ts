@@ -459,7 +459,7 @@
  *                             description: "ID of the user."
  *                           Role:
  *                             type: string
- *                             description: "Role of the user in the group (e.g., 'creator', 'member')."
+ *                             description: "Role of the user in the group (e.g., 'admin', 'member')."
  *       400:
  *         description: "Invalid input or constraints violated."
  *         content:
@@ -483,7 +483,7 @@
  * /DELETE_GROUP_CHANNEL_CLIENT:
  *   delete:
  *     summary: "Delete a group or channel"
- *     description: "This socket event allows the creator of a group channel to delete the group. All members will be informed about the deletion."
+ *     description: "This socket event allows the admin of a group channel to delete the group. All members will be informed about the deletion."
  *     tags:
  *       - Sockets
  *     operationId: "deleteGroupChannel"
