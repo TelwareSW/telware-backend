@@ -185,8 +185,6 @@ export const handleDraftMessage = async (
 ) => {
   try {
     const { chatId, content, contentType, isFirstTime, chatType } = data;
-
-    // Store draft in Redis
     const draftKey = `draft:${chatId}:${senderId}`;
     const draftMessage = {
       content,
@@ -232,13 +230,12 @@ const check = async (chatId: any, ack: Function, senderId: any) => {
     });
   const chatMembers = chat.members;
   const chatMembersIds = chatMembers.map((m: any) => m._id);
-  if (chatMembersIds.length === 0) {
-    console.log('!chatMembersIds');
+  if (chatMembersIds.length === 0)
     return ack({
       success: false,
       message: 'this chat is deleted and it no longer exists',
     });
-  }
+
   const admin: Member = chatMembers.find((m) =>
     m.user.equals(senderId)
   ) as unknown as Member;
@@ -262,30 +259,40 @@ export const addAdminsHandler = async (
   let user;
   const func = await check(chatId, ack, senderId);
   if (func) return func;
-  members.map(async (memId: Member) => {
+  members.map(async (memId: string) => {
     user = await User.findById(memId);
     if (!user)
       return ack({
         success: false,
         message: `member with Id: ${memId} does no longer exists`,
       });
-    if (!user.chats.includes(chatId))
+
+    const isMemberOfChat = user.chats.some((chatEntry) =>
+      chatEntry.chat.equals(chatId)
+    );
+    if (!isMemberOfChat) {
       return ack({
         success: false,
-        message: `member with Id: ${memId} is no longer a member of this chat`,
+        message: `Member with Id: ${memId} is no longer a member of this chat.`,
       });
-    //TODO: handle the case where someone tries to set the creator as an admin
-    const chat = await Chat.findOneAndUpdate(
-      { _id: chatId, 'members._id': memId },
-      { $set: { 'members.$.Role': 'admin' } },
-      { new: true }
-    );
+    }
 
+    //TODO: handle the case where someone tries to set the creator as an admin
+    const chat = await Chat.findByIdAndUpdate(
+      chatId,
+      { $set: { 'members.$[elem].Role': 'admin' } },
+      {
+        new: true,
+        arrayFilters: [{ 'elem.user': memId }],
+      }
+    );
     console.log(chat);
+    
     let memberSocket;
     const socketIds = await getSocketsByUserId(memId);
     if (!socketIds || socketIds.length !== 0)
       socketIds.forEach((socketId: any) => {
+        console.log(socketId);
         memberSocket = io.sockets.sockets.get(socketId);
         if (memberSocket) memberSocket.emit('ADD_ADMINS_SERVER', { chatId });
       });
