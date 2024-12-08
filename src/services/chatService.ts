@@ -3,7 +3,6 @@ import NormalChat from '@base/models/normalChatModel';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
 import User from '@base/models/userModel';
-import Chat from '@base/models/chatModel';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
@@ -56,4 +55,3 @@ export const enableDestruction = async (
     }, chat.destructionDuration * 1000);
   }
 };
-

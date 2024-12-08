@@ -456,10 +456,42 @@ export const deleteGroupChannel = async (
   });
 };
 
+export const leaveGroupChannel = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId } = data;
+  const chat = await Chat.findById(chatId);
+  if (!chat)
+    return ack({
+      success: false,
+      message: 'could not leave the group',
+      error: 'this chat does no longer exist',
+    });
+  const isMember = chat.members.some(
+    (member: any) => member.user.toString() === senderId.toString()
+  );
+  if (!isMember)
+    return ack({
+      success: false,
+      message: 'could not leave the group',
+      error: 'you are not a member of this chat',
+    });
 
-const leaveGroupChannel = async (chatId: string, member: string) => {
   await Chat.updateOne(
     { _id: chatId },
-    { $pull: { members: { user: member } } }
+    { $pull: { members: { user: senderId } } }
   );
+
+  socket
+    .to(chatId)
+    .emit('LEAVE_GROUP_CHANNEL_SERVER', { chatId, memberId: senderId });
+  ack({
+    success: true,
+    message: 'left the group successfuly',
+    data: {},
+  });
 };

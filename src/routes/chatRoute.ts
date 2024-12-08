@@ -10,7 +10,6 @@ import {
   getDraft,
   getChat,
   deleteGroupChannel,
-  leaveChat,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -32,5 +31,4 @@ router.get('/get-draft', getDraft);
 
 router.get('/:chatId', restrictTo(), getChat);
 router.delete('/:chatId', restrictTo('creator'), deleteGroupChannel);
-router.delete('/leave/:id', leaveChat);
 export default router;
