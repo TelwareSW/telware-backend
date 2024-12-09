@@ -126,14 +126,13 @@ export const handleMessaging = async (
   }
 
   if (chatType !== 'private') {
-    const chat = GroupChannel.findById(chatId);
+    const chat = await GroupChannel.findById(chatId);
     if (!chat)
       return ack({
         success: false,
         message: 'Failed to send the message',
         error: 'this chat does not exist',
       });
-
     const sender = chat.members.find((member: any) =>
       member.user.equals(senderId)
     );
@@ -696,11 +695,11 @@ export const handleSetPermission = async (
       error: 'you do not have permission',
     });
 
-  if (type === 'post') chat.messagnigPermission = who === 'everyone';
+  if (type === 'post') chat.messagingPermission = who === 'everyone';
   else if (type === 'download') chat.downloadingPermission = who === 'everyone';
   await chat.save();
   socket.to(chatId).emit('SET_PERMISSION_SERVER', { chatId, type, who });
-
+  console.log(chat);
   ack({
     success: true,
     message: 'permissions updated successfully',
