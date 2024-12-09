@@ -9,6 +9,7 @@ import {
   getDraft,
   getChat,
   setPrivacy,
+  getChatMembers,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -29,4 +30,6 @@ router.get('/get-draft', getDraft);
 
 router.get('/:chatId', restrictTo(), getChat);
 router.patch('/privacy/:chatId', restrictTo('admin'), setPrivacy);
+router.get('/members/:chatId', restrictTo(), getChatMembers);
+
 export default router;

@@ -231,3 +231,21 @@ export const setPrivacy = catchAsync(
     });
   }
 );
+
+export const getChatMembers = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const chat = await Chat.findById(chatId);
+    if (!chat)
+      return next(new AppError('no chat found with the provided Id', 400));
+    res.status(200).json({
+      status: 'success',
+      message: 'retreived chats successfuly',
+      data: { members: chat.members },
+    });
+  }
+);
+
+export const muteNotifications = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {}
+);
