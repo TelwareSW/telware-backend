@@ -3,6 +3,7 @@ import NormalChat from '@base/models/normalChatModel';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
 import User from '@base/models/userModel';
+import IUser from '@base/types/user';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
@@ -55,4 +56,20 @@ export const enableDestruction = async (
       socket.to(chatId).emit('DESTRUCT_MESSAGE', messageId);
     }, chat.destructionDuration * 1000);
   }
+};
+
+export const unmute = async (
+  user: IUser,
+  chatId: string,
+  muteDuration: number
+) => {
+  setTimeout(async () => {
+    user.chats.forEach((c: any) => {
+      if (c.chat.equals(chatId)) {
+        c.isMuted = false;
+        c.muteDuration = undefined;
+      }
+    });
+    await user.save({ validateBeforeSave: false });
+  }, muteDuration * 1000);
 };
