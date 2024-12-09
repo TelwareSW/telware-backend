@@ -917,3 +917,87 @@
  *                   type: string
  *                   example: no chat found with the provided id
  */
+
+/**
+ * @swagger
+ * /chats/picture/{chatId}:
+ *   patch:
+ *     summary: Update the chat's profile picture
+ *     description: Upload a new profile picture for a specific chat. Only authorized users who are members of the chat are allowed to update the picture.
+ *     tags:
+ *       - Chat
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: Unique identifier of the chat
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The image file to be uploaded
+ *     responses:
+ *       201:
+ *         description: Chat picture updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: chat picture updated successfully
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: Bad request - Chat does not exist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: this chat does no longer exists
+ *       403:
+ *         description: Forbidden - User not allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: you are not a member of this chat, you are not allowed here
+ *       500:
+ *         description: Server error - File upload failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: An error occurred while uploading the story
+ */
