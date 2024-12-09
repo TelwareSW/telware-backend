@@ -3,10 +3,9 @@ import NormalChat from '@base/models/normalChatModel';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
 import User from '@base/models/userModel';
-import fs from 'fs/promises';
-import path from 'path';
 import AppError from '@base/errors/AppError';
 import GroupChannel from '@base/models/groupChannelModel';
+import deleteFile from '@base/utils/deleteFile';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
@@ -70,19 +69,5 @@ export const deleteChatPictureFile = async (
   }
 
   const fileName = chat.picture;
-  if (!fileName || !fileName.trim()) return;
-
-  const filePath = path.join(process.cwd(), 'src/public/media/', fileName);
-
-  try {
-    // Check if the file exists
-    await fs.access(filePath);
-    // Delete the file if it exists
-    await fs.unlink(filePath);
-  } catch (err: any) {
-    // Ignore file not found errors (ENOENT)
-    if (err.code !== 'ENOENT') {
-      throw err; // Rethrow unexpected errors
-    }
-  }
+  await deleteFile(fileName);
 };
