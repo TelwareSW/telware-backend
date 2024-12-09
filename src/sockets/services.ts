@@ -125,6 +125,37 @@ export const handleMessaging = async (
     chatId = id;
   }
 
+  if (chatType !== 'private') {
+    const chat = await GroupChannel.findById(chatId);
+    if (!chat)
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'this chat does not exist',
+      });
+    const sender = chat.members.find((member: any) =>
+      member.user.equals(senderId)
+    );
+    if (!sender)
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'you are not a member of this chat',
+      });
+    if (sender.Role !== 'admin' && !chat.messagnigPermission)
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'only admins can post and reply to this chat',
+      });
+    if (sender.Role !== 'admin' && !isReply && chatType === 'channel')
+      return ack({
+        success: false,
+        message: 'Failed to send the message',
+        error: 'only admins can post to this channel',
+      });
+  }
+
   let parentMessage;
   if (isForward || isReply) {
     parentMessage = (await Message.findById(parentMessageId)) as IMessage;
@@ -280,7 +311,7 @@ export const handleAddAdmins = async (
 
   if (func) return func;
 
-  if (!chat)
+  if (!chat || chat.isDeleted)
     return ack({
       success: false,
       message: 'Could not add admins to the group',
@@ -293,7 +324,7 @@ export const handleAddAdmins = async (
 
       if (!user) {
         forbiddenUsers.push(memId);
-        return; 
+        return;
       }
 
       const isMemberOfChat = chat.members.some((m) => m.user.equals(memId));
@@ -344,7 +375,7 @@ export const handleAddMembers = async (
   if (func) return func;
 
   const chat = await Chat.findById(chatId);
-  if (!chat)
+  if (!chat || chat.isDeleted)
     return ack({
       success: false,
       message: 'No chat found with the provided ID',
@@ -513,7 +544,7 @@ export const handleLeaveGroupChannel = async (
 ) => {
   const { chatId } = data;
   const chat = await Chat.findById(chatId);
-  if (!chat)
+  if (!chat || chat.isDeleted)
     return ack({
       success: false,
       message: 'could not leave the group',
@@ -540,6 +571,138 @@ export const handleLeaveGroupChannel = async (
   ack({
     success: true,
     message: 'left the group successfuly',
+    data: {},
+  });
+};
+
+export const handleRemoveMembers = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId, members } = data;
+  const forbiddenUsers: string[] = [];
+
+  const chat = await Chat.findById(chatId);
+  if (!chat || chat.isDeleted)
+    return ack({
+      success: false,
+      message: 'could not remove members from the group',
+      error: 'this chat does no longer exist',
+    });
+
+  const admin: Member = chat.members.find((m) =>
+    m.user.equals(senderId)
+  ) as unknown as Member;
+
+  if (!admin)
+    return ack({
+      success: false,
+      message: 'could not remove members from the group',
+      error: 'you are no longer a member of this group',
+    });
+
+  if (admin.Role === 'member')
+    return ack({
+      success: false,
+      message: 'could not remove members from the group',
+      error: 'you do not have permission',
+    });
+
+  await Promise.all(
+    members.map(async (memberId: any) => {
+      const user = await User.findById(memberId);
+      if (!user) {
+        forbiddenUsers.push(memberId);
+        return;
+      }
+
+      const isMember = chat.members.some((m: any) => m.user.equals(memberId));
+      if (!isMember) {
+        forbiddenUsers.push(memberId);
+        return;
+      }
+
+      await Chat.updateOne(
+        { _id: chatId },
+        { $pull: { members: { user: memberId } } }
+      );
+
+      await inform(io, memberId, chatId, 'REMOVE_MEMBERS_SERVER');
+    })
+  );
+  if (forbiddenUsers.length > 0)
+    return ack({
+      success: false,
+      message: 'Some users could not be added',
+      error: `Could not remove users with IDs: ${forbiddenUsers.join(', ')}`,
+    });
+  ack({
+    success: true,
+    message: 'Members removed successfully',
+    data: {},
+  });
+};
+
+export const handleSetPermission = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId, type, who } = data;
+
+  if (!type || !who)
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'missing required fields',
+    });
+
+  const chat = await GroupChannel.findById(chatId);
+  if (!chat || chat.isDeleted)
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'this chat does no longer exist',
+    });
+
+  if (chat.type === 'private')
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'cannot change permissions for private chats',
+    });
+
+  const admin: Member = chat.members.find((m: any) =>
+    m.user.equals(senderId)
+  ) as unknown as Member;
+
+  if (!admin)
+    return ack({
+      success: false,
+      message: 'could not update permissions',
+      error: 'you are no longer a member of this group',
+    });
+
+  if (admin.Role === 'member')
+    return ack({
+      success: false,
+      message: 'could not change group permissions',
+      error: 'you do not have permission',
+    });
+
+  if (type === 'post') chat.messagingPermission = who === 'everyone';
+  else if (type === 'download') chat.downloadingPermission = who === 'everyone';
+  await chat.save();
+  socket.to(chatId).emit('SET_PERMISSION_SERVER', { chatId, type, who });
+  console.log(chat);
+  ack({
+    success: true,
+    message: 'permissions updated successfully',
     data: {},
   });
 };
