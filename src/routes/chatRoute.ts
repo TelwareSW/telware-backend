@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import {
-  createChat,
   getAllChats,
   getMessages,
   postMediaFile,
@@ -9,7 +8,7 @@ import {
   getAllDrafts,
   getDraft,
   getChat,
-  deleteGroupChannel,
+  setPrivacy,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -19,7 +18,6 @@ const router = Router();
 
 router.use(protect);
 router.get('/', getAllChats);
-router.post('/', createChat);
 router.get('/messages/:chatId', restrictTo(), getMessages);
 
 router.patch('/destruct/:chatId', restrictTo(), enableSelfDestructing);
@@ -30,5 +28,5 @@ router.get('/get-all-drafts', getAllDrafts);
 router.get('/get-draft', getDraft);
 
 router.get('/:chatId', restrictTo(), getChat);
-router.delete('/:chatId', restrictTo('admin'), deleteGroupChannel);
+router.patch('/privacy/:chatId', restrictTo('admin'), setPrivacy);
 export default router;

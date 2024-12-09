@@ -14,7 +14,11 @@ const restrictTo =
     if (!chat)
       return next(new AppError('this chat does no longer exists', 400));
     const userChats = user.chats;
-    if (!userChats.some(userChat => userChat.chat.equals(new mongoose.Types.ObjectId(chatId))))
+    if (
+      !userChats.some((userChat) =>
+        userChat.chat.equals(new mongoose.Types.ObjectId(chatId))
+      )
+    )
       return next(
         new AppError(
           'you are not a member of this chat, you are not allowed here',
@@ -23,9 +27,7 @@ const restrictTo =
       );
 
     const chatMembers = chat.members;
-    const member = chatMembers.find((m: any) =>
-      m.user.equals(userId)
-    );
+    const member = chatMembers.find((m: any) => m.user.equals(userId));
 
     if (
       member &&

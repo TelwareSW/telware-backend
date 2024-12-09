@@ -825,3 +825,95 @@
  *                   type: string
  *                   example: Internal server error
  */
+
+/**
+ * @swagger
+ * /privacy/{chatId}:
+ *   patch:
+ *     summary: Update the privacy settings of a group chat.
+ *     tags:
+ *       - Chat
+ *     description: Updates the privacy of a group chat to either private or public. Only accessible by admins.
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: The ID of the group chat to update.
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         description: Privacy settings to update.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             privacy:
+ *               type: string
+ *               enum: [private, public]
+ *               description: The new privacy setting for the group chat.
+ *               example: private
+ *     responses:
+ *       200:
+ *         description: Privacy settings updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: privacy updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     chat:
+ *                       type: object
+ *                       description: The updated group chat details.
+ *                       example:
+ *                         _id: "645a4b34e8345f001f45678d"
+ *                         name: "Tech Group"
+ *                         privacy: true
+ *       400:
+ *         description: Missing required fields or invalid chat ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: missing required fields
+ *       403:
+ *         description: Unauthorized to update privacy settings.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: You do not have permission to perform this action.
+ *       404:
+ *         description: No chat found with the provided ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: no chat found with the provided id
+ */
