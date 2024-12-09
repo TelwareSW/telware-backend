@@ -136,6 +136,7 @@ export const handleMessaging = async (
     const sender = chat.members.find((member: any) =>
       member.user.equals(senderId)
     );
+    console.log(sender);
     if (!sender)
       return ack({
         success: false,
