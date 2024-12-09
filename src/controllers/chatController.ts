@@ -1,6 +1,5 @@
 import AppError from '@base/errors/AppError';
 import Chat from '@base/models/chatModel';
-import GroupChannel from '@base/models/groupChannelModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
@@ -10,6 +9,7 @@ import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import redisClient from '@config/redis';
+import GroupChannel from '@base/models/groupChannelModel';
 
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -211,3 +211,25 @@ export const getChat = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
+
+export const setPrivacy = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { privacy } = req.body;
+    const { chatId } = req.params;
+    if (!privacy || !chatId)
+      return next(new AppError('missing required fields', 400));
+    const isPrivate: boolean = privacy === 'private';
+    const chat = await GroupChannel.findByIdAndUpdate(
+      chatId,
+      { privacy: isPrivate },
+      { new: true }
+    );
+    if (!chat)
+      return next(new AppError('no chat found with the provided id', 400));
+    res.status(200).json({
+      status: 'success',
+      message: 'privacy updated successfuly',
+      data: { chat },
+    });
+  }
+);
