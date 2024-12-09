@@ -240,7 +240,7 @@ export const getChatMembers = catchAsync(
       return next(new AppError('no chat found with the provided Id', 400));
     res.status(200).json({
       status: 'success',
-      message: 'retreived chats successfuly',
+      message: 'retrieved chats successfuly',
       data: { members: chat.members },
     });
   }
