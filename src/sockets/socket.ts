@@ -23,6 +23,7 @@ import { authorizeSocket, protectSocket } from './middlewares';
 
 const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
   const chatIds = await getChatIds(userId);
+  console.log(chatIds);
   chatIds.forEach((chatId: mongoose.Types.ObjectId) => {
     socket.join(chatId.toString());
   });

@@ -30,7 +30,7 @@ export const getChats = async (
       match: type ? { type } : {},
     });
   if (!userChats) return [];
-  return userChats;
+  return userChats.chats;
 };
 
 export const getChatIds = async (
