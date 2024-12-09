@@ -89,7 +89,7 @@
  *                   type: string
  *                   example: missing required Fields
  *       404:
- *         description: Parent message not found.
+ *         description: Parent message not found or invalid chat configuration.
  *         content:
  *           application/json:
  *             schema:
@@ -103,7 +103,23 @@
  *                   example: Failed to send the message
  *                 error:
  *                   type: string
- *                   example: No message found with the provided id
+ *                   example: No message found with the provided id or Invalid chat configuration
+ *       403:
+ *         description: Insufficient permissions to send the message (e.g., chat type restrictions or role restrictions).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Failed to send the message
+ *                 error:
+ *                   type: string
+ *                   example: Only admins can post to this channel or Only admins can post and reply to this chat
  */
 
 /**
