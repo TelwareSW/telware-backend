@@ -2,7 +2,7 @@ import IChat from './chat';
 
 interface IGroupChannel extends IChat {
   name: string;
-  messagnigPermission: boolean;
+  messagingPermission: boolean;
   downloadingPermission: boolean;
   privacy: boolean;
   createdAt: Date;
