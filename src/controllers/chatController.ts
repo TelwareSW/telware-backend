@@ -8,60 +8,8 @@ import { getChats, getLastMessage } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
-import mongoose, { ObjectId } from 'mongoose';
+import mongoose from 'mongoose';
 import redisClient from '@config/redis';
-
-export const createChat = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { type, name, members } = req.body;
-    const user: IUser = req.user as IUser;
-    if (!user) return next(new AppError('you need to login first', 400));
-
-    if (!process.env.GROUP_SIZE)
-      return next(new AppError('define GROUP_SIZE in your .env file', 500));
-
-    if (type === 'group' && members.length > process.env.GROUP_SIZE)
-      return next(
-        new AppError(
-          `groups cannot have more than ${process.env.GROUP_SIZE} members`,
-          400
-        )
-      );
-
-    const membersWithRoles = members.map((id: ObjectId) => ({
-      user: id,
-      Role: 'member',
-    }));
-    const allMembers = [
-      ...membersWithRoles,
-      {
-        user: user._id,
-        Role: 'admin',
-      },
-    ];
-    const newChat = new GroupChannel({
-      name,
-      type,
-      members: allMembers,
-    });
-    await newChat.save();
-    await Promise.all(
-      allMembers.map((member) =>
-        User.findByIdAndUpdate(
-          member.user,
-          { $push: { chats: { chat: newChat._id } } },
-          { new: true }
-        )
-      )
-    );
-    await User.findById(allMembers[0].user);
-    res.status(201).json({
-      status: 'success',
-      message: 'Chat created successfuly',
-      data: newChat,
-    });
-  }
-);
 
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -263,23 +211,3 @@ export const getChat = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
-
-export const deleteGroupChannel = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { chatId } = req.params;
-    const chat = await Chat.findById(chatId);
-
-    if (!chat || chat.isDeleted)
-      return next(new AppError('no chat found with the provided id', 400));
-
-    chat.members = [];
-    chat.isDeleted = true;
-    await chat.save();
-
-    res.status(204).json({
-      status: 'success',
-      message: 'chat deleted successfuly',
-      data: {},
-    });
-  }
-);
