@@ -247,7 +247,7 @@ export const updateChatPicture = catchAsync(async (req: any, res: Response) => {
 
   await GroupChannel.findByIdAndUpdate(
     chatId,
-    { photo: req.file.filename },
+    { picture: req.file.filename },
     { new: true, runValidators: true }
   );
 
