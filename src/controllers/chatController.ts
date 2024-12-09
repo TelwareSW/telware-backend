@@ -3,7 +3,11 @@ import Chat from '@base/models/chatModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
-import { getChats, getLastMessage } from '@base/services/chatService';
+import {
+  deleteChatPictureFile,
+  getChats,
+  getLastMessage,
+} from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
@@ -231,3 +235,25 @@ export const setPrivacy = catchAsync(
     });
   }
 );
+
+export const updateChatPicture = catchAsync(async (req: any, res: Response) => {
+  const { chatId } = req.params;
+
+  if (!req.file) {
+    throw new AppError('An error occured while uploading the story', 500);
+  }
+
+  await deleteChatPictureFile(chatId);
+
+  await GroupChannel.findByIdAndUpdate(
+    chatId,
+    { photo: req.file.filename },
+    { new: true, runValidators: true }
+  );
+
+  res.status(201).json({
+    status: 'success',
+    message: 'chat picture updated successfuly',
+    data: {},
+  });
+});

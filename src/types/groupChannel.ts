@@ -7,6 +7,7 @@ interface IGroupChannel extends IChat {
   privacy: boolean;
   createdAt: Date;
   isFilterd: boolean;
+  picture: string;
 }
 
 export default IGroupChannel;

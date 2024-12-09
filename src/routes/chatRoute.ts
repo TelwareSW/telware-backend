@@ -9,6 +9,7 @@ import {
   getDraft,
   getChat,
   setPrivacy,
+  updateChatPicture,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -20,6 +21,12 @@ router.use(protect);
 router.get('/', getAllChats);
 router.get('/messages/:chatId', restrictTo(), getMessages);
 
+router.patch(
+  '/picture/:chatId',
+  restrictTo(),
+  upload.single('file'),
+  updateChatPicture
+);
 router.patch('/destruct/:chatId', restrictTo(), enableSelfDestructing);
 router.patch('/un-destruct/:chatId', restrictTo(), disableSelfDestructing);
 router.post('/media', upload.single('file'), postMediaFile);

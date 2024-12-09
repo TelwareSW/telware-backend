@@ -27,6 +27,10 @@ const groupChannelSchema = new mongoose.Schema<IGroupChannel>({
     type: Boolean,
     default: false,
   },
+  picture: {
+    type: String,
+    default: '',
+  },
 });
 
 const GroupChannel = Chat.discriminator('GroupChannel', groupChannelSchema);
