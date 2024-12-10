@@ -2,8 +2,7 @@ import AppError from '@base/errors/AppError';
 import Story from '@base/models/storyModel';
 import User from '@base/models/userModel';
 import mongoose from 'mongoose';
-import { unlink } from 'fs/promises';
-import path from 'path';
+import deleteFile from '@base/utils/deleteFile';
 import Chat from '@base/models/chatModel';
 import IStory from '@base/types/story';
 
@@ -41,8 +40,7 @@ export const deleteStoryFile = async (storyId: mongoose.Types.ObjectId) => {
   }
 
   const fileName = story.content;
-
-  await unlink(path.join(process.cwd(), 'src/public/media/', fileName));
+  await deleteFile(fileName);
 };
 
 // Returns all the users ids that the user has a private chat with

@@ -920,22 +920,33 @@
 
 /**
  * @swagger
- * /chats/members/{chatId}:
- *   get:
- *     summary: Retrieve chat members
+ * /chats/picture/{chatId}:
+ *   patch:
+ *     summary: Update the chat's profile picture
+ *     description: Upload a new profile picture for a specific chat. Only authorized users who are members of the chat are allowed to update the picture.
  *     tags:
  *       - Chat
- *     description: Fetches the members of a chat by its ID.
  *     parameters:
  *       - in: path
  *         name: chatId
  *         required: true
- *         description: The ID of the chat whose members are to be retrieved.
+ *         description: Unique identifier of the chat
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The image file to be uploaded
  *     responses:
- *       200:
- *         description: Successfully retrieved chat members.
+ *       201:
+ *         description: Chat picture updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -946,23 +957,12 @@
  *                   example: success
  *                 message:
  *                   type: string
- *                   example: retrieved chats successfully
+ *                   example: chat picture updated successfully
  *                 data:
  *                   type: object
- *                   properties:
- *                     members:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           user:
- *                             type: string
- *                             description: The ID of the user.
- *                           role:
- *                             type: string
- *                             description: The role of the user in the chat (e.g., admin, member).
+ *                   example: {}
  *       400:
- *         description: No chat found with the provided ID.
+ *         description: Bad request - Chat does not exist
  *         content:
  *           application/json:
  *             schema:
@@ -973,8 +973,35 @@
  *                   example: fail
  *                 message:
  *                   type: string
- *                   example: no chat found with the provided Id
+ *                   example: this chat does no longer exists
+ *       403:
+ *         description: Forbidden - User not allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: you are not a member of this chat, you are not allowed here
+ *       500:
+ *         description: Server error - File upload failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: An error occurred while uploading the story
  */
+
 
 /**
  * @swagger
@@ -1087,3 +1114,4 @@
  *                   type: string
  *                   example: login first
  */
+
