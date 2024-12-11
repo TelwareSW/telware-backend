@@ -238,7 +238,7 @@ export const handleEditMessage = async (
     });
   const message = await Message.findByIdAndUpdate(
     messageId,
-    { content },
+    { content, isEdited: true },
     { new: true }
   );
   if (!message)
