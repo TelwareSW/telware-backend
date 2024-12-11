@@ -1,6 +1,7 @@
+import ICommunication from '@base/types/communication';
 import mongoose from 'mongoose';
 
-const communicationSchema = new mongoose.Schema(
+const communicationSchema = new mongoose.Schema<ICommunication>(
   {
     timestamp: {
       type: Date,

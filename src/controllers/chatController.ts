@@ -13,7 +13,6 @@ import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
-import redisClient from '@config/redis';
 import GroupChannel from '@base/models/groupChannelModel';
 import crypto from 'crypto';
 import Invite from '@base/models/invite';
@@ -116,86 +115,6 @@ export const disableSelfDestructing = catchAsync(
       status: 'success',
       message: 'Destruction time is disabled successfuly',
     });
-  }
-);
-
-export const getAllDrafts = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.query.userId as string;
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: 'User ID is required',
-      });
-    }
-
-    try {
-      const draftKey = `drafts:${userId}`;
-      const draftsData = await redisClient.get(draftKey);
-      if (!draftsData) {
-        return res.status(404).json({
-          success: false,
-          message: 'No draft messages found',
-        });
-      }
-      const drafts = JSON.parse(draftsData);
-      return res.json({
-        success: true,
-        message: 'Draft messages synced',
-        drafts,
-      });
-    } catch (error) {
-      return next(error);
-    }
-  }
-);
-
-export const getDraft = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.query.userId as string;
-    const chatId = req.query.chatId as string;
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: 'User ID is required',
-      });
-    }
-    try {
-      const draftKey = `drafts:${userId}`;
-      const draftsData = await redisClient.get(draftKey);
-      if (!draftsData) {
-        return res.status(404).json({
-          success: false,
-          message: 'No draft messages found for this user',
-        });
-      }
-      const drafts = JSON.parse(draftsData);
-
-      if (chatId) {
-        const filteredDrafts = drafts.filter(
-          (draft: any) => draft.chatId === chatId
-        );
-
-        if (filteredDrafts.length === 0) {
-          return res.status(404).json({
-            success: false,
-            message: `No draft messages found for chat ${chatId}`,
-          });
-        }
-        return res.json({
-          success: true,
-          message: `Draft messages for chat ${chatId} synced`,
-          drafts: filteredDrafts,
-        });
-      }
-      return res.json({
-        success: true,
-        message: 'All draft messages synced',
-        drafts,
-      });
-    } catch (error) {
-      return next(error);
-    }
   }
 );
 

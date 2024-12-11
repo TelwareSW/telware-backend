@@ -1,8 +1,7 @@
 import { Socket } from 'socket.io';
 import Message from '@base/models/messageModel';
-import { enableDestruction } from '@base/services/chatService';
+import { enableDestruction, getChatIds } from '@services/chatService';
 import IMessage from '@base/types/message';
-import redisClient from '@config/redis';
 import NormalChat from '@base/models/normalChatModel';
 import mongoose, { ObjectId } from 'mongoose';
 import { getSocketsByUserId } from '@base/services/sessionService';
@@ -51,18 +50,13 @@ const check = async (chatId: any, ack: Function, senderId: any) => {
     });
 };
 
-const inform = async (
-  io: any,
-  userId: string,
-  chatId: string,
-  event: string
-) => {
+const inform = async (io: any, userId: string, data: any, event: string) => {
   let memberSocket;
   const socketIds = await getSocketsByUserId(userId);
   if (!socketIds || socketIds.length !== 0)
     socketIds.forEach((socketId: any) => {
       memberSocket = io.sockets.sockets.get(socketId);
-      if (memberSocket) memberSocket.emit(event, { chatId });
+      if (memberSocket) memberSocket.emit(event, data);
     });
 };
 
@@ -74,12 +68,38 @@ const joinRoom = async (io: any, roomId: String, userId: ObjectId) => {
   });
 };
 
+export const updateDraft = async (
+  io: any,
+  senderId: string,
+  chatId: string,
+  content: string
+) => {
+  await User.findByIdAndUpdate(
+    senderId,
+    { $set: { 'chats.$[chat].draft': content } },
+    {
+      arrayFilters: [{ 'chat.chat': chatId }],
+    }
+  );
+  await inform(io, senderId, { chatId, draft: content }, 'UPDATE_DRAFT_SERVER');
+};
+
+export const joinAllRooms = async (
+  socket: Socket,
+  userId: mongoose.Types.ObjectId
+) => {
+  const chatIds = await getChatIds(userId);
+  chatIds.forEach((chatId: mongoose.Types.ObjectId) => {
+    socket.join(chatId.toString());
+  });
+};
+
 export const handleMessaging = async (
   io: any,
   socket: Socket,
   data: any,
   ack: Function,
-  senderId: String
+  senderId: string
 ) => {
   let { chatId, media, content, contentType, parentMessageId } = data;
   const { isFirstTime, chatType, isReply, isForward } = data;
@@ -195,8 +215,7 @@ export const handleMessaging = async (
     await parentMessage.save();
   }
 
-  const draftKey = `draft:${chatId}:${senderId}`;
-  await redisClient.del(draftKey);
+  await updateDraft(io, senderId, chatId, '');
   socket.to(chatId).emit('RECEIVE_MESSAGE', message);
   const res = {
     messageId: message._id,
@@ -219,7 +238,7 @@ export const handleEditMessage = async (
     });
   const message = await Message.findByIdAndUpdate(
     messageId,
-    { content },
+    { content, isEdited: true },
     { new: true }
   );
   if (!message)
@@ -263,40 +282,6 @@ export const handleDeleteMessage = async (
     });
   socket.to(chatId).emit(messageId);
   ack({ success: true, message: 'Message deleted successfully' });
-};
-
-export const handleDraftMessage = async (
-  socket: Socket,
-  data: any,
-  ack: Function,
-  senderId: String
-) => {
-  try {
-    const { chatId, content, contentType, isFirstTime, chatType } = data;
-    const draftKey = `draft:${chatId}:${senderId}`;
-    const draftMessage = {
-      content,
-      contentType,
-      chatId,
-      isFirstTime,
-      senderId,
-      status: 'draft',
-      chatType,
-    };
-
-    await redisClient.setEx(draftKey, 86400, JSON.stringify(draftMessage));
-
-    // Emit the draft update to the client
-    socket.emit('RECEIVE_DRAFT', draftMessage);
-
-    const res = { messageId: draftKey };
-    ack({ success: true, message: 'Draft saved', res });
-  } catch (error) {
-    ack({
-      success: false,
-      message: 'Failed to save the draft',
-    });
-  }
 };
 
 export const handleAddAdmins = async (
@@ -344,7 +329,7 @@ export const handleAddAdmins = async (
         }
       );
 
-      await inform(io, memId, chatId, 'ADD_ADMINS_SERVER');
+      await inform(io, memId, { chatId }, 'ADD_ADMINS_SERVER');
     })
   );
 
@@ -403,7 +388,7 @@ export const handleAddMembers = async (
         return;
       }
 
-      await inform(io, userId, chatId, 'ADD_MEMBERS_SERVER');
+      await inform(io, userId, { chatId }, 'ADD_MEMBERS_SERVER');
     })
   );
 
@@ -522,7 +507,7 @@ export const handleDeleteGroupChannel = async (
     });
 
   chatMembers.map(async (member: any) => {
-    await inform(io, member.user, chatId, 'DELETE_GROUP_CHANNEL_SERVER');
+    await inform(io, member.user, { chatId }, 'DELETE_GROUP_CHANNEL_SERVER');
   });
 
   chat.members = [];
@@ -631,7 +616,7 @@ export const handleRemoveMembers = async (
         { $pull: { members: { user: memberId } } }
       );
 
-      await inform(io, memberId, chatId, 'REMOVE_MEMBERS_SERVER');
+      await inform(io, memberId, { chatId }, 'REMOVE_MEMBERS_SERVER');
     })
   );
   if (forbiddenUsers.length > 0)

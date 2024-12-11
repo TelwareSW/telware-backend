@@ -1,14 +1,13 @@
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import corsOptions from '@base/config/cors';
 import registerChatHandlers from '@base/sockets/chat';
-import { getChatIds } from '@services/chatService';
 import redisClient from '@base/config/redis';
 import mongoose from 'mongoose';
 import {
+  joinAllRooms,
   handleEditMessage,
   handleDeleteMessage,
-  handleDraftMessage,
   handleMessaging,
   handleAddAdmins,
   handleCreateGroupChannel,
@@ -21,14 +20,6 @@ import {
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
 
-const joinRooms = async (socket: Socket, userId: mongoose.Types.ObjectId) => {
-  const chatIds = await getChatIds(userId);
-  console.log(chatIds);
-  chatIds.forEach((chatId: mongoose.Types.ObjectId) => {
-    socket.join(chatId.toString());
-  });
-};
-
 const socketSetup = (server: HTTPServer) => {
   const io = new Server(server, {
     cors: corsOptions,
@@ -40,7 +31,7 @@ const socketSetup = (server: HTTPServer) => {
   io.on('connection', async (socket: any) => {
     const userId = socket.request.session.user.id;
     console.log(`New client with userID ${userId} connected: ${socket.id}`);
-    await joinRooms(socket, new mongoose.Types.ObjectId(userId as string));
+    await joinAllRooms(socket, new mongoose.Types.ObjectId(userId as string));
 
     socket.on('SEND_MESSAGE', (data: any, ack: Function) =>
       handleMessaging(io, socket, data, ack, userId)
@@ -52,10 +43,6 @@ const socketSetup = (server: HTTPServer) => {
 
     socket.on('DELETE_MESSAGE', (data: any, ack: Function) =>
       handleDeleteMessage(socket, data, ack)
-    );
-
-    socket.on('UPDATE_DRAFT', (data: any, ack: Function) =>
-      handleDraftMessage(socket, data, ack, userId)
     );
 
     socket.on('ADD_ADMINS_CLIENT', (data: any, ack: Function) => {
@@ -90,6 +77,15 @@ const socketSetup = (server: HTTPServer) => {
       handleSetPermission(io, socket, data, ack, userId);
     });
 
+    socket.on('error', (error: Error) => {
+      console.error(`Socket error on ${socket.id}:`, error);
+
+      socket.emit('ERROR', {
+        message: 'An error occurred on the server',
+        details: error.message,
+      });
+    });
+
     socket.on('disconnect', async () => {
       console.log(`Client with userID ${userId} disconnected: ${socket.id}`);
       socket.request.session.user.lastSeenTime = Date.now();
@@ -98,8 +94,8 @@ const socketSetup = (server: HTTPServer) => {
       await redisClient.sRem(`user:${userId}:sockets`, socket.id);
     });
 
-    registerChatHandlers(io, socket);
-    registerMessagesHandlers(io, socket);
+    registerChatHandlers(io, socket, userId);
+    registerMessagesHandlers(io, socket, userId);
   });
 };
 

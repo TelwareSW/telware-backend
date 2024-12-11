@@ -1,12 +1,14 @@
-import { Document, Types } from 'mongoose';
+import { Types } from 'mongoose';
+import ICommunication from './communication';
 
-interface IMessage extends Document {
+interface IMessage extends ICommunication {
   timestamp: Date;
   media: string;
   content: string;
   contentType: string;
   isPinned: boolean;
   isForward: boolean;
+  isEdited: boolean;
   isAnnouncement: boolean;
   senderId: Types.ObjectId;
   chatId: Types.ObjectId;

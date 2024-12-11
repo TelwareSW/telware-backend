@@ -18,6 +18,10 @@ const messageSchema = new mongoose.Schema<IMessage>({
     type: Boolean,
     default: false,
   },
+  isEdited: {
+    type: Boolean,
+    default: false,
+  },
   isAnnouncement: {
     type: Boolean,
     default: false,
