@@ -615,32 +615,6 @@
 
 /**
  * @swagger
- * /chats/get-all-drafts:
- *   get:
- *     summary: Get all drafts
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: A list of drafts
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   title:
- *                     type: string
- *                   content:
- *                     type: string
- */
-
-/**
- * @swagger
  * /chats/{chatId}:
  *   get:
  *     summary: Retrieve a specific chat
@@ -727,30 +701,6 @@
  *                 message:
  *                   type: string
  *                   example: "No chat with the provided id"
- */
-
-/**
- * @swagger
- * /chats/get-draft:
- *   get:
- *     summary: Get a specific draft
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: A draft's details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 title:
- *                   type: string
- *                 content:
- *                   type: string
  */
 
 /**
@@ -1002,7 +952,6 @@
  *                   example: An error occurred while uploading the story
  */
 
-
 /**
  * @swagger
  * /chat/mute/{chatId}:
@@ -1114,4 +1063,3 @@
  *                   type: string
  *                   example: login first
  */
-
