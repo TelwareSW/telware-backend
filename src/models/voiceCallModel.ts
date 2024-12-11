@@ -6,12 +6,13 @@ const voiceCallSchema = new mongoose.Schema<IVoiceCall>({
   timestamp: { type: Date, required: true },
   duration: { type: Number },
   callType: { type: String, enum: ['group', 'private'], required: true },
+  status: { type: String, enum: ['ongoing', 'finished'], required: true },
   senderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  participants: [
+  currentParticipants: [
     { type: mongoose.Types.ObjectId, ref: 'User', required: true, default: [] },
   ],
   chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat', required: true },

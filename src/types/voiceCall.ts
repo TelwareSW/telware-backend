@@ -3,8 +3,9 @@ import ICommunication from './communication';
 
 interface IVoiceCall extends ICommunication {
   callType: String;
-  participants: Types.ObjectId[];
+  currentParticipants: Types.ObjectId[];
   duration: Number;
+  status: String;
 }
 
 export default IVoiceCall;
