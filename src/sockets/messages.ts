@@ -5,7 +5,6 @@ import { Server, Socket } from 'socket.io';
 interface PinUnPinMessageData {
   chatId: string | mongoose.Types.ObjectId;
   messageId: string | mongoose.Types.ObjectId;
-  userId: string | mongoose.Types.ObjectId;
 }
 
 async function handlePinMessage(socket: Socket, data: PinUnPinMessageData) {
@@ -46,7 +45,7 @@ async function handleUnPinMessage(socket: Socket, data: PinUnPinMessageData) {
   }
 }
 
-async function registerMessagesHandlers(io: Server, socket: Socket) {
+async function registerMessagesHandlers(io: Server, socket: Socket, _userId: string) {
   socket.on('PIN_MESSAGE_CLIENT', (data: PinUnPinMessageData) =>
     handlePinMessage(socket, data)
   );

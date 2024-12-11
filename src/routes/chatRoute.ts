@@ -5,8 +5,6 @@ import {
   postMediaFile,
   enableSelfDestructing,
   disableSelfDestructing,
-  getAllDrafts,
-  getDraft,
   getChat,
   setPrivacy,
   getChatMembers,
@@ -22,25 +20,17 @@ const router = Router();
 
 router.use(protect);
 router.get('/', getAllChats);
-router.get('/messages/:chatId', restrictTo(), getMessages);
-
-router.patch(
-  '/picture/:chatId',
-  restrictTo(),
-  upload.single('file'),
-  updateChatPicture
-);
-router.patch('/destruct/:chatId', restrictTo(), enableSelfDestructing);
-router.patch('/un-destruct/:chatId', restrictTo(), disableSelfDestructing);
 router.post('/media', upload.single('file'), postMediaFile);
-
-router.get('/get-all-drafts', getAllDrafts);
-router.get('/get-draft', getDraft);
-
-router.get('/:chatId', restrictTo(), getChat);
 router.patch('/privacy/:chatId', restrictTo('admin'), setPrivacy);
-router.get('/members/:chatId', restrictTo(), getChatMembers);
-router.patch('/mute/:chatId', restrictTo(), muteChat);
-router.patch('/unmute/:chatId', restrictTo(), unmuteChat);
+
+router.use(restrictTo());
+router.patch('/picture/:chatId', upload.single('file'), updateChatPicture);
+router.patch('/destruct/:chatId', enableSelfDestructing);
+router.patch('/un-destruct/:chatId', disableSelfDestructing);
+router.patch('/mute/:chatId', muteChat);
+router.patch('/unmute/:chatId', unmuteChat);
+router.get('/messages/:chatId', getMessages);
+router.get('/members/:chatId', getChatMembers);
+router.get('/:chatId', getChat);
 
 export default router;
