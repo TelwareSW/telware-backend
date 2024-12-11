@@ -11,6 +11,8 @@ const restrictTo = (...roles: string[]) =>
     const user: IUser = req.user as IUser;
     const userId: any = user._id;
     const chat = await Chat.findById(chatId);
+    if (!chatId || !mongoose.Types.ObjectId.isValid(chatId))
+      return next(new AppError('please provide a valid chat ID', 400));
     if (!chat)
       return next(new AppError('this chat does no longer exists', 400));
     const userChats = user.chats;
