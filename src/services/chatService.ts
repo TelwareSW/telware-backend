@@ -3,6 +3,7 @@ import NormalChat from '@base/models/normalChatModel';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
 import User from '@base/models/userModel';
+import IUser from '@base/types/user';
 import AppError from '@base/errors/AppError';
 import GroupChannel from '@base/models/groupChannelModel';
 import deleteFile from '@base/utils/deleteFile';
@@ -41,6 +42,7 @@ export const getChatIds = async (
   type?: string
 ) => {
   const chats = await getChats(userId, type);
+  console.log(chats);
   return chats.map((chat: any) => chat.chat._id);
 };
 
@@ -58,6 +60,21 @@ export const enableDestruction = async (
     }, chat.destructionDuration * 1000);
   }
 };
+
+export const unmute = async (
+  user: IUser,
+  chatId: string,
+  muteDuration: number
+) => {
+  setTimeout(async () => {
+    user.chats.forEach((c: any) => {
+      if (c.chat.equals(chatId)) {
+        c.isMuted = false;
+        c.muteDuration = undefined;
+      }
+    });
+    await user.save({ validateBeforeSave: false });
+  }, muteDuration * 1000);
 
 export const deleteChatPictureFile = async (
   chatId: mongoose.Types.ObjectId | string

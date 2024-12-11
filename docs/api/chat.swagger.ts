@@ -1001,3 +1001,117 @@
  *                   type: string
  *                   example: An error occurred while uploading the story
  */
+
+
+/**
+ * @swagger
+ * /chat/mute/{chatId}:
+ *   patch:
+ *     summary: Mute a chat
+ *     tags:
+ *       - Chat
+ *     description: Mutes a chat for a specific duration. The chat will be automatically unmuted after the duration expires.
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: The ID of the chat to be muted.
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               muteDuration:
+ *                 type: number
+ *                 description: The duration (in seconds) for which the chat will be muted.
+ *                 example: 3600
+ *     responses:
+ *       200:
+ *         description: Chat muted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Chat muted successfully
+ *       400:
+ *         description: Missing required fields or invalid request.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: missing required fields
+ *       403:
+ *         description: Unauthorized request due to missing or invalid user authentication.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: login first
+ */
+
+/**
+ * @swagger
+ * /chat/unmute/{chatId}:
+ *   patch:
+ *     summary: Unmute a chat
+ *     tags:
+ *       - Chat
+ *     description: Unmutes a chat that was previously muted for the user.
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: The ID of the chat to be unmuted.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Chat unmuted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Chat unmuted successfully
+ *       403:
+ *         description: Unauthorized request due to missing or invalid user authentication.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: login first
+ */
+

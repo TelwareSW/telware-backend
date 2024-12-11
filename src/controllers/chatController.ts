@@ -3,6 +3,7 @@ import Chat from '@base/models/chatModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
+import { getChats, getLastMessage, unmute } from '@base/services/chatService';
 import {
   deleteChatPictureFile,
   getChats,
@@ -232,6 +233,63 @@ export const setPrivacy = catchAsync(
       status: 'success',
       message: 'privacy updated successfuly',
       data: { chat },
+    });
+  }
+);
+
+export const getChatMembers = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const chat = await Chat.findById(chatId);
+    if (!chat)
+      return next(new AppError('no chat found with the provided Id', 400));
+    res.status(200).json({
+      status: 'success',
+      message: 'retrieved chats successfuly',
+      data: { members: chat.members },
+    });
+  }
+);
+
+export const muteChat = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const { muteDuration } = req.body;
+    const user: IUser = req.user as IUser;
+    if (!user) return next(new AppError('login first', 403));
+    if (!muteDuration)
+      return next(new AppError('missing required fields', 400));
+    user.chats.forEach((c: any) => {
+      if (c.chat.equals(chatId)) {
+        c.isMuted = true;
+        c.muteDuration = muteDuration;
+      }
+    });
+    await user.save({ validateBeforeSave: false });
+    unmute(user, chatId, muteDuration);
+    res.status(200).json({
+      status: 'success',
+      message: 'Chat muted successfully',
+    });
+  }
+);
+
+export const unmuteChat = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const user: IUser = req.user as IUser;
+    if (!user) return next(new AppError('login first', 403));
+
+    user.chats.forEach((c: any) => {
+      if (c.chat.equals(chatId)) {
+        c.isMuted = false;
+        c.muteDuration = undefined;
+      }
+    });
+    await user.save({ validateBeforeSave: false });
+    res.status(200).json({
+      status: 'success',
+      message: 'Chat unmuted successfully',
     });
   }
 );
