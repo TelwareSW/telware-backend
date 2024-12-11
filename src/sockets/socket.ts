@@ -19,6 +19,7 @@ import {
 } from './services';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
+import registerVoiceCallHandlers from './voiceCalls';
 
 const socketSetup = (server: HTTPServer) => {
   const io = new Server(server, {
@@ -96,6 +97,7 @@ const socketSetup = (server: HTTPServer) => {
 
     registerChatHandlers(io, socket, userId);
     registerMessagesHandlers(io, socket, userId);
+    registerVoiceCallHandlers(io, socket, userId);
   });
 };
 
