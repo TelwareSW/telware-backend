@@ -21,16 +21,16 @@ const router = Router();
 router.use(protect);
 router.get('/', getAllChats);
 router.post('/media', upload.single('file'), postMediaFile);
-router.patch('/privacy/:chatId', restrictTo('admin'), setPrivacy);
+router.patch('/picture/:chatId', restrictTo(), upload.single('file'), updateChatPicture);
 
-router.use(restrictTo());
-router.patch('/picture/:chatId', upload.single('file'), updateChatPicture);
-router.patch('/destruct/:chatId', enableSelfDestructing);
-router.patch('/un-destruct/:chatId', disableSelfDestructing);
-router.patch('/mute/:chatId', muteChat);
-router.patch('/unmute/:chatId', unmuteChat);
-router.get('/messages/:chatId', getMessages);
-router.get('/members/:chatId', getChatMembers);
-router.get('/:chatId', getChat);
+router.patch('/privacy/:chatId', restrictTo('admin'), setPrivacy);
+router.patch('/destruct/:chatId', restrictTo(), enableSelfDestructing);
+router.patch('/un-destruct/:chatId', restrictTo(), disableSelfDestructing);
+router.patch('/mute/:chatId', restrictTo(), muteChat);
+router.patch('/unmute/:chatId', restrictTo(), unmuteChat);
+
+router.get('/messages/:chatId', restrictTo(), getMessages);
+router.get('/members/:chatId', restrictTo(), getChatMembers);
+router.get('/:chatId', restrictTo(), getChat);
 
 export default router;
