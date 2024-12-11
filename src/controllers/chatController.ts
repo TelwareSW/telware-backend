@@ -3,11 +3,11 @@ import Chat from '@base/models/chatModel';
 import Message from '@base/models/messageModel';
 import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
-import { getChats, getLastMessage, unmute } from '@base/services/chatService';
 import {
-  deleteChatPictureFile,
   getChats,
   getLastMessage,
+  unmute,
+  deleteChatPictureFile,
 } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';

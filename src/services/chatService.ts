@@ -75,6 +75,7 @@ export const unmute = async (
     });
     await user.save({ validateBeforeSave: false });
   }, muteDuration * 1000);
+};
 
 export const deleteChatPictureFile = async (
   chatId: mongoose.Types.ObjectId | string
