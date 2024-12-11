@@ -15,6 +15,8 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import redisClient from '@config/redis';
 import GroupChannel from '@base/models/groupChannelModel';
+import crypto from 'crypto';
+import Invite from '@base/models/invite';
 
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -315,3 +317,60 @@ export const updateChatPicture = catchAsync(async (req: any, res: Response) => {
     data: {},
   });
 });
+
+export const invite = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { expiresIn } = req.body;
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
+    const invitation = await Invite.create({
+      token,
+      chatId: req.params.chatId,
+      expiresIn: expiresAt,
+    });
+    await invitation.save();
+    const invitationLink = `${req.protocol}://${req.get('host')}/api/v1/chats/join/${token}`;
+    res.status(201).json({
+      status: 'success',
+      message: 'invitation link is created successfuly',
+      data: {
+        invitationLink,
+        expiresAt,
+      },
+    });
+  }
+);
+
+export const join = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { token } = req.params;
+    const user: IUser = req.user as IUser;
+    const userId = user._id as mongoose.Types.ObjectId;
+    const invitation = await Invite.findOne({ token });
+    if (!invitation || invitation.expiresIn < new Date())
+      return next(new AppError('Invalid or expired invite', 400));
+
+    const chat = await Chat.findById(invitation.chatId);
+    if (!chat) return next(new AppError('this chat does no longer exist', 400));
+    const isMember = chat.members.some((member: any) =>
+      member.user.equals(userId)
+    );
+    if (isMember) return next(new AppError('you are already a member', 400));
+
+    chat.members.push({ user: userId, Role: 'member' });
+    await chat.save();
+
+    const wasMember = user.chats.some((c: any) => c.chat.equals(chat._id));
+    if (!wasMember)
+      await User.findByIdAndUpdate(userId, {
+        $push: { chats: { chat: chat._id } },
+      });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'joined chat successfuly',
+      data: {},
+    });
+  }
+);

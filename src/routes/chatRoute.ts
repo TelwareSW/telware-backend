@@ -13,6 +13,8 @@ import {
   muteChat,
   unmuteChat,
   updateChatPicture,
+  invite,
+  join,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -42,5 +44,8 @@ router.patch('/privacy/:chatId', restrictTo('admin'), setPrivacy);
 router.get('/members/:chatId', restrictTo(), getChatMembers);
 router.patch('/mute/:chatId', restrictTo(), muteChat);
 router.patch('/unmute/:chatId', restrictTo(), unmuteChat);
+
+router.get('/invite/:chatId', restrictTo('admin'), invite);
+router.post('/join/:token', join);
 
 export default router;
