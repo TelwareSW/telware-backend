@@ -54,8 +54,26 @@ const createRandomMessage = async (users: any[], chat: any) => {
   const sender = faker.helpers.arrayElement(users);
   const message = {
     content: faker.lorem.sentence(),
+    media: faker.datatype.boolean() ? faker.image.url() : undefined, // Updated this line
+    contentType: faker.helpers.arrayElement([
+      'text',
+      'image',
+      'GIF',
+      'sticker',
+      'audio',
+      'video',
+      'file',
+      'link',
+    ]),
+    isPinned: faker.datatype.boolean(),
+    isForward: faker.datatype.boolean(),
     senderId: sender._id,
     chatId: chat._id,
+    timestamp: faker.date.recent({ days: 30 }),
+    isAnnouncement: faker.datatype.boolean(),
+    parentMessageId: undefined,
+    threadMessages: [],
+    messageType: chat.type,
   };
 
   return Message.create(message);

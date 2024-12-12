@@ -36,9 +36,8 @@ const chatSchema = new mongoose.Schema<IChat>(
 );
 
 chatSchema.virtual('numberOfMembers').get(function () {
-  return this.members.length;
+  return Array.isArray(this.members) ? this.members.length : 0;
 });
-
 //TODO: create a virtual property => m4 fakra esmha but it's related to "seen"
 
 //TODO: unreadMessages virtual property
