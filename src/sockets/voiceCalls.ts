@@ -1,4 +1,8 @@
+import Chat from '@base/models/chatModel';
+import VoiceCall from '@base/models/voiceCallModel';
+import mongoose from 'mongoose';
 import { Server, Socket } from 'socket.io';
+import createVoiceCall from './voiceCallsServices';
 
 interface CreateCallData {
   chatId: string;
@@ -22,7 +26,22 @@ async function handleCreateCall(
   data: CreateCallData,
   userId: string
 ) {
-  console.log('Inside Create Call');
+  const { targetId } = data;
+  let { chatId } = data;
+
+  if (targetId && !chatId) {
+    //TODO: Create a new chat between the target and the user.
+    chatId = '123';
+  }
+
+  const voiceCall = await createVoiceCall(chatId, userId);
+
+  io.to(chatId).emit('CALL-STARTED', {
+    snederId: userId,
+    chatId,
+    voiceCallId: voiceCall._id,
+  });
+  //TODO: Don't forget to test create call
 }
 
 async function handleJoinCall(
