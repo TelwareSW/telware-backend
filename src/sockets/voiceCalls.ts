@@ -1,8 +1,5 @@
-import Chat from '@base/models/chatModel';
-import VoiceCall from '@base/models/voiceCallModel';
-import mongoose from 'mongoose';
 import { Server, Socket } from 'socket.io';
-import createVoiceCall from './voiceCallsServices';
+import { addClientToCall, createVoiceCall } from './voiceCallsServices';
 
 interface CreateCallData {
   chatId: string;
@@ -41,7 +38,6 @@ async function handleCreateCall(
     chatId,
     voiceCallId: voiceCall._id,
   });
-  //TODO: Don't forget to test create call
 }
 
 async function handleJoinCall(
@@ -50,7 +46,18 @@ async function handleJoinCall(
   data: JoinLeaveCallData,
   userId: string
 ) {
-  console.log('Inside Join Call');
+  const { voiceCallId } = data;
+  console.log('userId type: ', typeof userId);
+  console.log('voiceCallId type: ', typeof voiceCallId);
+
+  socket.join(voiceCallId);
+
+  await addClientToCall(socket, userId, voiceCallId);
+
+  socket.to(voiceCallId).emit('CLIENT-JOINED', {
+    clientId: userId,
+    voiceCallId,
+  });
 }
 
 async function handleSignal(
@@ -77,19 +84,19 @@ async function registerVoiceCallHandlers(
   userId: string
 ) {
   socket.on('CREATE-CALL', (data: CreateCallData) => {
-    handleCreateCall(io, socket, data, userId);
+    handleCreateCall(io, socket, data, userId.toString());
   });
 
   socket.on('JOIN-CALL', (data: JoinLeaveCallData) => {
-    handleJoinCall(io, socket, data, userId);
+    handleJoinCall(io, socket, data, userId.toString());
   });
 
   socket.on('SIGNAL', (data: SignalData) => {
-    handleSignal(io, socket, data, userId);
+    handleSignal(io, socket, data, userId.toString());
   });
 
   socket.on('LEAVE', (data: JoinLeaveCallData) => {
-    handleLeaveCall(io, socket, data, userId);
+    handleLeaveCall(io, socket, data, userId.toString());
   });
 }
 
