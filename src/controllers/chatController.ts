@@ -16,6 +16,7 @@ import mongoose from 'mongoose';
 import GroupChannel from '@base/models/groupChannelModel';
 import crypto from 'crypto';
 import Invite from '@base/models/invite';
+import VoiceCall from '@base/models/voiceCallModel';
 
 export const getAllChats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -290,6 +291,22 @@ export const join = catchAsync(
       status: 'success',
       message: 'joined chat successfuly',
       data: {},
+    });
+  }
+);
+
+export const getVoiceCallsInChat = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+
+    const voiceCalls = await VoiceCall.find({ chatId });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'voice calls retrieved successfuly',
+      data: {
+        voiceCalls,
+      },
     });
   }
 );
