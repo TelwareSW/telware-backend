@@ -60,6 +60,10 @@ const createRandomMessage = async (chat: any) => {
     content,
     senderId: sender.user,
     chatId: chat._id,
+    isPinned: faker.datatype.boolean(),
+    isForward: faker.datatype.boolean(),
+    isEdited: faker.datatype.boolean(),
+    timestamp: faker.date.recent({ days: 30 }),
   };
 
   return Message.create(message);

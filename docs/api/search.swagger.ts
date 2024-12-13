@@ -2,15 +2,16 @@
  * @swagger
  * tags:
  *   name: Search
- *   description: API for searching content in various spaces.
+ *   description: API for searching content across various spaces with optional filters and global search capabilities.
  */
+
 /**
  * @swagger
  * /search-request:
- *   post:
+ *   get:
  *     summary: Perform a search across specified spaces with optional filters.
  *     tags: [Search]
- *     description: Allows users to search within specific spaces like chats, channels, and groups with optional filters and an option for global search.
+ *     description: Allows users to search within specific spaces like chats, channels, and groups, apply filters, and enable global search for a broader scope.
  *     requestBody:
  *       required: true
  *       content:
@@ -30,7 +31,7 @@
  *                     - chats
  *                     - channels
  *                     - groups
- *                 description: Specifies the spaces to search in.
+ *                 description: Specifies the spaces to search in. If empty, searches all spaces.
  *                 example: ["chats", "groups"]
  *               filter:
  *                 type: object
@@ -48,7 +49,7 @@
  *                     example: "text"
  *               isGlobalSearch:
  *                 type: boolean
- *                 description: If true, performs a global search across channels, groups, and users.
+ *                 description: If true, performs a global search across all available spaces, including channels, groups, and users.
  *                 example: true
  *             required:
  *               - query
@@ -61,27 +62,67 @@
  *             schema:
  *               type: object
  *               properties:
- *                 results:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         description: Unique identifier for the result item.
- *                         example: "12345"
- *                       title:
- *                         type: string
- *                         description: Title of the search result.
- *                         example: "Project Updates - Group"
- *                       type:
- *                         type: string
- *                         description: Type of the result (e.g., chat, channel, group).
- *                         example: "group"
- *                       content:
- *                         type: string
- *                         description: Content snippet related to the search query.
- *                         example: "Discussion about the upcoming project updates."
+ *                 message:
+ *                   type: string
+ *                   description: Status message of the response.
+ *                   example: "Search completed successfully."
+ *                 status:
+ *                   type: string
+ *                   description: Status of the request.
+ *                   example: "success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     SearchResults:
+ *                       type: array
+ *                       description: List of search results for specified spaces.
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           type:
+ *                             type: string
+ *                             description: Type of the result (e.g., chat, group, channel).
+ *                             example: "chat"
+ *                           chat:
+ *                             type: object
+ *                             description: Details of the chat if applicable.
+ *                             properties:
+ *                               members:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                   description: Members of the chat.
+ *                           searchMessage:
+ *                             type: object
+ *                             description: Details of the message related to the search.
+ *                             properties:
+ *                               messagePreview:
+ *                                 type: string
+ *                                 description: Preview of the message matching the search query.
+ *                               searchTermIndex:
+ *                                 type: integer
+ *                                 description: Position of the search term in the message.
+ *                     GlobalSearchResults:
+ *                       type: array
+ *                       description: List of global search results if `isGlobalSearch` is true.
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           channels:
+ *                             type: array
+ *                             description: List of channels matching the search query.
+ *                             items:
+ *                               type: object
+ *                           groups:
+ *                             type: array
+ *                             description: List of groups matching the search query.
+ *                             items:
+ *                               type: object
+ *                           users:
+ *                             type: array
+ *                             description: List of users matching the search query.
+ *                             items:
+ *                               type: object
  *       400:
  *         description: Bad Request - Invalid input parameters.
  *         content:
@@ -91,11 +132,29 @@
  *               properties:
  *                 status:
  *                   type: string
- *                   example: error
+ *                   description: Status of the response.
+ *                   example: "error"
  *                 message:
  *                   type: string
+ *                   description: Details of the error encountered.
  *                   example: "Invalid search space specified."
+ *       500:
+ *         description: Internal Server Error - Unexpected failure during processing.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   description: Status of the response.
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   description: Error message explaining the issue.
+ *                   example: "An unexpected error occurred while processing the request."
  */
+
 /**
  * @swagger
  * tags:
@@ -106,7 +165,7 @@
 /**
  * @swagger
  * /media/suggestions:
- *   post:
+ *   get:
  *     summary: Fetch media suggestions based on search space.
  *     tags: [Media]
  *     description: Allows users to fetch suggested media from specified spaces such as chats, channels, or groups.
@@ -120,13 +179,23 @@
  *               searchSpace:
  *                 type: array
  *                 items:
- *                   type: string
- *                   enum:
- *                     - chats
- *                     - channels
- *                     - groups
- *                 description: Specifies the spaces to fetch media suggestions from.
- *                 example: ["channels", "groups"]
+ *                   type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum:
+ *                         - chats
+ *                         - channels
+ *                         - groups
+ *                       description: Specifies the space type (e.g., chat, channel, or group).
+ *                       example: "chats"
+ *                     details:
+ *                       type: object
+ *                       description: Additional details for the space.
+ *                       example: 
+ *                         id: "12345"
+ *                         name: "Team Discussion"
+ *                         description: "This is a chat group for team discussions."
  *             required:
  *               - searchSpace
  *     responses:
@@ -137,27 +206,48 @@
  *             schema:
  *               type: object
  *               properties:
- *                 suggestions:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         description: Unique identifier for the media suggestion.
- *                         example: "67890"
- *                       title:
- *                         type: string
- *                         description: Title or description of the suggested media.
- *                         example: "Meeting Notes - Group"
- *                       type:
- *                         type: string
- *                         description: Type of media (e.g., image, video, document).
- *                         example: "image"
- *                       url:
- *                         type: string
- *                         description: URL to access the suggested media.
- *                         example: "https://example.com/media/67890"
+ *                 message:
+ *                   type: string
+ *                   description: Status message of the response.
+ *                   example: "Media suggestions fetched successfully."
+ *                 status:
+ *                   type: string
+ *                   description: Status of the request.
+ *                   example: "success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mediaSuggestions:
+ *                       type: array
+ *                       description: List of media suggestions for specified spaces.
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: Unique identifier for the media suggestion.
+ *                             example: "67890"
+ *                           title:
+ *                             type: string
+ *                             description: Title or description of the suggested media.
+ *                             example: "Meeting Notes"
+ *                           type:
+ *                             type: string
+ *                             description: Type of media (e.g., image, video, document).
+ *                             example: "image"
+ *                           url:
+ *                             type: string
+ *                             description: URL to access the suggested media.
+ *                             example: "https://example.com/media/67890"
+ *                           suggestionSpace:
+ *                             type: object
+ *                             description: The space from which the suggestion is made.
+ *                             example: 
+ *                               type: "chats"
+ *                               details: 
+ *                                 chatId: "12345"
+ *                                 
+ *                                 
  *       400:
  *         description: Bad Request - Invalid input parameters.
  *         content:
@@ -167,10 +257,25 @@
  *               properties:
  *                 status:
  *                   type: string
- *                   example: error
+ *                   example: "error"
  *                 message:
  *                   type: string
  *                   example: "Invalid search space specified."
+ *       500:
+ *         description: Internal Server Error - Unexpected failure during processing.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   description: Status of the response.
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   description: Error message explaining the issue.
+ *                   example: "An unexpected error occurred while processing the request."
  */
 
 /**

@@ -49,7 +49,7 @@ const chatSchema = new mongoose.Schema<IChat>(
 );
 
 chatSchema.virtual('numberOfMembers').get(function () {
-  return this.members.length;
+  return Array.isArray(this.members) ? this.members.length : 0;
 });
 
 const Chat = mongoose.model<IChat>('Chat', chatSchema);
