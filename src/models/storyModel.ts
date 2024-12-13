@@ -1,6 +1,5 @@
-import mongoose, { mongo } from 'mongoose';
+import mongoose from 'mongoose';
 import IStory from '@base/types/story';
-import { type } from 'os';
 
 const storySchema = new mongoose.Schema<IStory>(
   {
@@ -24,7 +23,13 @@ const storySchema = new mongoose.Schema<IStory>(
     ],
   },
   {
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        delete ret.__v;
+        return ret;
+      },
+    },
     toObject: { virtuals: true },
   }
 );

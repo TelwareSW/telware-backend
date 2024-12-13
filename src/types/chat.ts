@@ -2,9 +2,9 @@ import { Types, Document } from 'mongoose';
 
 interface IChat extends Document {
   isSeen: boolean;
-  destructionTimestamp: Date | undefined;
-  destructionDuration: number | undefined;
-  members: Types.ObjectId[];
+  members: { user: Types.ObjectId; Role: string }[];
+  type: string;
+  isDeleted: boolean;
 }
 
 export default IChat;

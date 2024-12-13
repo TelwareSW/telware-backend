@@ -9,13 +9,6 @@ import {
 
 const router = Router();
 
-/**
- * @swagger
- * tags:
- *  name: Privacy
- *  description: The Privacy Managing API
- */
-
 router.patch('/read-receipts', switchReadRecieptsState);
 router.patch('/stories', changeStoriesPrivacy);
 router.patch('/last-seen', changeLastSeenPrivacy);

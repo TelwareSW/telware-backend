@@ -12,12 +12,14 @@
     "test": "npx jest",
     "test:watch": "npx jest --watchAll",
     "test:coverage": "npx jest --coverage",
+    "doc": "npx typedoc",
     "migrate:create": "npx migrate-mongo create",
     "migrate:up": "npx migrate-mongo up",
     "migrate:down": "npx migrate-mongo down",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint --fix .",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "static-analysis": "node src/utils/static-analysis-script.mjs"
   },
   "author": "TelWare",
   "license": "ISC",
@@ -71,6 +73,7 @@
     "tsc-alias": "^1.8.10",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.1",
+    "typedoc": "^0.26.11",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.8.1"
   },
@@ -91,16 +94,19 @@
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
+    "mongodb": "^6.11.0",
     "mongoose": "^8.7.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.15",
+    "npm": "^10.9.1",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "redis": "^4.7.0",
     "request": "^2.88.2",
+    "socket.io": "^4.8.1",
     "supertest": "^7.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
@@ -108,5 +114,8 @@
     "ua-parser-js": "^1.0.39",
     "validator": "^13.12.0",
     "yamljs": "^0.3.0"
+  },
+  "directories": {
+    "doc": "docs"
   }
 }

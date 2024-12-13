@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - main
-      - dev
+      - develop
   pull_request:
     types: [closed]
     branches:
       - main
-      - dev
+      - develop
 
 jobs:
   trigger-jenkins:
@@ -21,7 +21,7 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "job_name=backend" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             echo "job_name=backend_dev" >> $GITHUB_ENV
           else
             echo "No Jenkins job to trigger for this branch."

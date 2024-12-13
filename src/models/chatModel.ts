@@ -5,36 +5,52 @@ const chatSchema = new mongoose.Schema<IChat>(
   {
     isSeen: {
       type: Boolean,
-      required: true,
+      default: true,
     },
-    destructionTimestamp: Date,
-    destructionDuration: Number,
     members: [
       {
-        type: mongoose.Types.ObjectId,
-        ref: 'User',
+        user: { type: mongoose.Types.ObjectId, ref: 'User' },
         Role: {
           type: String,
-          enum: ['member', 'admin', 'creator'],
+          enum: ['member', 'admin'],
+          default: 'member',
         },
       },
     ],
+    type: {
+      type: String,
+      enum: ['private', 'group', 'channel'],
+      default: 'private',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     discriminatorKey: 'chatType',
     collection: 'Chat',
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        delete ret.__v;
+        delete ret.chatType;
+        if (ret.members) {
+          ret.members.forEach((member: any) => {
+            delete member.id;
+            delete member._id;
+          });
+        }
+        return ret;
+      },
+    },
     toObject: { virtuals: true },
   }
 );
 
 chatSchema.virtual('numberOfMembers').get(function () {
-  return this.members.length;
+  return Array.isArray(this.members) ? this.members.length : 0;
 });
-
-//TODO: create a virtual property => m4 fakra esmha but it's related to "seen"
-
-//TODO: unreadMessages virtual property
 
 const Chat = mongoose.model<IChat>('Chat', chatSchema);
 export default Chat;

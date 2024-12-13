@@ -22,6 +22,7 @@ import {
 } from '@controllers/userController';
 import {
   deleteStory,
+  getAllContactsStories,
   getCurrentUserStory,
   getStory,
   postStory,
@@ -30,16 +31,8 @@ import { protect } from '@middlewares/authMiddleware';
 
 const router = Router();
 
-/**
- * @swagger
- * tags:
- *  name: User
- *  description: The User Managing API
- */
-
 router.use(protect);
 router.use('/privacy', privacyRouter);
-
 router.get('/stories', getCurrentUserStory);
 router.post('/stories', upload.single('file'), postStory);
 router.delete('/stories/:storyId', deleteStory);
@@ -61,8 +54,7 @@ router.patch('/username', updateUsername);
 router.patch('/screen-name', updateScreenName);
 router.patch('/picture', upload.single('file'), updatePicture);
 router.delete('/picture', deletePicture);
-
-// conflicting routes
+router.get('/contacts/stories', getAllContactsStories);
 router.get('/:userId', getUser);
 router.get('/:userId/stories', getStory);
 

@@ -2,42 +2,38 @@ import IMessage from '@base/types/message';
 import mongoose from 'mongoose';
 import Communication from './communicationModel';
 
-const messageSchema = new mongoose.Schema<IMessage>(
-  {
-    content: {
-      type: String,
-      required: [true, 'a message must have content'],
-    },
-    contentType: {
-      type: String,
-      enum: [
-        'text',
-        'image',
-        'GIF',
-        'sticker',
-        'audio',
-        'video',
-        'file',
-        'link',
-      ],
-      required: [true, 'message must have a content type'],
-    },
-    isPinned: {
-      type: Boolean,
-      default: false,
-    },
-    isForward: {
-      type: Boolean,
-      default: false,
-    },
+const messageSchema = new mongoose.Schema<IMessage>({
+  content: String,
+  media: String,
+  contentType: {
+    type: String,
+    enum: ['text', 'image', 'GIF', 'sticker', 'audio', 'video', 'file', 'link'],
+    default: 'text',
   },
-  {
-    discriminatorKey: 'messageType',
-    collection: 'Message',
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  }
-);
+  isPinned: {
+    type: Boolean,
+    default: false,
+  },
+  isForward: {
+    type: Boolean,
+    default: false,
+  },
+  isEdited: {
+    type: Boolean,
+    default: false,
+  },
+  isAnnouncement: {
+    type: Boolean,
+    default: false,
+  },
+  parentMessageId: mongoose.Types.ObjectId,
+  threadMessages: [
+    {
+      type: mongoose.Types.ObjectId,
+      default: [],
+    },
+  ],
+});
 
 const Message = Communication.discriminator('Message', messageSchema);
 export default Message;
