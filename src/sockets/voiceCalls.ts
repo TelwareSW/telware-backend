@@ -1,5 +1,9 @@
 import { Server, Socket } from 'socket.io';
-import { addClientToCall, createVoiceCall } from './voiceCallsServices';
+import {
+  addClientToCall,
+  createVoiceCall,
+  getClientSocketId,
+} from './voiceCallsServices';
 
 interface CreateCallData {
   chatId: string;
@@ -47,8 +51,6 @@ async function handleJoinCall(
   userId: string
 ) {
   const { voiceCallId } = data;
-  console.log('userId type: ', typeof userId);
-  console.log('voiceCallId type: ', typeof voiceCallId);
 
   socket.join(voiceCallId);
 
@@ -63,10 +65,19 @@ async function handleJoinCall(
 async function handleSignal(
   io: Server,
   socket: Socket,
-  data: SignalData,
+  signalData: SignalData,
   userId: string
 ) {
-  console.log('Inside Signal');
+  const { type, targetId, voiceCallId, data } = signalData;
+
+  const socketId = getClientSocketId(voiceCallId, targetId);
+
+  io.to(socketId).emit('SIGNAL-CLIENT', {
+    type,
+    senderId: userId,
+    voiceCallId,
+    data,
+  });
 }
 
 async function handleLeaveCall(
@@ -91,7 +102,7 @@ async function registerVoiceCallHandlers(
     handleJoinCall(io, socket, data, userId.toString());
   });
 
-  socket.on('SIGNAL', (data: SignalData) => {
+  socket.on('SIGNAL-SERVER', (data: SignalData) => {
     handleSignal(io, socket, data, userId.toString());
   });
 

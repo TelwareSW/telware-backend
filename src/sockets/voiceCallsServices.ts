@@ -1,3 +1,4 @@
+import AppError from '@base/errors/AppError';
 import Chat from '@base/models/chatModel';
 import VoiceCall from '@base/models/voiceCallModel';
 import IVoiceCall from '@base/types/voiceCall';
@@ -48,13 +49,18 @@ export async function addClientToCall(
   }
 
   await voiceCall.save();
-  console.log(
-    'voice call currentParticipants: ',
-    voiceCall.currentParticipants
-  );
-  console.log('map data: ', clientSocketMap);
 }
 
 export function getClientSocketMap(): ClientSocketMap {
   return clientSocketMap;
+}
+
+export function getClientSocketId(voiceCallId: string, userId: string) {
+  if (!clientSocketMap[voiceCallId])
+    throw new Error('No voice call exists with this id!');
+
+  if (!clientSocketMap[voiceCallId][userId])
+    throw new Error('No socket exists for this user id!');
+
+  return clientSocketMap[voiceCallId][userId];
 }
