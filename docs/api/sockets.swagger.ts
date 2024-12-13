@@ -912,3 +912,89 @@
  *                   type: string
  *                   example: This chat does not exist or has been deleted
  */
+
+/**
+ * @swagger
+ * CREATE-CALL:
+ *   post:
+ *     summary: Initiates a new voice call.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique ID of the chat where the voice call is started.
+ *               targetId:
+ *                 type: string
+ *                 description: Used to when there is no chat between the two users.
+ *                 example: "98765"
+ */
+
+/**
+ * @swagger
+ * JOIN-CALL:
+ *   post:
+ *     summary: Joins an existing voice call.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               voiceCallId:
+ *                 type: string
+ *                 description: The ID of the voice call to join.
+ */
+
+/**
+ * @swagger
+ * SIGNAL-SERVER:
+ *   post:
+ *     summary: Sends signaling data to a specific client.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [ICE, OFFER, ANSWER]
+ *                 description: The type of signaling message.
+ *               targetId:
+ *                 type: string
+ *                 description: The ID of the target client.
+ *               voiceCallId:
+ *                 type: string
+ *                 description: The ID of the voice call.
+ *               data:
+ *                 type: object
+ *                 description: The actual signaling data.
+ */
+
+/**
+ * @swagger
+ * LEAVE:
+ *   post:
+ *     summary: Leaves a voice call.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               voiceCallId:
+ *                 type: string
+ *                 description: The ID of the voice call to leave.
+ */
