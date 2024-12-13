@@ -3,6 +3,7 @@ import {
   addClientToCall,
   createVoiceCall,
   getClientSocketId,
+  removeClientFromCall,
 } from './voiceCallsServices';
 
 interface CreateCallData {
@@ -86,7 +87,16 @@ async function handleLeaveCall(
   data: JoinLeaveCallData,
   userId: string
 ) {
-  console.log('Inside Leave Call');
+  const { voiceCallId } = data;
+
+  socket.leave(voiceCallId);
+
+  await removeClientFromCall(userId, voiceCallId);
+
+  socket.to(voiceCallId).emit('CLIENT-LEFT', {
+    clientId: userId,
+    voiceCallId,
+  });
 }
 
 async function registerVoiceCallHandlers(
@@ -109,6 +119,8 @@ async function registerVoiceCallHandlers(
   socket.on('LEAVE', (data: JoinLeaveCallData) => {
     handleLeaveCall(io, socket, data, userId.toString());
   });
+
+  //TODO: DON'T FORGET TO HANDLE ERRORS (WRAP HANDLERS WITH ANOTHER FUNCTION LIKE catchAsync)
 }
 
 export default registerVoiceCallHandlers;

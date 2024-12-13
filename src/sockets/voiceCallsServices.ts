@@ -1,4 +1,3 @@
-import AppError from '@base/errors/AppError';
 import Chat from '@base/models/chatModel';
 import VoiceCall from '@base/models/voiceCallModel';
 import IVoiceCall from '@base/types/voiceCall';
@@ -12,6 +11,22 @@ interface ClientSocketMap {
 }
 
 const clientSocketMap: ClientSocketMap = {};
+
+async function endVoiceCall(voiceCallId: string) {
+  // Delete voice call entry in map.
+  delete clientSocketMap[voiceCallId];
+
+  const voiceCall: IVoiceCall = await VoiceCall.findById(voiceCallId);
+
+  // Calculate duration in minutes
+  voiceCall.duration = Math.floor(
+    (Date.now() - voiceCall.timestamp.getTime()) / (1000 * 60)
+  );
+
+  voiceCall.status = 'finished';
+
+  await voiceCall.save();
+}
 
 export async function createVoiceCall(chatId: string, userId: string) {
   const chat = await Chat.findById(chatId);
@@ -49,6 +64,29 @@ export async function addClientToCall(
   }
 
   await voiceCall.save();
+}
+
+export async function removeClientFromCall(
+  userId: string,
+  voiceCallId: string
+) {
+  // Delete the userId entry from the map
+  if (clientSocketMap[voiceCallId]) delete clientSocketMap[voiceCallId][userId];
+
+  // Delete the userId from current participants of voice call.
+  const voiceCall: IVoiceCall = await VoiceCall.findById(voiceCallId);
+  const userIdObj = new mongoose.Types.ObjectId(userId);
+
+  const userIdIndex = voiceCall.currentParticipants.indexOf(userIdObj);
+
+  if (userIdIndex !== -1) {
+    voiceCall.currentParticipants.splice(userIdIndex, 1);
+    await voiceCall.save();
+  }
+
+  if (voiceCall.currentParticipants.length === 0) {
+    await endVoiceCall(voiceCallId);
+  }
 }
 
 export function getClientSocketMap(): ClientSocketMap {
