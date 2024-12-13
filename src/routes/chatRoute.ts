@@ -40,7 +40,7 @@ router.patch('/unmute/:chatId', restrictTo(), unmuteChat);
 router.get('/invite/:chatId', restrictTo('admin'), invite);
 router.post('/join/:token', join);
 
-router.get('/voice-calls/:chatId', getVoiceCallsInChat);
+router.get('/voice-calls/:chatId', restrictTo(), getVoiceCallsInChat);
 router.get('/messages/:chatId', restrictTo(), getMessages);
 router.get('/members/:chatId', restrictTo(), getChatMembers);
 router.get('/:chatId', restrictTo(), getChat);

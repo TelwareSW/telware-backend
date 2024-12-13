@@ -1063,3 +1063,67 @@
  *                   type: string
  *                   example: login first
  */
+
+/**
+ * @swagger
+ * /chats/voice-calls/{chatId}:
+ *   get:
+ *     summary: Retrieve voice calls in a specific chat.
+ *     description: Fetch all voice calls associated with a given chat ID. Access is restricted to chat members.
+ *     tags:
+ *       - Chat
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the chat whose voice calls are being retrieved.
+ *     responses:
+ *       200:
+ *         description: Voice calls retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: voice calls retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     voiceCalls:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *       400:
+ *         description: Missing required fields or invalid request.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: missing required fields
+ *       403:
+ *         description: Unauthorized request due to missing or invalid user authentication.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: login first
+ */
