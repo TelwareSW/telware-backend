@@ -192,14 +192,16 @@ const userSchema = new mongoose.Schema<IUser>(
     ],
     chats: [
       {
-        type: mongoose.Types.ObjectId,
-        ref: 'Chat',
+        chat: {
+          type: mongoose.Types.ObjectId,
+          ref: 'Chat',
+        },
         isMuted: {
           type: Boolean,
           default: false,
         },
-        unmuteDuration: Number,
-        Draft: {
+        muteDuration: Number,
+        draft: {
           type: String,
           default: '',
         },
@@ -213,12 +215,27 @@ const userSchema = new mongoose.Schema<IUser>(
     resetPasswordExpires: { type: String, select: false },
   },
   {
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        delete ret.__v;
+        if (ret.chats) {
+          ret.chats.forEach((chat: any) => {
+            delete chat.id;
+            delete chat._id;
+          });
+        }
+        if (ret.username) return ret;
+        return ret.chats;
+      },
+    },
     toObject: { virtuals: true },
   }
 );
 
-//TODO: Add index
+//TODO: unreadMessages virtual property
+
+userSchema.index({ email: 1 }, { unique: true, background: true });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();

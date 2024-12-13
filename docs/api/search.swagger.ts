@@ -4,6 +4,7 @@
  *   name: Search
  *   description: API for searching content across various spaces with optional filters and global search capabilities.
  */
+
 /**
  * @swagger
  * /search-request:
@@ -153,7 +154,6 @@
  *                   description: Error message explaining the issue.
  *                   example: "An unexpected error occurred while processing the request."
  */
-
 
 /**
  * @swagger

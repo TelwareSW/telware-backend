@@ -1,67 +1,39 @@
 import IMessage from '@base/types/message';
 import mongoose from 'mongoose';
+import Communication from './communicationModel';
 
-const messageSchema = new mongoose.Schema<IMessage>(
-  {
-    content: String,
-    media: String,
-    contentType: {
-      type: String,
-      enum: [
-        'text',
-        'image',
-        'GIF',
-        'sticker',
-        'audio',
-        'video',
-        'file',
-        'link',
-      ],
-      default: 'text',
-    },
-    isPinned: {
-      type: Boolean,
-      default: false,
-    },
-    isForward: {
-      type: Boolean,
-      default: false,
-    },
-    senderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: [true, 'message must have senderId'],
-      ref: 'User',
-    },
-    chatId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: [true, 'message must have chatId'],
-      ref: 'Chat',
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now(),
-    },
-    isAnnouncement: {
-      type: Boolean,
-      default: false,
-    },
-    parentMessageId: mongoose.Types.ObjectId,
-    threadMessages: [
-      {
-        type: mongoose.Types.ObjectId,
-        default: [],
-      },
-    ],
-    messageType: {
-      type: String,
-      enum: ['channel', 'group', 'private'],
-    },
+const messageSchema = new mongoose.Schema<IMessage>({
+  content: String,
+  media: String,
+  contentType: {
+    type: String,
+    enum: ['text', 'image', 'GIF', 'sticker', 'audio', 'video', 'file', 'link'],
+    default: 'text',
   },
-  {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  }
-);
+  isPinned: {
+    type: Boolean,
+    default: false,
+  },
+  isForward: {
+    type: Boolean,
+    default: false,
+  },
+  isEdited: {
+    type: Boolean,
+    default: false,
+  },
+  isAnnouncement: {
+    type: Boolean,
+    default: false,
+  },
+  parentMessageId: mongoose.Types.ObjectId,
+  threadMessages: [
+    {
+      type: mongoose.Types.ObjectId,
+      default: [],
+    },
+  ],
+});
 
-const Message = mongoose.model('Message', messageSchema);
+const Message = Communication.discriminator('Message', messageSchema);
 export default Message;

@@ -1,35 +1,34 @@
+import ICommunication from '@base/types/communication';
 import mongoose from 'mongoose';
 
-const communicationSchema = new mongoose.Schema(
+const communicationSchema = new mongoose.Schema<ICommunication>(
   {
     timestamp: {
       type: Date,
       default: Date.now,
     },
-    chat: {
-      type: mongoose.Types.ObjectId,
-      ref: 'Chat',
-    },
-    receivers: [
-      {
-        type: mongoose.Types.ObjectId,
-        ref: 'User',
-        status: {
-          type: String,
-          enum: ['sent', 'delivered', 'read'],
-          default: 'sent',
-        },
-      },
-    ],
-    sender: {
-      type: mongoose.Types.ObjectId,
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, 'message must have senderId'],
       ref: 'User',
+    },
+    chatId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, 'message must have chatId'],
+      ref: 'Chat',
     },
   },
   {
     discriminatorKey: 'communicationType',
     collection: 'Communication',
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        delete ret.__v;
+        delete ret.communicationType;
+        return ret;
+      },
+    },
     toObject: { virtuals: true },
   }
 );

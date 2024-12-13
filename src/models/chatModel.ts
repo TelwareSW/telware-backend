@@ -12,7 +12,7 @@ const chatSchema = new mongoose.Schema<IChat>(
         user: { type: mongoose.Types.ObjectId, ref: 'User' },
         Role: {
           type: String,
-          enum: ['member', 'admin', 'creator'],
+          enum: ['member', 'admin'],
           default: 'member',
         },
       },
@@ -30,7 +30,20 @@ const chatSchema = new mongoose.Schema<IChat>(
   {
     discriminatorKey: 'chatType',
     collection: 'Chat',
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        delete ret.__v;
+        delete ret.chatType;
+        if (ret.members) {
+          ret.members.forEach((member: any) => {
+            delete member.id;
+            delete member._id;
+          });
+        }
+        return ret;
+      },
+    },
     toObject: { virtuals: true },
   }
 );
@@ -38,9 +51,6 @@ const chatSchema = new mongoose.Schema<IChat>(
 chatSchema.virtual('numberOfMembers').get(function () {
   return Array.isArray(this.members) ? this.members.length : 0;
 });
-//TODO: create a virtual property => m4 fakra esmha but it's related to "seen"
-
-//TODO: unreadMessages virtual property
 
 const Chat = mongoose.model<IChat>('Chat', chatSchema);
 export default Chat;

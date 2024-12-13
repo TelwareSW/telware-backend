@@ -1,21 +1,21 @@
 import mongoose from 'mongoose';
-import GroupChannel from '@base/models/groupChannelModel';
 import NormalChat from '@base/models/normalChatModel';
-import IGroupChannel from '@base/types/groupChannel';
-import INormalChat from '@base/types/normalChat';
 import Message from '@base/models/messageModel';
 import { Socket } from 'socket.io';
 import User from '@base/models/userModel';
-import Chat from '@base/models/chatModel';
+import IUser from '@base/types/user';
+import AppError from '@base/errors/AppError';
+import GroupChannel from '@base/models/groupChannelModel';
+import deleteFile from '@base/utils/deleteFile';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
     chats.map(async (chat: any) => {
-      const lastMessage = await Message.findOne({ chatId: chat._id }).sort({
+      const lastMessage = await Message.findOne({ chatId: chat.chat }).sort({
         timestamp: -1,
       });
       return {
-        chatId: chat._id,
+        chatId: chat.chat._id,
         lastMessage,
       };
     })
@@ -27,13 +27,14 @@ export const getChats = async (
   userId: mongoose.Types.ObjectId,
   type?: string
 ): Promise<any> => {
-  const chats = await User.findById(userId)
+  const userChats = await User.findById(userId)
     .select('chats')
     .populate({
-      path: 'chats',
+      path: 'chats.chat',
       match: type ? { type } : {},
     });
-  return chats;
+  if (!userChats) return [];
+  return userChats.chats.filter((chat) => chat.chat !== null);
 };
 
 export const getChatIds = async (
@@ -41,19 +42,7 @@ export const getChatIds = async (
   type?: string
 ) => {
   const chats = await getChats(userId, type);
-  return chats.map((chat: any) => chat._id);
-};
-
-export const createNewChat = async (
-  data: any
-): Promise<INormalChat | IGroupChannel> => {
-  const { name, members } = data;
-  const newChat = new GroupChannel({
-    name,
-    members,
-  });
-  await newChat.save();
-  return newChat;
+  return chats.map((chat: any) => chat.chat._id);
 };
 
 export const enableDestruction = async (
@@ -71,9 +60,31 @@ export const enableDestruction = async (
   }
 };
 
-export const leaveGroupChannel = async (chatId: string, member: string) => {
-  await Chat.updateOne(
-    { _id: chatId },
-    { $pull: { members: { _id: member } } }
-  );
+export const unmute = async (
+  user: IUser,
+  chatId: string,
+  muteDuration: number
+) => {
+  setTimeout(async () => {
+    user.chats.forEach((c: any) => {
+      if (c.chat.equals(chatId)) {
+        c.isMuted = false;
+        c.muteDuration = undefined;
+      }
+    });
+    await user.save({ validateBeforeSave: false });
+  }, muteDuration * 1000);
+};
+
+export const deleteChatPictureFile = async (
+  chatId: mongoose.Types.ObjectId | string
+) => {
+  const chat = await GroupChannel.findById(chatId);
+
+  if (!chat) {
+    throw new AppError('No Chat exists with this ID', 404);
+  }
+
+  const fileName = chat.picture;
+  await deleteFile(fileName);
 };

@@ -10,7 +10,7 @@
  * /chats:
  *   get:
  *     summary: Retrieve all chats for the authenticated user.
- *     description: Fetches all chats associated with the authenticated user, including chat members and the last messages in each chat.
+ *     description: Fetches all chats associated with the authenticated user, including chat members, last messages, and chat details.
  *     tags:
  *       - Chat
  *     parameters:
@@ -41,18 +41,59 @@
  *                       items:
  *                         type: object
  *                         properties:
+ *                           chat:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                                 description: Unique identifier for the chat.
+ *                               isSeen:
+ *                                 type: boolean
+ *                                 description: Indicates if the chat has been seen.
+ *                               members:
+ *                                 type: array
+ *                                 items:
+ *                                   type: object
+ *                                   properties:
+ *                                     user:
+ *                                       type: string
+ *                                       description: Unique identifier for the user.
+ *                                     Role:
+ *                                       type: string
+ *                                       description: Role of the user in the chat (e.g., member, admin).
+ *                                     _id:
+ *                                       type: string
+ *                                       description: Unique identifier for the membership entry.
+ *                                     id:
+ *                                       type: string
+ *                                       description: Alias for `_id`.
+ *                               type:
+ *                                 type: string
+ *                                 description: Type of the chat (e.g., "private", "group").
+ *                               isDeleted:
+ *                                 type: boolean
+ *                                 description: Indicates if the chat has been deleted.
+ *                               chatType:
+ *                                 type: string
+ *                                 description: Specific type of the chat (e.g., "NormalChat").
+ *                               __v:
+ *                                 type: integer
+ *                                 description: Version key.
+ *                               numberOfMembers:
+ *                                 type: integer
+ *                                 description: Total number of members in the chat.
+ *                               id:
+ *                                 type: string
+ *                                 description: Alias for `_id`.
+ *                           isMuted:
+ *                             type: boolean
+ *                             description: Indicates if the chat is muted.
+ *                           draft:
+ *                             type: string
+ *                             description: Draft message saved for the chat.
  *                           _id:
  *                             type: string
- *                             description: Unique identifier for the chat.
- *                           isSeen:
- *                             type: boolean
- *                             description: Indicates if the chat has been seen.
- *                           type:
- *                             type: string
- *                             description: Type of chat (e.g., "group", "private").
- *                           numberOfMembers:
- *                             type: integer
- *                             description: Total number of members in the chat.
+ *                             description: Unique identifier for the chat entry.
  *                           id:
  *                             type: string
  *                             description: Alias for `_id`.
@@ -64,9 +105,37 @@
  *                           _id:
  *                             type: string
  *                             description: Unique identifier for the member.
- *                           Role:
+ *                           username:
  *                             type: string
- *                             description: Role of the member in the chat (e.g., "creator", "admin", "member").
+ *                             description: Username of the member.
+ *                           screenFirstName:
+ *                             type: string
+ *                             description: First name displayed on the screen.
+ *                           screenLastName:
+ *                             type: string
+ *                             description: Last name displayed on the screen.
+ *                           phoneNumber:
+ *                             type: string
+ *                             description: The phone number of the member.
+ *                           photo:
+ *                             type: string
+ *                             description: URL to the member's photo.
+ *                           status:
+ *                             type: string
+ *                             description: Current status of the member (e.g., "offline").
+ *                           isAdmin:
+ *                             type: boolean
+ *                             description: Whether the member is an admin.
+ *                           stories:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                               description: IDs of the member's stories.
+ *                           blockedUsers:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                               description: IDs of users blocked by this member.
  *                           id:
  *                             type: string
  *                             description: Alias for `_id`.
@@ -78,21 +147,51 @@
  *                           chatId:
  *                             type: string
  *                             description: Unique identifier of the chat this message belongs to.
- *                           _id:
- *                             type: string
- *                             description: Unique identifier for the message.
- *                           content:
- *                             type: string
- *                             description: Content of the message.
- *                           contentType:
- *                             type: string
- *                             description: Type of content (e.g., "text", "image").
- *                           isPinned:
- *                             type: boolean
- *                             description: Indicates if the message is pinned.
- *                           isForward:
- *                             type: boolean
- *                             description: Indicates if the message was forwarded.
+ *                           lastMessage:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                                 description: Unique identifier for the message.
+ *                               senderId:
+ *                                 type: string
+ *                                 description: Unique identifier of the sender.
+ *                               chatId:
+ *                                 type: string
+ *                                 description: Unique identifier of the chat the message belongs to.
+ *                               communicationType:
+ *                                 type: string
+ *                                 description: Type of communication (e.g., "Message").
+ *                               content:
+ *                                 type: string
+ *                                 description: The content of the message.
+ *                               contentType:
+ *                                 type: string
+ *                                 description: Type of the message content (e.g., "text").
+ *                               isPinned:
+ *                                 type: boolean
+ *                                 description: Indicates if the message is pinned.
+ *                               isForward:
+ *                                 type: boolean
+ *                                 description: Indicates if the message is forwarded.
+ *                               isAnnouncement:
+ *                                 type: boolean
+ *                                 description: Indicates if the message is an announcement.
+ *                               threadMessages:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                   description: IDs of thread messages linked to this message.
+ *                               timestamp:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 description: Timestamp when the message was sent.
+ *                               __v:
+ *                                 type: integer
+ *                                 description: Version key.
+ *                               id:
+ *                                 type: string
+ *                                 description: Alias for `_id`.
  *       401:
  *         description: User is not logged in or the request is invalid.
  *         content:
@@ -115,7 +214,7 @@
  * /chats:
  *   post:
  *     summary: Create a new chat.
- *     description: Allows an authenticated user to create a new chat with specified members. The creator is automatically assigned as the "creator" role, and other members are assigned the "member" role.
+ *     description: Allows an authenticated user to create a new chat with specified members. The creator is automatically assigned as the "admin" role, and other members are assigned the "member" role.
  *     tags:
  *       - Chat
  *     requestBody:
@@ -173,7 +272,7 @@
  *                       items:
  *                         type: object
  *                         properties:
- *                           _id:
+ *                           user:
  *                             type: string
  *                             description: Member ID.
  *                             example: "63e1f5c2d1234e0012345678"
@@ -516,32 +615,6 @@
 
 /**
  * @swagger
- * /chats/get-all-drafts:
- *   get:
- *     summary: Get all drafts
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: A list of drafts
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   title:
- *                     type: string
- *                   content:
- *                     type: string
- */
-
-/**
- * @swagger
  * /chats/{chatId}:
  *   get:
  *     summary: Retrieve a specific chat
@@ -584,47 +657,37 @@
  *                           example: true
  *                         members:
  *                           type: array
- *                           description: List of chat members.
+ *                           description: List of chat members with their roles.
  *                           items:
  *                             type: object
  *                             properties:
- *                               _id:
+ *                               user:
  *                                 type: string
  *                                 description: The user ID of the member.
- *                               username:
+ *                                 example: "63e1f5c2d1234e0012345678"
+ *                               Role:
  *                                 type: string
- *                                 description: Username of the member.
- *                               screenFirstName:
+ *                                 description: Role of the member in the chat.
+ *                                 enum:
+ *                                   - "member"
+ *                                   - "admin"
+ *                                 default: "member"
+ *                               _id:
  *                                 type: string
- *                                 description: Screen first name of the member.
- *                               screenLastName:
+ *                                 description: The ID of the member record.
+ *                                 example: "63e1f5c2d1234e0012345679"
+ *                               id:
  *                                 type: string
- *                                 description: Screen last name of the member.
- *                               phoneNumber:
- *                                 type: string
- *                                 description: Phone number of the member.
- *                               photo:
- *                                 type: string
- *                                 description: Profile photo URL of the member.
- *                               status:
- *                                 type: string
- *                                 description: Status of the member.
- *                               isAdmin:
- *                                 type: boolean
- *                                 description: Whether the member is an admin in the chat.
- *                               stories:
- *                                 type: array
- *                                 description: List of user stories.
- *                               blockedUsers:
- *                                 type: array
- *                                 description: List of blocked users by this member.
+ *                                 description: Alias for `_id`.
+ *                                 example: "63e1f5c2d1234e0012345679"
  *                         type:
  *                           type: string
  *                           description: The type of the chat (e.g., private, group, channel).
  *                           example: "private"
  *                         numberOfMembers:
- *                           type: number
+ *                           type: integer
  *                           description: Number of members in the chat.
+ *                           example: 2
  *       404:
  *         description: Chat not found.
  *         content:
@@ -642,34 +705,10 @@
 
 /**
  * @swagger
- * /chats/get-draft:
- *   get:
- *     summary: Get a specific draft
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: A draft's details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 title:
- *                   type: string
- *                 content:
- *                   type: string
- */
-
-/**
- * @swagger
  * /chats/{chatId}:
  *   delete:
  *     summary: Delete a group chat by ID.
- *     description: Deletes a group chat and removes all members. Marks the chat as deleted. This action is only allowed for the creator of the chat.
+ *     description: Deletes a group chat and removes all members. Marks the chat as deleted. This action is only allowed for the admins of the chat.
  *     tags:
  *       - Chat
  *     parameters:
@@ -710,7 +749,7 @@
  *                   type: string
  *                   example: no chat found with the provided id
  *       403:
- *         description: You are not authorized to delete this chat. You must be the creator of the chat.
+ *         description: You are not authorized to delete this chat. You must be an admin of the chat.
  *         content:
  *           application/json:
  *             schema:
@@ -739,22 +778,34 @@
 
 /**
  * @swagger
- * /chats/leave/{id}:
- *   delete:
- *     summary: Leave a chat group.
- *     description: Allows the authenticated user to leave a group chat. The user will be removed from the group chat's members list.
+ * /privacy/{chatId}:
+ *   patch:
+ *     summary: Update the privacy settings of a group chat.
  *     tags:
  *       - Chat
+ *     description: Updates the privacy of a group chat to either private or public. Only accessible by admins.
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: chatId
  *         required: true
+ *         description: The ID of the group chat to update.
  *         schema:
  *           type: string
- *         description: The ID of the chat the user wants to leave.
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         description: Privacy settings to update.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             privacy:
+ *               type: string
+ *               enum: [private, public]
+ *               description: The new privacy setting for the group chat.
+ *               example: private
  *     responses:
  *       200:
- *         description: Successfully left the group.
+ *         description: Privacy settings updated successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -765,12 +816,103 @@
  *                   example: success
  *                 message:
  *                   type: string
- *                   example: left the group successfully
+ *                   example: privacy updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     chat:
+ *                       type: object
+ *                       description: The updated group chat details.
+ *                       example:
+ *                         _id: "645a4b34e8345f001f45678d"
+ *                         name: "Tech Group"
+ *                         privacy: true
+ *       400:
+ *         description: Missing required fields or invalid chat ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: missing required fields
+ *       403:
+ *         description: Unauthorized to update privacy settings.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: You do not have permission to perform this action.
+ *       404:
+ *         description: No chat found with the provided ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: no chat found with the provided id
+ */
+
+/**
+ * @swagger
+ * /chats/picture/{chatId}:
+ *   patch:
+ *     summary: Update the chat's profile picture
+ *     description: Upload a new profile picture for a specific chat. Only authorized users who are members of the chat are allowed to update the picture.
+ *     tags:
+ *       - Chat
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: Unique identifier of the chat
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The image file to be uploaded
+ *     responses:
+ *       201:
+ *         description: Chat picture updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: chat picture updated successfully
  *                 data:
  *                   type: object
  *                   example: {}
  *       400:
- *         description: User is not logged in or the request is invalid.
+ *         description: Bad request - Chat does not exist
  *         content:
  *           application/json:
  *             schema:
@@ -778,12 +920,12 @@
  *               properties:
  *                 status:
  *                   type: string
- *                   example: error
+ *                   example: fail
  *                 message:
  *                   type: string
- *                   example: You need to login first
+ *                   example: this chat does no longer exists
  *       403:
- *         description: User is not a member of the group or lacks permissions.
+ *         description: Forbidden - User not allowed
  *         content:
  *           application/json:
  *             schema:
@@ -791,23 +933,133 @@
  *               properties:
  *                 status:
  *                   type: string
- *                   example: error
+ *                   example: fail
  *                 message:
  *                   type: string
- *                   example: You are not a member of this chat
- *       404:
- *         description: Chat not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 message:
- *                   type: string
- *                   example: No chat found with the provided ID
+ *                   example: you are not a member of this chat, you are not allowed here
  *       500:
- *         description: Server error occurred.
+ *         description: Server error - File upload failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: An error occurred while uploading the story
+ */
+
+/**
+ * @swagger
+ * /chat/mute/{chatId}:
+ *   patch:
+ *     summary: Mute a chat
+ *     tags:
+ *       - Chat
+ *     description: Mutes a chat for a specific duration. The chat will be automatically unmuted after the duration expires.
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: The ID of the chat to be muted.
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               muteDuration:
+ *                 type: number
+ *                 description: The duration (in seconds) for which the chat will be muted.
+ *                 example: 3600
+ *     responses:
+ *       200:
+ *         description: Chat muted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Chat muted successfully
+ *       400:
+ *         description: Missing required fields or invalid request.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: missing required fields
+ *       403:
+ *         description: Unauthorized request due to missing or invalid user authentication.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: login first
+ */
+
+/**
+ * @swagger
+ * /chat/unmute/{chatId}:
+ *   patch:
+ *     summary: Unmute a chat
+ *     tags:
+ *       - Chat
+ *     description: Unmutes a chat that was previously muted for the user.
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: The ID of the chat to be unmuted.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Chat unmuted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Chat unmuted successfully
+ *       403:
+ *         description: Unauthorized request due to missing or invalid user authentication.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: login first
  */

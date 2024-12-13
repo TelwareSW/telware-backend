@@ -27,7 +27,8 @@ export const protectSocket = async (socket: any, next: any) => {
 };
 
 export const authorizeSocket = (socket: Socket, next: any) => {
-  const sessionToken = socket.handshake.query.sessionId;
+  const sessionToken =
+    socket.handshake.auth.sessionId ?? socket.handshake.query.sessionId;
   const req = socket.request;
 
   req.headers['x-session-token'] = sessionToken;

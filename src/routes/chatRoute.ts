@@ -1,16 +1,18 @@
 import { Router } from 'express';
 import {
-  createChat,
   getAllChats,
   getMessages,
   postMediaFile,
   enableSelfDestructing,
   disableSelfDestructing,
-  getAllDrafts,
-  getDraft,
   getChat,
-  deleteGroupChannel,
-  leaveChat,
+  setPrivacy,
+  getChatMembers,
+  muteChat,
+  unmuteChat,
+  updateChatPicture,
+  invite,
+  join,
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -20,17 +22,20 @@ const router = Router();
 
 router.use(protect);
 router.get('/', getAllChats);
-router.post('/', createChat);
-router.get('/messages/:chatId', restrictTo(), getMessages);
+router.post('/media', upload.single('file'), postMediaFile);
+router.patch('/picture/:chatId', restrictTo(), upload.single('file'), updateChatPicture);
 
+router.patch('/privacy/:chatId', restrictTo('admin'), setPrivacy);
 router.patch('/destruct/:chatId', restrictTo(), enableSelfDestructing);
 router.patch('/un-destruct/:chatId', restrictTo(), disableSelfDestructing);
-router.post('/media', upload.single('file'), postMediaFile);
+router.patch('/mute/:chatId', restrictTo(), muteChat);
+router.patch('/unmute/:chatId', restrictTo(), unmuteChat);
 
-router.get('/get-all-drafts', getAllDrafts);
-router.get('/get-draft', getDraft);
+router.get('/invite/:chatId', restrictTo('admin'), invite);
+router.post('/join/:token', join);
 
+router.get('/messages/:chatId', restrictTo(), getMessages);
+router.get('/members/:chatId', restrictTo(), getChatMembers);
 router.get('/:chatId', restrictTo(), getChat);
-router.delete('/:chatId', restrictTo('creator'), deleteGroupChannel);
-router.delete('/leave/:id', leaveChat);
+
 export default router;

@@ -89,7 +89,7 @@
  *                   type: string
  *                   example: missing required Fields
  *       404:
- *         description: Parent message not found.
+ *         description: Parent message not found or invalid chat configuration.
  *         content:
  *           application/json:
  *             schema:
@@ -103,7 +103,23 @@
  *                   example: Failed to send the message
  *                 error:
  *                   type: string
- *                   example: No message found with the provided id
+ *                   example: No message found with the provided id or Invalid chat configuration
+ *       403:
+ *         description: Insufficient permissions to send the message (e.g., chat type restrictions or role restrictions).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Failed to send the message
+ *                 error:
+ *                   type: string
+ *                   example: Only admins can post to this channel or Only admins can post and reply to this chat
  */
 
 /**
@@ -308,7 +324,7 @@
 
 /**
  * @swagger
- * /UPDATE_DRAFT:
+ * /UPDATE_DRAFT_CLIENT:
  *   post:
  *     summary: Updates a draft message
  *     description: Updates an existing draft message with new content. The updated draft is saved and the client is notified of the update.
@@ -320,19 +336,15 @@
  *           schema:
  *             type: object
  *             required:
- *               - draftId
+ *               - chatId
  *               - content
- *               - userId
  *             properties:
- *               draftId:
+ *               chatId:
  *                 type: string
- *                 description: The unique ID of the draft to be updated.
+ *                 description: The unique ID of the chat to update its draft.
  *               content:
  *                 type: string
  *                 description: The new content of the draft.
- *               userId:
- *                 type: string
- *                 description: The unique ID of the user updating the draft.
  *     responses:
  *       200:
  *         description: Draft updated successfully.
@@ -347,16 +359,6 @@
  *                 message:
  *                   type: string
  *                   description: A message describing the result.
- *                 res:
- *                   type: object
- *                   description: The result of the update operation, containing the updated draft details.
- *                   properties:
- *                     draftId:
- *                       type: string
- *                       description: The unique ID of the updated draft.
- *                     content:
- *                       type: string
- *                       description: The new content of the updated draft.
  *       400:
  *         description: Missing required fields or invalid input.
  *         content:
@@ -373,8 +375,63 @@
  *                 error:
  *                   type: string
  *                   description: Details about the error (e.g., missing fields).
- *       404:
- *         description: No draft found with the provided ID or failed to update the draft.
+ */
+
+/**
+ * @swagger
+ * /UPDATE_DRAFT_SERVER:
+ *   post:
+ *     summary: Emits an event to update a draft message on the server
+ *     description: Emits an event to update an existing draft message with new content on the server. The server processes the update and notifies the client of the status.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chatId
+ *               - draft
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique ID of the chat whose draft is being updated.
+ *               draft:
+ *                 type: string
+ *                 description: The new content of the draft message.
+ *     responses:
+ *       200:
+ *         description: Draft update event emitted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the event was successfully emitted.
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the result.
+ *       400:
+ *         description: Missing required fields or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: An error message describing the problem.
+ *                 error:
+ *                   type: string
+ *                   description: Details about the error (e.g., invalid input).
+ *       500:
+ *         description: Internal server error occurred while emitting the event.
  *         content:
  *           application/json:
  *             schema:
@@ -388,5 +445,470 @@
  *                   description: An error message describing the result.
  *                 error:
  *                   type: string
- *                   description: Details about the error (e.g., draft not found).
+ *                   description: Details about the server error.
+ */
+
+/**
+ * @swagger
+ * /CREATE_GROUP_CHANNEL:
+ *   post:
+ *     summary: "Create a new group channel"
+ *     description: "This socket event allows a user to create a new group channel. It validates the user's login status, group size, and adds members with roles."
+ *     tags:
+ *       - Sockets
+ *     operationId: "createGroupChannel"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [group, otherType]
+ *                 description: "Type of the channel (e.g., 'group')."
+ *               name:
+ *                 type: string
+ *                 description: "Name of the group channel."
+ *               members:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: "Array of user IDs to be added as members."
+ *             required:
+ *               - type
+ *               - name
+ *               - members
+ *     responses:
+ *       200:
+ *         description: "Group channel created successfully."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Chat created successfully."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: "ID of the newly created group channel."
+ *                     name:
+ *                       type: string
+ *                       description: "Name of the group channel."
+ *                     type:
+ *                       type: string
+ *                       description: "Type of the group channel."
+ *                     members:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: string
+ *                             description: "ID of the user."
+ *                           Role:
+ *                             type: string
+ *                             description: "Role of the user in the group (e.g., 'admin', 'member')."
+ *       400:
+ *         description: "Invalid input or constraints violated."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to create the chat."
+ *                 error:
+ *                   type: string
+ *                   description: "Error message describing the issue."
+ */
+
+/**
+ * @swagger
+ * /DELETE_GROUP_CHANNEL_CLIENT:
+ *   delete:
+ *     summary: "Delete a group or channel"
+ *     description: "This socket event allows the admin of a group channel to delete the group. All members will be informed about the deletion."
+ *     tags:
+ *       - Sockets
+ *     operationId: "deleteGroupChannel"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The unique ID of the group channel to be deleted."
+ *             required:
+ *               - chatId
+ *     responses:
+ *       200:
+ *         description: "Group channel deleted successfully."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Chat deleted successfully."
+ *                 data:
+ *                   type: string
+ *                   description: "The ID of the deleted group channel."
+ *       400:
+ *         description: "Group deletion failed due to invalid input or unauthorized access."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Could not delete the group."
+ *                 error:
+ *                   type: string
+ *                   description: "Error message describing the issue."
+ */
+
+/**
+ * @swagger
+ * /LEAVE_GROUP_CHANNEL_CLIENT:
+ *   delete:
+ *     summary: "Leave a group channel"
+ *     description: "Allows a user to leave a group channel. Other members in the group will be notified of the member's departure."
+ *     tags:
+ *       - Sockets
+ *     operationId: "leaveGroupChannel"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The unique ID of the group channel the user wants to leave."
+ *             required:
+ *               - chatId
+ *     responses:
+ *       200:
+ *         description: "Successfully left the group."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Left the group successfully."
+ *                 data:
+ *                   type: object
+ *                   description: "Additional data (if any)."
+ *       400:
+ *         description: "Failed to leave the group due to invalid input or authorization issues."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Could not leave the group."
+ *                 error:
+ *                   type: string
+ *                   description: "Detailed error message."
+ */
+
+/**
+ * @swagger
+ * ADD_ADMINS_CLIENT:
+ *   patch:
+ *     summary: "Add admins to a group chat"
+ *     description: "Allows the creator or an authorized admin of a group chat to promote members to admin role."
+ *     tags:
+ *       - Sockets
+ *     operationId: "addAdmins"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The unique ID of the group chat where members will be promoted to admin."
+ *               members:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   description: "User ID of the member to be promoted to admin."
+ *             required:
+ *               - chatId
+ *               - members
+ *     responses:
+ *       200:
+ *         description: "Successfully added admins to the group chat."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Added admins successfully."
+ *       400:
+ *         description: "Failed to add admins due to invalid input, unauthorized access, or membership issues."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Member with Id: <memberId> is no longer a member of this chat."
+ *                 error:
+ *                   type: string
+ *                   description: "Detailed error message (if applicable)."
+ */
+
+/**
+ * @swagger
+ * ADD_MEMBERS_CLIENT:
+ *   patch:
+ *     summary: Add members to a chat group
+ *     description: Adds multiple users to a chat group, ensuring they are not already members and the chat exists.
+ *     tags:
+ *       - Sockets
+ *     parameters:
+ *       - in: body
+ *         name: data
+ *         description: Data required to add users to the chat group.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             chatId:
+ *               type: string
+ *               description: The ID of the chat to which users are being added.
+ *               example: '60f6c72ef56d9e0020f290f2'
+ *             users:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               description: List of user IDs to be added to the chat.
+ *               example: ['60f6c72ef56d9e0020f290f3', '60f6c72ef56d9e0020f290f4']
+ *     responses:
+ *       200:
+ *         description: Members added successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Members added successfully
+ *       400:
+ *         description: Error in adding members to the chat.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Some users could not be added
+ *                 error:
+ *                   type: string
+ *                   example: Could not add users with IDs 60f6c72ef56d9e0020f290f3, 60f6c72ef56d9e0020f290f4
+ */
+
+/**
+ * @swagger
+ * REMOVE_MEMBERS_CLIENT:
+ *   delete:
+ *     summary: Remove members from a group or channel chat
+ *     description: Removes specified members from a group or channel chat. Only admins or creators can perform this action.
+ *     tags:
+ *       - Sockets
+ *     operationId: "removeMembers"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: "The ID of the group chat."
+ *                 example: "64f123abc456def789012345"
+ *               members:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: "An array of user IDs to be removed from the group."
+ *                 example: ["64f123abc456def789012346", "64f123abc456def789012347"]
+ *     responses:
+ *       200:
+ *         description: "Successfully removed members."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Members removed successfully"
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: "Failed to remove members due to invalid input or permissions."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Some users could not be removed"
+ *                 error:
+ *                   type: string
+ *                   example: "Could not remove users with IDs: 64f123abc456def789012346"
+ */
+
+/**
+ * @swagger
+ * SET_PERMISSION_CLIENT:
+ *   patch:
+ *     summary: Update permissions for a group or channel chat
+ *     description: Allows an admin to update messaging or downloading permissions in a group chat or channel. Only users with admin privileges can perform this action.
+ *     tags:
+ *       - Sockets
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chatId
+ *               - type
+ *               - who
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique identifier of the group chat.
+ *               type:
+ *                 type: string
+ *                 enum: [post, download]
+ *                 description: The type of permission to update (`post` for messaging, `download` for downloading files).
+ *               who:
+ *                 type: string
+ *                 enum: [everyone, admin-only]
+ *                 description: Defines who can perform the specified action (`everyone` or `admin-only`).
+ *     responses:
+ *       200:
+ *         description: Permissions updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Permissions updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     chatId:
+ *                       type: string
+ *                       description: The ID of the chat where permissions were updated.
+ *                     type:
+ *                       type: string
+ *                       description: The permission type that was updated.
+ *                     who:
+ *                       type: string
+ *                       description: The updated permission scope.
+ *       400:
+ *         description: Invalid input or insufficient permissions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Could not update permissions
+ *                 error:
+ *                   type: string
+ *                   example: Invalid permission type or you do not have admin rights
+ *       404:
+ *         description: Chat not found or deleted.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Could not update permissions
+ *                 error:
+ *                   type: string
+ *                   example: This chat does not exist or has been deleted
  */
