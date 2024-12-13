@@ -47,13 +47,16 @@ export async function addClientToCall(
   userId: string,
   voiceCallId: string
 ) {
-  // Add the client socket id into the map
-  if (!clientSocketMap[voiceCallId]) clientSocketMap[voiceCallId] = {};
-  clientSocketMap[voiceCallId][userId] = socket.id;
-
   // Add a user Id object into the call current participants.
   const voiceCall: IVoiceCall = await VoiceCall.findById(voiceCallId);
   const userIdObj = new mongoose.Types.ObjectId(userId);
+
+  //TODO: UNCOMMENT AFTER IMPLEMENTING ERROR HANDLING
+  /*
+  if (voiceCall.status === 'finished') {
+    throw new Error('This voice call has already finished!');
+  }
+  */
 
   const userIdIndex = voiceCall.currentParticipants.indexOf(userIdObj);
 
@@ -64,6 +67,10 @@ export async function addClientToCall(
   }
 
   await voiceCall.save();
+
+  // Add the client socket id into the map
+  if (!clientSocketMap[voiceCallId]) clientSocketMap[voiceCallId] = {};
+  clientSocketMap[voiceCallId][userId] = socket.id;
 }
 
 export async function removeClientFromCall(
@@ -94,11 +101,13 @@ export function getClientSocketMap(): ClientSocketMap {
 }
 
 export function getClientSocketId(voiceCallId: string, userId: string) {
+  //TODO: UNCOMMENT AFTER IMPLEMENTING ERROR HANDLING
+  /*
   if (!clientSocketMap[voiceCallId])
     throw new Error('No voice call exists with this id!');
 
   if (!clientSocketMap[voiceCallId][userId])
     throw new Error('No socket exists for this user id!');
-
+  */
   return clientSocketMap[voiceCallId][userId];
 }

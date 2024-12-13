@@ -53,9 +53,9 @@ async function handleJoinCall(
 ) {
   const { voiceCallId } = data;
 
-  socket.join(voiceCallId);
-
   await addClientToCall(socket, userId, voiceCallId);
+
+  socket.join(voiceCallId);
 
   socket.to(voiceCallId).emit('CLIENT-JOINED', {
     clientId: userId,
