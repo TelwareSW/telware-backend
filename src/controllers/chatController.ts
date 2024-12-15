@@ -57,15 +57,19 @@ export const getMessages = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { chatId } = req.params;
 
-    const page: number = parseInt(req.query.page as string, 10) || 1;
+    const pageByMsgId = req.query.page === '0' ? undefined : req.query.page;
     const limit: number = parseInt(req.query.limit as string, 10) || 20;
-    const skip: number = (page - 1) * limit;
-    const messages = await Message.find({ chatId }).limit(limit).skip(skip);
+    const filter: any = { chatId };
+    if (pageByMsgId) {
+      filter._id = { $lt: pageByMsgId };
+    }
+    console.log(filter);
+    const messages = await Message.find(filter).sort({ _id: -1 }).limit(limit);
 
     res.status(200).json({
       status: 'success',
       message: 'messages retreived successfuly',
-      data: { messages, nextPage: page + 1 },
+      data: { messages, nextPage: messages[messages.length - 1]._id },
     });
   }
 );
