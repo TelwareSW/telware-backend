@@ -68,14 +68,16 @@ export const getMessages = catchAsync(
     }
 
     const messages = await Message.find(filter)
-      .limit(limit)
-      .sort({ timestamp: 1 });
+      .sort({ timestamp: -1 })
+      .limit(limit);
 
     if (!messages || messages.length === 0) {
       return next(new AppError('No messages found', 404));
     }
+
+    messages.reverse();
     const nextPage =
-      messages.length < limit ? undefined : messages[messages.length - 1]._id;
+      messages.length < limit ? undefined : messages[0]._id;
 
     res.status(200).json({
       status: 'success',
