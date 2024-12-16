@@ -235,7 +235,7 @@ const userSchema = new mongoose.Schema<IUser>(
 
 //TODO: unreadMessages virtual property
 
-userSchema.index({ email: 1 }, { unique: true, background: true });
+userSchema.index({ email: 1 }, { background: true });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();

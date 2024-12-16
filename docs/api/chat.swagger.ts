@@ -315,9 +315,9 @@
  *         name: page
  *         required: false
  *         schema:
- *           type: integer
- *           example: 1
- *         description: The page number for paginated messages (default is 1).
+ *           type: objectId
+ *           example: "674cbbba97faf0d2e8a93846"
+ *         description: The page starting after that messageId.
  *       - in: query
  *         name: limit
  *         required: false
@@ -325,6 +325,13 @@
  *           type: integer
  *           example: 50
  *         description: The number of messages to retrieve per page (default is 100).
+ *       - in: query
+ *         name: timestamp
+ *         required: false
+ *         schema:
+ *           type: Date
+ *           example: 2024-12-01T19:37:56.399Z
+ *         description: The timestamp to retrieve messages after.
  *     responses:
  *       200:
  *         description: Messages retrieved successfully.
@@ -383,17 +390,8 @@
  *                             items:
  *                               type: string
  *                             example: []
- *                           messageType:
- *                             type: string
- *                             example: private
- *                           __v:
- *                             type: integer
- *                             example: 0
- *                           id:
- *                             type: string
- *                             example: "674cbbba97faf0d2e8a93846"
  *                     nextPage:
- *                       type: integer
+ *                       type: objectId
  *                       example: 2
  *       400:
  *         description: Bad Request - Chat does not exist.

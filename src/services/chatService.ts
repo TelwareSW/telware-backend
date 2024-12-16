@@ -34,6 +34,7 @@ export const getChats = async (
       match: type ? { type } : {},
     });
   if (!userChats) return [];
+  //!FIXME: a33333333333333333333333333333333333333333333333333333333333333333333333333
   return userChats.chats.filter((chat) => chat.chat !== null);
 };
 
@@ -55,7 +56,7 @@ export const enableDestruction = async (
   if (chat && chat.destructionDuration) {
     setTimeout(async () => {
       await Message.findByIdAndDelete(messageId);
-      socket.to(chatId).emit('DESTRUCT_MESSAGE', messageId);
+      socket.to(chatId).emit('DELETE_MESSAGE_SERVER', messageId);
     }, chat.destructionDuration * 1000);
   }
 };
