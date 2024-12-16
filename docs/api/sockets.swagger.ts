@@ -39,13 +39,6 @@
  *                 type: string
  *                 nullable: true
  *                 description: ID of the parent message for reply or forward.
- *               isFirstTime:
- *                 type: boolean
- *                 description: Indicates whether the chat is being initiated for the first time.
- *               chatType:
- *                 type: string
- *                 enum: [group, direct, channel]
- *                 description: Type of the chat.
  *               isReply:
  *                 type: boolean
  *                 description: Indicates if the message is a reply.

@@ -14,7 +14,6 @@ interface IMessage extends ICommunication {
   chatId: Types.ObjectId;
   parentMessageId: Types.ObjectId | undefined;
   threadMessages: Types.ObjectId[];
-  messageType: string;
 }
 
 export default IMessage;

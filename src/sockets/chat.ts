@@ -6,7 +6,7 @@ import GroupChannel from '@models/groupChannelModel';
 import NormalChat from '@base/models/normalChatModel';
 import {
   check,
-  inform,
+  informSessions,
   joinRoom,
   Member,
   updateDraft,
@@ -20,17 +20,13 @@ const handleAddAdmins = async (
 ) => {
   const { members, chatId } = data;
   const forbiddenUsers: string[] = [];
-  const func = await check(chatId, ack, senderId);
+
   const chat = await Chat.findById(chatId);
-
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+    checkAdmin: true,
+  });
   if (func) return func;
-
-  if (!chat || chat.isDeleted)
-    return ack({
-      success: false,
-      message: 'Could not add admins to the group',
-      error: 'Chat not found',
-    });
 
   await Promise.all(
     members.map(async (memId: string) => {
@@ -41,7 +37,7 @@ const handleAddAdmins = async (
         return;
       }
 
-      const isMemberOfChat = chat.members.some((m) => m.user.equals(memId));
+      const isMemberOfChat = chat?.members.some((m) => m.user.equals(memId));
 
       if (!isMemberOfChat) {
         forbiddenUsers.push(memId);
@@ -57,7 +53,7 @@ const handleAddAdmins = async (
         }
       );
 
-      await inform(io, memId, { chatId }, 'ADD_ADMINS_SERVER');
+      await informSessions(io, memId, { chatId }, 'ADD_ADMINS_SERVER');
     })
   );
 
@@ -85,15 +81,12 @@ const handleAddMembers = async (
   const { chatId, users } = data;
   const forbiddenUsers: string[] = [];
 
-  const func = await check(chatId, ack, senderId);
-  if (func) return func;
-
   const chat = await Chat.findById(chatId);
-  if (!chat || chat.isDeleted)
-    return ack({
-      success: false,
-      message: 'No chat found with the provided ID',
-    });
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+    checkAdmin: true,
+  });
+  if (func) return func;
 
   await Promise.all(
     users.map(async (userId: any) => {
@@ -104,10 +97,11 @@ const handleAddMembers = async (
         return;
       }
 
-      const isAlreadyMember = chat.members.some((m: any) =>
+      const isAlreadyMember = chat?.members.some((m: any) =>
         m.user.equals(userId)
       );
-      if (!isAlreadyMember) chat.members.push({ user: userId, Role: 'member' });
+      if (!isAlreadyMember)
+        chat?.members.push({ user: userId, Role: 'member' });
       const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
       if (!userWasMember) user.chats.push(chatId);
       console.log(user.chats);
@@ -116,7 +110,7 @@ const handleAddMembers = async (
         return;
       }
 
-      await inform(io, userId, { chatId }, 'ADD_MEMBERS_SERVER');
+      await informSessions(io, userId, { chatId }, 'ADD_MEMBERS_SERVER');
     })
   );
 
@@ -128,7 +122,7 @@ const handleAddMembers = async (
     });
   }
 
-  await chat.save();
+  await chat?.save();
 
   ack({
     success: true,
@@ -285,7 +279,12 @@ const handleDeleteGroupChannel = async (
     });
 
   chatMembers.map(async (member: any) => {
-    await inform(io, member.user, { chatId }, 'DELETE_GROUP_CHANNEL_SERVER');
+    await informSessions(
+      io,
+      member.user,
+      { chatId },
+      'DELETE_GROUP_CHANNEL_SERVER'
+    );
   });
 
   chat.members = [];
@@ -394,7 +393,7 @@ const handleRemoveMembers = async (
         { $pull: { members: { user: memberId } } }
       );
 
-      await inform(io, memberId, { chatId }, 'REMOVE_MEMBERS_SERVER');
+      await informSessions(io, memberId, { chatId }, 'REMOVE_MEMBERS_SERVER');
     })
   );
   if (forbiddenUsers.length > 0)
@@ -441,7 +440,7 @@ const handleSetPermission = async (
       error: 'cannot change permissions for private chats',
     });
 
-  const admin: Member = chat.members.find((m: any) =>
+  const admin: Member = chat.members.find((m: Member) =>
     m.user.equals(senderId)
   ) as unknown as Member;
 

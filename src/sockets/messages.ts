@@ -2,11 +2,9 @@ import { Types } from 'mongoose';
 import { Server, Socket } from 'socket.io';
 import IMessage from '@base/types/message';
 import Message from '@models/messageModel';
-import NormalChat from '@models/normalChatModel';
-import User from '@models/userModel';
-import GroupChannel from '@models/groupChannelModel';
 import { enableDestruction } from '@services/chatService';
-import { joinRoom, updateDraft } from './MessagingServices';
+import Chat from '@base/models/chatModel';
+import { check, updateDraft } from './MessagingServices';
 
 interface PinUnPinMessageData {
   chatId: string | Types.ObjectId;
@@ -20,8 +18,8 @@ export const handleMessaging = async (
   ack: Function,
   senderId: string
 ) => {
-  let { chatId, media, content, contentType, parentMessageId } = data;
-  const { isFirstTime, chatType, isReply, isForward } = data;
+  let { media, content, contentType, parentMessageId } = data;
+  const { chatId, chatType, isReply, isForward } = data;
   if (
     (!isForward &&
       !content &&
@@ -35,66 +33,18 @@ export const handleMessaging = async (
       error: 'missing required Fields',
     });
 
-  if (
-    (isFirstTime && isReply) ||
-    (isForward && (content || media || contentType))
-  )
+  if (isForward && (content || media || contentType))
     return ack({
       success: false,
       message: 'Failed to send the message',
       error: 'conflicting fields',
     });
-  if (isFirstTime) {
-    const members = [{ user: chatId }, { user: senderId }];
-    const chat = new NormalChat({ members });
-    const id = String(chat._id);
-    await chat.save();
-    socket.join(id);
-    await joinRoom(io, id, chatId);
-    await User.findByIdAndUpdate(senderId, {
-      $push: {
-        chats: { chat: id },
-      },
-    });
-    await User.findByIdAndUpdate(chatId, {
-      $push: {
-        chats: { chat: id },
-      },
-    });
-    chatId = id;
-  }
 
-  if (chatType !== 'private') {
-    const chat = await GroupChannel.findById(chatId);
-    if (!chat)
-      return ack({
-        success: false,
-        message: 'Failed to send the message',
-        error: 'this chat does not exist',
-      });
-    const sender = chat.members.find((member: any) =>
-      member.user.equals(senderId)
-    );
-    console.log(sender);
-    if (!sender)
-      return ack({
-        success: false,
-        message: 'Failed to send the message',
-        error: 'you are not a member of this chat',
-      });
-    if (sender.Role !== 'admin' && !chat.messagnigPermission)
-      return ack({
-        success: false,
-        message: 'Failed to send the message',
-        error: 'only admins can post and reply to this chat',
-      });
-    if (sender.Role !== 'admin' && !isReply && chatType === 'channel')
-      return ack({
-        success: false,
-        message: 'Failed to send the message',
-        error: 'only admins can post to this channel',
-      });
-  }
+  const chat = await Chat.findById(chatId);
+  const func = await check(chat, ack, senderId, {
+    newMessageIsReply: isReply,
+  });
+  if (func) return func;
 
   let parentMessage;
   if (isForward || isReply) {
@@ -104,13 +54,6 @@ export const handleMessaging = async (
         success: false,
         message: 'Failed to send the message',
         error: 'No message found with the provided id',
-      });
-
-    if (!parentMessage)
-      return ack({
-        success: false,
-        message: 'Failed to reply to the message',
-        error: 'No message found with the provided parent message id',
       });
 
     if (isForward) {
@@ -126,7 +69,6 @@ export const handleMessaging = async (
     senderId,
     chatId,
     parentMessageId,
-    messageType: chatType,
   });
   await message.save();
   if (parentMessage && isReply && chatType === 'channel') {
