@@ -15,7 +15,7 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import GroupChannel from '@base/models/groupChannelModel';
 import crypto from 'crypto';
-import Invite from '@base/models/invite';
+import Invite from '@base/models/inviteModel';
 import VoiceCall from '@base/models/voiceCallModel';
 
 export const getAllChats = catchAsync(
@@ -63,6 +63,10 @@ export const getMessages = catchAsync(
     if (pageByMsgId) {
       filter._id = { $lt: pageByMsgId };
     }
+    if (req.query.timestamp) {
+      filter.timestamp = { $gte: req.query.timestamp };
+    }
+
     const messages = await Message.find(filter)
       .limit(limit)
       .sort({ timestamp: 1 });
