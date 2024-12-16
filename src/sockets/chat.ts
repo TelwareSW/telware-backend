@@ -1,5 +1,5 @@
+import { Types } from 'mongoose';
 import { Server, Socket } from 'socket.io';
-import { ObjectId } from 'mongodb';
 import User from '@models/userModel';
 import Chat from '@models/chatModel';
 import GroupChannel from '@models/groupChannelModel';
@@ -217,7 +217,7 @@ const handleCreateGroupChannel = async (
       error: `groups cannot have more than ${process.env.GROUP_SIZE} members`,
     });
 
-  const membersWithRoles = members.map((id: ObjectId) => ({
+  const membersWithRoles = members.map((id: Types.ObjectId) => ({
     user: id,
     Role: 'member',
   }));
@@ -239,7 +239,7 @@ const handleCreateGroupChannel = async (
       joinRoom(io, newChat._id as string, member.user)
     ),
     User.updateMany(
-      { _id: { $in: [allMembers.map((member) => member.user)] } },
+      { _id: { $in: allMembers.map((member) => member.user) } },
       { $push: { chats: { chat: newChat._id } } },
       { new: true }
     ),
