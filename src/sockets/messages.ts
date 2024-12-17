@@ -4,7 +4,7 @@ import IMessage from '@base/types/message';
 import Message from '@models/messageModel';
 import { enableDestruction } from '@services/chatService';
 import Chat from '@base/models/chatModel';
-import { check, updateDraft } from './MessagingServices';
+import { check, informSessions, updateDraft } from './MessagingServices';
 
 interface PinUnPinMessageData {
   chatId: string | Types.ObjectId;
@@ -77,7 +77,14 @@ export const handleMessaging = async (
   }
 
   await updateDraft(io, senderId, chatId, '');
-  socket.to(chatId).emit('RECEIVE_MESSAGE', message);
+  socket.to(chatId).emit('RECEIVE_MESSAGE', message, async (res: any) => {
+    if (res.success) {
+      if (res.isRead) message.readBy.push(res.userId);
+      else message.deliveredTo.push(res.userId);
+      await message.save();
+      informSessions(io, senderId, message, 'MESSAGE_DELIVERED');
+    }
+  });
   const res = {
     messageId: message._id,
   };
@@ -141,7 +148,7 @@ export const handleDeleteMessage = async (
       message: 'Failed to delete the message',
       error: 'no message found with the provided id',
     });
-  socket.to(chatId).emit('DELETE_MESSAGE_SERVER', messageId);
+  socket.to(chatId).emit('DELETE_MESSAGE_SERVER', message);
   ack({ success: true, message: 'Message deleted successfully' });
 };
 
