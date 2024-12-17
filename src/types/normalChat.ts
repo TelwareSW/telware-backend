@@ -3,7 +3,8 @@ import IChat from './chat';
 interface INormalChat extends IChat {
   encryptionKey: String;
   initializationVector: String;
-  authTag: String;
+  keyAuthTag: String;
+  vectorAuthTag: String;
   destructionTimestamp: Date | undefined;
   destructionDuration: number | undefined;
 }

@@ -2,8 +2,9 @@ import fs from 'fs';
 import { faker } from '@faker-js/faker';
 import User from '@models/userModel';
 import Message from '@models/messageModel';
-import GroupChannel from '@base/models/groupChannelModel';
-import NormalChat from '@base/models/normalChatModel';
+import GroupChannel from '@models/groupChannelModel';
+import NormalChat from '@models/normalChatModel';
+import { decryptKey, encryptMessage } from '@utils/encryption';
 
 const existingUsers = JSON.parse(
   fs.readFileSync(`${__dirname}/json/users.json`, 'utf-8')
@@ -65,6 +66,14 @@ const createRandomMessage = async (chat: any) => {
     isEdited: faker.datatype.boolean(),
     timestamp: faker.date.recent({ days: 30 }),
   };
+
+  if (chat.encryptionKey) {
+    message.content = encryptMessage(
+      message.content,
+      decryptKey(chat.encryptionKey, chat.keyAuthTag),
+      decryptKey(chat.initializationVector, chat.vectorAuthTag)
+    );
+  }
 
   return Message.create(message);
 };
