@@ -11,9 +11,13 @@ const normalChatSchema = new mongoose.Schema<INormalChat>({
   },
   initializationVector: {
     type: String,
-    default: crypto.randomBytes(12).toString('hex'),
+    default: crypto.randomBytes(16).toString('hex'),
   },
-  authTag: {
+  keyAuthTag: {
+    type: String,
+    default: '',
+  },
+  vectorAuthTag: {
     type: String,
     default: '',
   },
@@ -23,12 +27,16 @@ const normalChatSchema = new mongoose.Schema<INormalChat>({
 
 normalChatSchema.pre('save', function (next) {
   if (!this.isNew) return next();
-  const { encryptedKey, authTag } = encryptKey(
-    this.encryptionKey,
+  const { encrypted: encryptedKey, authTag: keyAuthTag } = encryptKey(
+    this.encryptionKey
+  );
+  const { encrypted: encryptedVector, authTag: vectorAuthTag } = encryptKey(
     this.initializationVector
   );
   this.encryptionKey = encryptedKey;
-  this.authTag = authTag;
+  this.keyAuthTag = keyAuthTag;
+  this.initializationVector = encryptedVector;
+  this.vectorAuthTag = vectorAuthTag;
   next();
 });
 

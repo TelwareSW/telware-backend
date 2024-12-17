@@ -43,11 +43,13 @@ const chatSchema = new mongoose.Schema<IChat>(
           });
         }
         if (ret.encryptionKey) {
-          ret.encryptionKey = decryptKey(
-            ret.encryptionKey,
+          ret.encryptionKey = decryptKey(ret.encryptionKey, ret.keyAuthTag);
+          ret.initializationVector = decryptKey(
             ret.initializationVector,
-            ret.authTag
+            ret.vectorAuthTag
           );
+          delete ret.keyAuthTag;
+          delete ret.vectorAuthTag;
         }
         return ret;
       },

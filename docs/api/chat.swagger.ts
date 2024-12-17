@@ -61,42 +61,30 @@
  *                                     Role:
  *                                       type: string
  *                                       description: Role of the user in the chat (e.g., member, admin).
- *                                     _id:
- *                                       type: string
- *                                       description: Unique identifier for the membership entry.
- *                                     id:
- *                                       type: string
- *                                       description: Alias for `_id`.
  *                               type:
  *                                 type: string
  *                                 description: Type of the chat (e.g., "private", "group").
+ *                               encryptionKey:
+ *                                 type: string
+ *                                 description: Key used for encrypting chat messages.
+ *                               initializationVector:
+ *                                 type: string
+ *                                 description: Initialization vector for encrypting chat messages.
  *                               isDeleted:
  *                                 type: boolean
  *                                 description: Indicates if the chat has been deleted.
  *                               chatType:
  *                                 type: string
  *                                 description: Specific type of the chat (e.g., "NormalChat").
- *                               __v:
- *                                 type: integer
- *                                 description: Version key.
  *                               numberOfMembers:
  *                                 type: integer
  *                                 description: Total number of members in the chat.
- *                               id:
- *                                 type: string
- *                                 description: Alias for `_id`.
  *                           isMuted:
  *                             type: boolean
  *                             description: Indicates if the chat is muted.
  *                           draft:
  *                             type: string
  *                             description: Draft message saved for the chat.
- *                           _id:
- *                             type: string
- *                             description: Unique identifier for the chat entry.
- *                           id:
- *                             type: string
- *                             description: Alias for `_id`.
  *                     members:
  *                       type: array
  *                       items:
@@ -136,9 +124,6 @@
  *                             items:
  *                               type: string
  *                               description: IDs of users blocked by this member.
- *                           id:
- *                             type: string
- *                             description: Alias for `_id`.
  *                     lastMessages:
  *                       type: array
  *                       items:
@@ -363,6 +348,12 @@
  *                           contentType:
  *                             type: string
  *                             example: text
+ *                           media:
+ *                            type: string
+ *                            example: "media-file-name.jpg"
+ *                           isEdited:
+ *                             type: boolean
+ *                             example: false
  *                           isPinned:
  *                             type: boolean
  *                             example: false
