@@ -34,7 +34,6 @@ export const getChats = async (
       match: type ? { type } : {},
     });
   if (!userChats) return [];
-  //!FIXME: a33333333333333333333333333333333333333333333333333333333333333333333333333
   return userChats.chats.filter((chat) => chat.chat !== null);
 };
 
