@@ -4,11 +4,10 @@
  *   name: Search
  *   description: API for searching content across various spaces with optional filters and global search capabilities.
  */
-
 /**
  * @swagger
  * /search-request:
- *   get:
+ *   post:
  *     summary: Perform a search across specified spaces with optional filters.
  *     tags: [Search]
  *     description: Allows users to search within specific spaces like chats, channels, and groups, apply filters, and enable global search for a broader scope.
@@ -154,6 +153,7 @@
  *                   description: Error message explaining the issue.
  *                   example: "An unexpected error occurred while processing the request."
  */
+
 
 /**
  * @swagger
