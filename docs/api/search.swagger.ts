@@ -6,7 +6,7 @@
  */
 /**
  * @swagger
- * /search-request:
+ * /search/search-request:
  *   post:
  *     summary: Perform a search across specified spaces with optional filters.
  *     tags: [Search]
