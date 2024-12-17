@@ -61,42 +61,30 @@
  *                                     Role:
  *                                       type: string
  *                                       description: Role of the user in the chat (e.g., member, admin).
- *                                     _id:
- *                                       type: string
- *                                       description: Unique identifier for the membership entry.
- *                                     id:
- *                                       type: string
- *                                       description: Alias for `_id`.
  *                               type:
  *                                 type: string
  *                                 description: Type of the chat (e.g., "private", "group").
+ *                               encryptionKey:
+ *                                 type: string
+ *                                 description: Key used for encrypting chat messages.
+ *                               initializationVector:
+ *                                 type: string
+ *                                 description: Initialization vector for encrypting chat messages.
  *                               isDeleted:
  *                                 type: boolean
  *                                 description: Indicates if the chat has been deleted.
  *                               chatType:
  *                                 type: string
  *                                 description: Specific type of the chat (e.g., "NormalChat").
- *                               __v:
- *                                 type: integer
- *                                 description: Version key.
  *                               numberOfMembers:
  *                                 type: integer
  *                                 description: Total number of members in the chat.
- *                               id:
- *                                 type: string
- *                                 description: Alias for `_id`.
  *                           isMuted:
  *                             type: boolean
  *                             description: Indicates if the chat is muted.
  *                           draft:
  *                             type: string
  *                             description: Draft message saved for the chat.
- *                           _id:
- *                             type: string
- *                             description: Unique identifier for the chat entry.
- *                           id:
- *                             type: string
- *                             description: Alias for `_id`.
  *                     members:
  *                       type: array
  *                       items:
@@ -136,9 +124,6 @@
  *                             items:
  *                               type: string
  *                               description: IDs of users blocked by this member.
- *                           id:
- *                             type: string
- *                             description: Alias for `_id`.
  *                     lastMessages:
  *                       type: array
  *                       items:
@@ -315,9 +300,9 @@
  *         name: page
  *         required: false
  *         schema:
- *           type: integer
- *           example: 1
- *         description: The page number for paginated messages (default is 1).
+ *           type: objectId
+ *           example: "674cbbba97faf0d2e8a93846"
+ *         description: The page starting after that messageId.
  *       - in: query
  *         name: limit
  *         required: false
@@ -325,6 +310,13 @@
  *           type: integer
  *           example: 50
  *         description: The number of messages to retrieve per page (default is 100).
+ *       - in: query
+ *         name: timestamp
+ *         required: false
+ *         schema:
+ *           type: Date
+ *           example: 2024-12-01T19:37:56.399Z
+ *         description: The timestamp to retrieve messages after.
  *     responses:
  *       200:
  *         description: Messages retrieved successfully.
@@ -356,6 +348,12 @@
  *                           contentType:
  *                             type: string
  *                             example: text
+ *                           media:
+ *                            type: string
+ *                            example: "media-file-name.jpg"
+ *                           isEdited:
+ *                             type: boolean
+ *                             example: false
  *                           isPinned:
  *                             type: boolean
  *                             example: false
@@ -383,17 +381,8 @@
  *                             items:
  *                               type: string
  *                             example: []
- *                           messageType:
- *                             type: string
- *                             example: private
- *                           __v:
- *                             type: integer
- *                             example: 0
- *                           id:
- *                             type: string
- *                             example: "674cbbba97faf0d2e8a93846"
  *                     nextPage:
- *                       type: integer
+ *                       type: objectId
  *                       example: 2
  *       400:
  *         description: Bad Request - Chat does not exist.

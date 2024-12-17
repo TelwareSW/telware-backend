@@ -3,7 +3,7 @@ import { MailOptions } from 'nodemailer/lib/json-transport';
 
 const telwareTeam: string = 'Telware <telware.sw@gmail.com>';
 
-const createTransporter = (provider: string) => {
+const createTransporter = (provider?: string) => {
   if (provider === 'gmail')
     return nodemailer.createTransport({
       service: 'gmail',
@@ -14,17 +14,17 @@ const createTransporter = (provider: string) => {
     });
 
   return nodemailer.createTransport({
-    host: process.env.GMAIL_HOST,
+    host: process.env.MAILTRAP_HOST,
     port: Number(process.env.MAIL_PORT),
     auth: {
-      user: process.env.TELWARE_EMAIL,
-      pass: process.env.TELWARE_PASSWORD,
+      user: process.env.MAILTRAP_USERNAME,
+      pass: process.env.MAILTRAP_PASSWORD,
     },
   });
 };
 
 const sendEmail = async (options: any) => {
-  const transporter = createTransporter('gmail');
+  const transporter = createTransporter(process.env.EMAIL_PROVIDER);
 
   const mailOptions: MailOptions = {
     from: telwareTeam,

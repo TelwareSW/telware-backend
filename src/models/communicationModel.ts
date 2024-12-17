@@ -33,5 +33,7 @@ const communicationSchema = new mongoose.Schema<ICommunication>(
   }
 );
 
+communicationSchema.index({ timestamp: -1 }, { unique: true, background: true });
+
 const Communication = mongoose.model('Communication', communicationSchema);
 export default Communication;

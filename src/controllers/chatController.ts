@@ -15,7 +15,7 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import GroupChannel from '@base/models/groupChannelModel';
 import crypto from 'crypto';
-import Invite from '@base/models/invite';
+import Invite from '@base/models/inviteModel';
 import VoiceCall from '@base/models/voiceCallModel';
 
 export const getAllChats = catchAsync(
@@ -57,15 +57,31 @@ export const getMessages = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { chatId } = req.params;
 
-    const page: number = parseInt(req.query.page as string, 10) || 1;
+    const pageByMsgId = req.query.page === '0' ? undefined : req.query.page;
     const limit: number = parseInt(req.query.limit as string, 10) || 20;
-    const skip: number = (page - 1) * limit;
-    const messages = await Message.find({ chatId }).limit(limit).skip(skip);
+    const filter: any = { chatId };
+    if (pageByMsgId) {
+      filter._id = { $lt: pageByMsgId };
+    }
+    if (req.query.timestamp) {
+      filter.timestamp = { $gte: req.query.timestamp };
+    }
+
+    const messages = await Message.find(filter)
+      .sort({ timestamp: -1 })
+      .limit(limit);
+
+    if (!messages || messages.length === 0) {
+      return next(new AppError('No messages found', 404));
+    }
+
+    messages.reverse();
+    const nextPage = messages.length < limit ? undefined : messages[0]._id;
 
     res.status(200).json({
       status: 'success',
       message: 'messages retreived successfuly',
-      data: { messages, nextPage: page + 1 },
+      data: { messages, nextPage },
     });
   }
 );
