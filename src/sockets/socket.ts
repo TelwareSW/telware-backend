@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import corsOptions from '@base/config/cors';
-import registerChatHandlers from '@base/sockets/chat';
+import registerChatHandlers from '@base/sockets/chats';
 import redisClient from '@base/config/redis';
 import { Types } from 'mongoose';
 import { joinAllRooms } from './MessagingServices';

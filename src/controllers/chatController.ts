@@ -76,8 +76,7 @@ export const getMessages = catchAsync(
     }
 
     messages.reverse();
-    const nextPage =
-      messages.length < limit ? undefined : messages[0]._id;
+    const nextPage = messages.length < limit ? undefined : messages[0]._id;
 
     res.status(200).json({
       status: 'success',

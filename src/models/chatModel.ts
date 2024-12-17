@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import IChat from '@base/types/chat';
+import { decryptKey } from '@base/utils/encryption';
 
 const chatSchema = new mongoose.Schema<IChat>(
   {
@@ -40,6 +41,13 @@ const chatSchema = new mongoose.Schema<IChat>(
             delete member.id;
             delete member._id;
           });
+        }
+        if (ret.encryptionKey) {
+          ret.encryptionKey = decryptKey(
+            ret.encryptionKey,
+            ret.initializationVector,
+            ret.authTag
+          );
         }
         return ret;
       },
