@@ -11,12 +11,12 @@ export const searchMessages = catchAsync(async (req: any, res: Response, next: N
   try {
     let globalSearchResult: {
       groups: IGroupChannel[];
-      chats: IChat[];
       users: IUser[];
+      channels: IGroupChannel[];
     } = {
       groups: [],
-      chats: [],
-      users: []
+      users: [],
+      channels: []
     };
 
     const { query, searchSpace, filter, isGlobalSearch } = req.body;
@@ -82,23 +82,28 @@ export const searchMessages = catchAsync(async (req: any, res: Response, next: N
       }).select('name type picture');
 
       globalSearchResult.groups = groupsAndChannels.filter((gc: IGroupChannel) => gc.type === 'group');
-      globalSearchResult.chats = groupsAndChannels.filter((gc: IGroupChannel) => gc.type === 'channel');
+      globalSearchResult.channels = groupsAndChannels.filter((gc: IGroupChannel) => gc.type === 'channel');
 
       // Users (to find chats involving usernames)
       const users = await User.find({
-        username: { $regex: query, $options: 'i' },
-      }).select('username _id');
+        $or: [
+          { screenFirstName: { $regex: query, $options: 'i' } },
+          { screenLastName: { $regex: query, $options: 'i' } },
+          { username: { $regex: query, $options: 'i' } }
+        ]
+      }).select('name username _id');
+      
 
       globalSearchResult.users = users;
 
       // Chats where the user is a member and the username matches
-      const userIds = users.map((user) => user._id);
-      const chats = await Chat.find({
-        members: { $elemMatch: { user: { $in: userIds } } },
-        type: 'private',
-      }).select('type members');
+      // const userIds = users.map((user) => user._id);
+      // const chats = await Chat.find({
+      //   members: { $elemMatch: { user: { $in: userIds } } },
+      //   type: 'private',
+      // }).select('type members');
 
-      globalSearchResult.chats.push(...chats);
+      // globalSearchResult.chats.push(...chats);
     }
 
     res.status(200).json({
