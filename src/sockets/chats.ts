@@ -19,7 +19,7 @@ const handleAddAdmins = async (
   senderId: any
 ) => {
   const { members, chatId } = data;
-  const forbiddenUsers: string[] = [];
+  const InvalidUsers: string[] = [];
 
   const chat = await Chat.findById(chatId);
   const func = await check(chat, ack, senderId, {
@@ -33,14 +33,14 @@ const handleAddAdmins = async (
       const user = await User.findById(memId);
 
       if (!user) {
-        forbiddenUsers.push(memId);
+        InvalidUsers.push(memId);
         return;
       }
 
       const isMemberOfChat = chat?.members.some((m) => m.user.equals(memId));
 
       if (!isMemberOfChat) {
-        forbiddenUsers.push(memId);
+        InvalidUsers.push(memId);
         return;
       }
 
@@ -57,11 +57,11 @@ const handleAddAdmins = async (
     })
   );
 
-  if (forbiddenUsers.length > 0) {
+  if (InvalidUsers.length > 0) {
     return ack({
       success: false,
       message: 'Some users could not be added as admins',
-      error: `Could not add users with IDs: ${forbiddenUsers.join(', ')}`,
+      error: `Could not add users with IDs: ${InvalidUsers.join(', ')}`,
     });
   }
 
@@ -79,7 +79,7 @@ const handleAddMembers = async (
   senderId: any
 ) => {
   const { chatId, users } = data;
-  const forbiddenUsers: string[] = [];
+  const invalidUsers: string[] = [];
 
   const chat = await Chat.findById(chatId);
   const func = await check(chat, ack, senderId, {
@@ -88,45 +88,55 @@ const handleAddMembers = async (
   });
   if (func) return func;
 
+  if (
+    chat?.type === 'group' &&
+    chat.members.length + users.length >
+      parseInt(process.env.GROUP_SIZE ?? '10', 10)
+  )
+    return ack({
+      success: false,
+      message: 'Faild to create the chat',
+      error: `groups cannot have more than ${process.env.GROUP_SIZE ?? '10'} members`,
+    });
+
   await Promise.all(
     users.map(async (userId: any) => {
       const user = await User.findById(userId);
 
       if (!user) {
-        forbiddenUsers.push(userId);
+        invalidUsers.push(userId);
         return;
       }
 
       const isAlreadyMember = chat?.members.some((m: any) =>
         m.user.equals(userId)
       );
-      if (!isAlreadyMember)
-        chat?.members.push({ user: userId, Role: 'member' });
-      const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
-      if (!userWasMember) user.chats.push(chatId);
-      console.log(user.chats);
       if (isAlreadyMember) {
-        forbiddenUsers.push(userId);
+        invalidUsers.push(userId);
         return;
       }
 
-      await informSessions(io, userId, { chatId }, 'ADD_MEMBERS_SERVER');
+      chat?.members.push({ user: userId, Role: 'member' });
+      const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
+      if (!userWasMember)
+        User.findByIdAndUpdate(
+          userId,
+          { $push: { chats: { chat: chatId } } },
+          { new: true }
+        );
+
+      informSessions(io, userId, { chatId }, 'ADD_MEMBERS_SERVER');
     })
   );
 
-  if (forbiddenUsers.length > 0) {
-    return ack({
-      success: false,
-      message: 'Some users could not be added',
-      error: `Could not add users with IDs: ${forbiddenUsers.join(', ')}`,
-    });
-  }
-
-  await chat?.save();
+  await chat?.save({ validateBeforeSave: false });
 
   ack({
     success: true,
-    message: 'Members added successfully',
+    message:
+      invalidUsers.length > 0
+        ? `Some users could not be added, IDs: ${invalidUsers.join(', ')}`
+        : 'Members added successfully',
     data: {},
   });
 };
@@ -197,18 +207,14 @@ const handleCreateGroupChannel = async (
       error: 'you need to login first',
     });
 
-  if (!process.env.GROUP_SIZE)
+  if (
+    type === 'group' &&
+    members.length > parseInt(process.env.GROUP_SIZE ?? '10', 10)
+  )
     return ack({
       success: false,
       message: 'Faild to create the chat',
-      error: 'define GROUP_SIZE in your .env file',
-    });
-
-  if (type === 'group' && members.length > process.env.GROUP_SIZE)
-    return ack({
-      success: false,
-      message: 'Faild to create the chat',
-      error: `groups cannot have more than ${process.env.GROUP_SIZE} members`,
+      error: `groups cannot have more than ${process.env.GROUP_SIZE ?? '10'} members`,
     });
 
   const membersWithRoles = members.map((id: Types.ObjectId) => ({
