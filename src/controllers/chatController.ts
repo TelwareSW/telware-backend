@@ -8,6 +8,7 @@ import {
   getLastMessage,
   unmute,
   deleteChatPictureFile,
+  getUnreadMessages,
 } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
@@ -39,16 +40,20 @@ export const getAllChats = catchAsync(
         )
       ),
     ];
-    const members = await User.find(
-      { _id: { $in: memberIds } },
-      'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
-    );
-    const lastMessages = await getLastMessage(allChats);
+
+    const [members, lastMessages, unreadMessages] = await Promise.all([
+      User.find(
+        { _id: { $in: memberIds } },
+        'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
+      ),
+      getLastMessage(allChats),
+      getUnreadMessages(allChats, userId),
+    ]);
 
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: { chats: allChats, members, lastMessages },
+      data: { chats: allChats, members, lastMessages, unreadMessages },
     });
   }
 );

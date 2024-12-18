@@ -43,7 +43,6 @@ interface IUser extends Document {
   isCorrectPassword: (_candidatePass: string) => Promise<boolean>;
   passwordChanged: (_tokenIssuedAt: number) => boolean;
   createResetPasswordToken: () => string;
-  selectFields: () => void;
 }
 
 export default IUser;

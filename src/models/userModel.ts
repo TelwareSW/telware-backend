@@ -219,6 +219,7 @@ const userSchema = new mongoose.Schema<IUser>(
       virtuals: true,
       transform(doc, ret) {
         delete ret.__v;
+        console.log(ret);
         if (ret.chats) {
           ret.chats.forEach((chat: any) => {
             delete chat.id;
@@ -232,8 +233,6 @@ const userSchema = new mongoose.Schema<IUser>(
     toObject: { virtuals: true },
   }
 );
-
-//TODO: unreadMessages virtual property
 
 userSchema.index({ email: 1 }, { background: true });
 
@@ -266,13 +265,6 @@ userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
   )
     return true;
   return false;
-};
-
-//FIX: fix this function
-userSchema.methods.selectFields = function (): void {
-  this.select(
-    '-__v -provider -providerId -password -isAdmin -stories -blockedUsers -contacts -chats -changedPasswordAt -emailVerificationCode -emailVerificationCodeExpires -resetPasswordToken -resetPasswordExpires'
-  );
 };
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {
