@@ -317,6 +317,57 @@
 
 /**
  * @swagger
+ * HANDLE_READ_MESSAGE:
+ *   post:
+ *     summary: Marks messages as read
+ *     description: Updates the status of unread messages in a chat for the user. Marks them as read and notifies the sender.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chatId
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique ID of the chat whose messages need to be marked as read.
+ *     responses:
+ *       200:
+ *         description: Messages marked as read successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the result.
+ *       400:
+ *         description: Missing required fields or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: An error message describing the problem.
+ *                 error:
+ *                   type: string
+ *                   description: Details about the error (e.g., missing fields).
+ */
+
+/**
+ * @swagger
  * UPDATE_DRAFT_CLIENT:
  *   post:
  *     summary: Updates a draft message

@@ -63,6 +63,7 @@ const handleMessaging = async (
   }
 
   const message = new Message({
+    media,
     content,
     contentType,
     isForward,

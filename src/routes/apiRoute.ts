@@ -3,7 +3,7 @@ import authRouter from '@routes/authRoute';
 import userRouter from '@routes/userRoute';
 import storyRouter from '@base/routes/storyRoute';
 import chatRouter from '@base/routes/chatRoute';
-import searchRouter from '@base/routes/searchRoute'
+import searchRouter from '@base/routes/searchRoute';
 
 const apiRouter = Router();
 
