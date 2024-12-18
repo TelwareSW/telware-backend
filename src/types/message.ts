@@ -2,7 +2,6 @@ import { Types } from 'mongoose';
 import ICommunication from './communication';
 
 interface IMessage extends ICommunication {
-  timestamp: Date;
   media: string;
   content: string;
   contentType: string;
@@ -10,8 +9,8 @@ interface IMessage extends ICommunication {
   isForward: boolean;
   isEdited: boolean;
   isAnnouncement: boolean;
-  senderId: Types.ObjectId;
-  chatId: Types.ObjectId;
+  deliveredTo: Types.ObjectId[];
+  readBy: Types.ObjectId[];
   parentMessageId: Types.ObjectId | undefined;
   threadMessages: Types.ObjectId[];
 }

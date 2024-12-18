@@ -4,14 +4,14 @@ import IMessage from '@base/types/message';
 import Message from '@models/messageModel';
 import { enableDestruction } from '@services/chatService';
 import Chat from '@base/models/chatModel';
-import { check, updateDraft } from './MessagingServices';
+import { check, informSessions, updateDraft } from './MessagingServices';
 
 interface PinUnPinMessageData {
   chatId: string | Types.ObjectId;
   messageId: string | Types.ObjectId;
 }
 
-export const handleMessaging = async (
+const handleMessaging = async (
   io: any,
   socket: Socket,
   data: any,
@@ -63,6 +63,7 @@ export const handleMessaging = async (
   }
 
   const message = new Message({
+    media,
     content,
     contentType,
     isForward,
@@ -77,7 +78,19 @@ export const handleMessaging = async (
   }
 
   await updateDraft(io, senderId, chatId, '');
-  socket.to(chatId).emit('RECEIVE_MESSAGE', message);
+  socket.to(chatId).emit('RECEIVE_MESSAGE', message, async (res: any) => {
+    if (res.success) {
+      if (res.isRead) message.readBy.push(res.userId);
+      else message.deliveredTo.push(res.userId);
+      message.save();
+      informSessions(
+        io,
+        senderId,
+        message,
+        res.isRead ? 'MESSAGE_READ_SERVER' : 'MESSAGE_DELIVERED'
+      );
+    }
+  });
   const res = {
     messageId: message._id,
   };
@@ -85,11 +98,7 @@ export const handleMessaging = async (
   ack({ success: true, message: 'Message sent successfully', res });
 };
 
-export const handleEditMessage = async (
-  socket: Socket,
-  data: any,
-  ack: Function
-) => {
+const handleEditMessage = async (socket: Socket, data: any, ack: Function) => {
   const { messageId, content, chatId } = data;
   if (!messageId || !content)
     return ack({
@@ -122,7 +131,7 @@ export const handleEditMessage = async (
   });
 };
 
-export const handleDeleteMessage = async (
+const handleDeleteMessage = async (
   socket: Socket,
   data: any,
   ack: Function
@@ -141,47 +150,77 @@ export const handleDeleteMessage = async (
       message: 'Failed to delete the message',
       error: 'no message found with the provided id',
     });
-  socket.to(chatId).emit('DELETE_MESSAGE_SERVER', messageId);
+  socket.to(chatId).emit('DELETE_MESSAGE_SERVER', message);
   ack({ success: true, message: 'Message deleted successfully' });
 };
 
-async function handlePinMessage(socket: Socket, data: PinUnPinMessageData) {
-  try {
-    // Make a message pinned
-    const message = await Message.findById(data.messageId);
-    if (!message) {
-      //TODO: Make a global socket event for the client to send errors to
-      return;
-    }
+const handleReadMessage = async (
+  io: Server,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  userId: string
+) => {
+  const { chatId } = data;
+  const messages = await Message.find({
+    chatId,
+    senderId: { $ne: userId },
+    readBy: { $nin: [userId] },
+  });
+  if (!messages)
+    return ack({
+      success: true,
+      message: 'No messages to read',
+    });
+  messages.forEach(async (message: IMessage) => {
+    message.deliveredTo = message.deliveredTo.filter(
+      (id) => id.toString() !== userId
+    );
+    message.readBy.push(new Types.ObjectId(userId));
+    message.save();
+    informSessions(
+      io,
+      message.senderId.toString(),
+      message,
+      'MESSAGE_READ_SERVER'
+    );
+  });
+  ack({ success: true, message: 'Message read successfully' });
+};
 
-    message.isPinned = true;
-    await message.save();
-
-    // Send an event to all online chat users to pin a message.
-    socket.to(data.chatId.toString()).emit('PIN_MESSAGE_SERVER', data);
-  } catch (err) {
-    //TODO: Make a global socket event for the client to send errors to
+const handlePinMessage = async (
+  socket: Socket,
+  data: PinUnPinMessageData,
+  ack: Function
+) => {
+  const message = await Message.findById(data.messageId);
+  if (!message) {
+    return ack({ success: false, message: 'Failed to pin message' });
   }
-}
 
-async function handleUnPinMessage(socket: Socket, data: PinUnPinMessageData) {
-  try {
-    // Make a message unpinned
-    const message = await Message.findById(data.messageId);
-    if (!message) {
-      //TODO: Make a global socket event for the client to send errors to
-      return;
-    }
+  message.isPinned = true;
+  await message.save();
 
-    message.isPinned = false;
-    await message.save();
+  socket.to(data.chatId.toString()).emit('PIN_MESSAGE_SERVER', data);
+  ack({ success: true, message: 'Message pinned successfully' });
+};
 
-    // Send an event to all online chat users to unpin a message.
-    socket.to(data.chatId.toString()).emit('UNPIN_MESSAGE_SERVER', data);
-  } catch (err) {
-    //TODO: Make a global socket event for the client to send errors to
+const handleUnPinMessage = async (
+  socket: Socket,
+  data: PinUnPinMessageData,
+  ack: Function
+) => {
+  const message = await Message.findById(data.messageId);
+  if (!message) {
+    return ack({ success: false, message: 'Failed to unpin message' });
   }
-}
+
+  message.isPinned = false;
+  await message.save();
+
+  socket.to(data.chatId.toString()).emit('UNPIN_MESSAGE_SERVER', data);
+  ack({ success: true, message: 'Message unpinned successfully' });
+};
 
 async function registerMessagesHandlers(
   io: Server,
@@ -200,12 +239,18 @@ async function registerMessagesHandlers(
     handleDeleteMessage(socket, data, ack)
   );
 
-  socket.on('PIN_MESSAGE_CLIENT', (data: PinUnPinMessageData) =>
-    handlePinMessage(socket, data)
+  socket.on('MESSAGE_READ_CLIENT', (data: any, ack: Function) => {
+    handleReadMessage(io, socket, data, ack, userId);
+  });
+
+  socket.on('PIN_MESSAGE_CLIENT', (data: PinUnPinMessageData, ack: Function) =>
+    handlePinMessage(socket, data, ack)
   );
 
-  socket.on('UNPIN_MESSAGE_CLIENT', (data: PinUnPinMessageData) =>
-    handleUnPinMessage(socket, data)
+  socket.on(
+    'UNPIN_MESSAGE_CLIENT',
+    (data: PinUnPinMessageData, ack: Function) =>
+      handleUnPinMessage(socket, data, ack)
   );
 }
 
