@@ -91,7 +91,7 @@ export const searchMessages = catchAsync(async (req: any, res: Response, next: N
           { screenLastName: { $regex: query, $options: 'i' } },
           { username: { $regex: query, $options: 'i' } }
         ]
-      }).select('name username _id');
+      }).select('name username _id screenFirstName screenLastName phoneNumber photo bio accountStatus stories');
       
 
       globalSearchResult.users = users;
