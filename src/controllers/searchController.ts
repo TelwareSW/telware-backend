@@ -67,12 +67,16 @@ export const searchMessages = catchAsync(async (req: any, res: Response, next: N
 
     // Fetch messages and populate references
     const messages = await Message.find(finalSearchConditions)
-      .populate('senderId', 'username')
-      .populate({
-        path: 'chatId',
-        select: 'name type',
-      })
-      .limit(50);
+    .populate({
+      path: 'senderId',
+      select: 'username screenFirstName screenLastName phoneNumber photo bio accountStatus stories',
+    })
+    .populate({
+      path: 'chatId',
+      select: 'name type',
+    })
+    .limit(50);
+  
 
     // Global Search for Groups, Channels, and Chats
     if (isGlobalSearch) {
@@ -91,7 +95,7 @@ export const searchMessages = catchAsync(async (req: any, res: Response, next: N
           { screenLastName: { $regex: query, $options: 'i' } },
           { username: { $regex: query, $options: 'i' } }
         ]
-      }).select('name username _id');
+      }).select('name username _id screenFirstName screenLastName phoneNumber photo bio accountStatus stories');
       
 
       globalSearchResult.users = users;
