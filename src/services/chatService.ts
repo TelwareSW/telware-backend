@@ -11,9 +11,11 @@ import deleteFile from '@base/utils/deleteFile';
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
     chats.map(async (chat: any) => {
-      const lastMessage = await Message.findOne({ chatId: chat.chat }).sort({
-        timestamp: -1,
-      });
+      const lastMessage = await Message.findOne({ chatId: chat.chat._id }).sort(
+        {
+          timestamp: -1,
+        }
+      );
       return {
         chatId: chat.chat._id,
         lastMessage,
@@ -22,6 +24,20 @@ export const getLastMessage = async (chats: any) => {
   );
   return lastMessages;
 };
+
+export const getUnreadMessages = async (
+  chats: any,
+  userId: mongoose.Types.ObjectId
+) =>
+  Promise.all(
+    chats.map(async (chat: any) => ({
+      chatId: chat.chat._id,
+      unreadMessagesCount: await Message.countDocuments({
+        chatId: chat.chat._id,
+        readBy: { $nin: [userId] },
+      }),
+    }))
+  );
 
 export const getChats = async (
   userId: mongoose.Types.ObjectId,
