@@ -14,9 +14,11 @@ import {
   getCurrentSession,
 } from '@controllers/authController';
 import { protect } from '@middlewares/authMiddleware';
+import { isActive } from '@middlewares/authMiddleware';
 import oauthRouter from '@base/routes/oauthRoute';
 
 const router = Router();
+router.use(isActive);
 
 router.use('/oauth', oauthRouter);
 

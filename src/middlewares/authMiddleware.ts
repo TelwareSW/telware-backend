@@ -4,6 +4,7 @@ import AppError from '@errors/AppError';
 import User from '@models/userModel';
 import { reloadSession } from '@services/sessionService';
 import redisClient from '@base/config/redis';
+import IUser from '@base/types/user';
 
 export const protect = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -45,6 +46,19 @@ export const savePlatformInfo = catchAsync(
 
 export const isAdmin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const currentUser = req.user as IUser;
+    if (!currentUser || !currentUser.isAdmin) {
+      return next(new AppError('You are not authorized to access this resource', 403));
+    }
+    next();
+  }
+);
+export const isActive = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const currentUser = req.user as IUser;
+    if (!currentUser || currentUser.accountStatus !== 'active') {
+      return next(new AppError('You are not active', 403));
+    }
     next();
   }
 );
