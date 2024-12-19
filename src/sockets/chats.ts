@@ -14,6 +14,7 @@ import {
 
 const handleAddAdmins = async (
   io: any,
+  socket: Socket,
   data: any,
   ack: Function,
   senderId: any
@@ -44,7 +45,7 @@ const handleAddAdmins = async (
         return;
       }
 
-      await Chat.findByIdAndUpdate(
+      Chat.findByIdAndUpdate(
         chatId,
         { $set: { 'members.$[elem].Role': 'admin' } },
         {
@@ -52,8 +53,7 @@ const handleAddAdmins = async (
           arrayFilters: [{ 'elem.user': memId }],
         }
       );
-
-      await informSessions(io, memId, { chatId }, 'ADD_ADMINS_SERVER');
+      socket.to(chatId).emit('ADD_ADMINS_SERVER', { chatId, memId });
     })
   );
 
@@ -74,6 +74,7 @@ const handleAddAdmins = async (
 
 const handleAddMembers = async (
   io: any,
+  socket: Socket,
   data: any,
   ack: Function,
   senderId: any
@@ -125,7 +126,8 @@ const handleAddMembers = async (
           { new: true }
         );
 
-      informSessions(io, userId, { chatId }, 'ADD_MEMBERS_SERVER');
+      await joinRoom(io, chatId as string, userId);
+      socket.to(chatId).emit('ADD_MEMBERS_SERVER', { chatId, userId });
     })
   );
 
@@ -235,7 +237,7 @@ const handleCreateGroupChannel = async (
   });
   await newChat.save();
   await Promise.all([
-    allMembers.map((member) =>
+    allMembers.map(async (member) =>
       joinRoom(io, newChat._id as string, member.user)
     ),
     User.updateMany(
@@ -510,11 +512,11 @@ const registerChatHandlers = (io: Server, socket: Socket, userId: any) => {
   });
 
   socket.on('ADD_ADMINS_CLIENT', (data: any, ack: Function) => {
-    handleAddAdmins(io, data, ack, userId);
+    handleAddAdmins(io, socket, data, ack, userId);
   });
 
   socket.on('ADD_MEMBERS_CLIENT', (data: any, ack: Function) => {
-    handleAddMembers(io, data, ack, userId);
+    handleAddMembers(io, socket, data, ack, userId);
   });
 
   socket.on('REMOVE_MEMBERS_CLIENT', (data: any, ack: Function) => {

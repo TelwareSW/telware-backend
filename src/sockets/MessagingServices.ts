@@ -59,7 +59,7 @@ export const check = async (
   if (sender.Role !== 'admin' && chat.type !== 'private') {
     const groupChannelChat = await GroupChannel.findById(chat._id);
 
-    if (!groupChannelChat.messagnigPermission)
+    if (!groupChannelChat.messagingPermission)
       return ack({
         success: false,
         message: 'only admins can post and reply to this chat',
@@ -70,6 +70,7 @@ export const check = async (
         message: 'only admins can post to this channel',
       });
   }
+  return true;
 };
 
 export const informSessions = async (
@@ -93,7 +94,7 @@ export const joinRoom = async (
   userId: Types.ObjectId
 ) => {
   const socketIds = await getSocketsByUserId(userId);
-  socketIds.forEach((socketId: string) => {
+  socketIds.forEach(async (socketId: string) => {
     const socket = io.sockets.sockets.get(socketId);
     if (socket) socket.join(roomId.toString());
   });
@@ -122,7 +123,7 @@ export const updateDraft = async (
 
 export const joinAllRooms = async (socket: Socket, userId: Types.ObjectId) => {
   const chatIds = await getChatIds(userId);
-  chatIds.forEach((chatId: Types.ObjectId) => {
+  chatIds.forEach(async (chatId: Types.ObjectId) => {
     socket.join(chatId.toString());
   });
 };
