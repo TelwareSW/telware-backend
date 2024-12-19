@@ -32,3 +32,7 @@ export const handleInvalidPrivacyOption = (err: AppError) => {
   err.message = 'Invalid Privacy Option.';
   return new AppError(err.message, 400);
 };
+export const handleInvalidAuth = (err: AppError) => {
+  err.message = 'You are not an Admin.';
+  return new AppError(err.message, 400);
+};
