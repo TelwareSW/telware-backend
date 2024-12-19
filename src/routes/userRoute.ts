@@ -31,9 +31,7 @@ import {
   getStory,
   postStory,
 } from '@controllers/storyController';
-import { protect } from '@middlewares/authMiddleware';
-import { isAdmin } from '@middlewares/authMiddleware';
-import { isActive } from '@middlewares/authMiddleware';
+import { protect,isAdmin,isActive } from '@middlewares/authMiddleware';
 
 
 const router = Router();
