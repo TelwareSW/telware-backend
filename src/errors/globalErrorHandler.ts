@@ -1,64 +1,42 @@
 import { Request, Response, NextFunction } from 'express';
-import catchAsync from '@utils/catchAsync';
-import AppError from '@errors/AppError';
-import User from '@models/userModel';
-import { reloadSession } from '@services/sessionService';
-import redisClient from '@base/config/redis';
-import IUser from '@base/types/user';
+import AppError from './AppError';
+import {
+  handleDuplicateKeysError,
+  sendDevError,
+  sendProdError,
+  handleInvalidPrivacyOption,
+  handleInvalidAuth
+} from './errorHandlers';
 
-export const protect = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    await reloadSession(req);
-    if (!req.session.user) {
-      return next(
-        new AppError('Session not found, you are not allowed here!', 401)
-      );
-    }
+const globalErrorHandler = (
+  err: AppError,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+  console.log(err.message);
 
-    const currentUser = await User.findById(req.session.user.id).select(
-      '+password'
-    );
-    if (!currentUser) {
-      return next(
-        new AppError('User has been deleted!! You can not log in', 401)
-      );
-    }
+  if (process.env.NODE_ENV === 'development') {
+    sendDevError(err, res);
+  } else if (process.env.NODE_ENV === 'production') {
+    if (
+      err.message ===
+      'Validation failed: invitePermessionsPrivacy: `nobody` is not a valid enum value for path `invitePermessionsPrivacy`.'
+    )
+      err = handleInvalidPrivacyOption(err);
 
-    if (currentUser.passwordChanged(req.session.user.timestamp)) {
-      return next(
-        new AppError('User has changed password!! Log in again.', 401)
-      );
-    }
-    req.session.user.lastSeenTime = Date.now();
-    req.session.save();
-    req.user = currentUser;
-    next();
+    if (err.name === 'ValidationError') err = handleDuplicateKeysError(err);
+
+    sendProdError(err, res);
   }
-);
+  if (
+    err.message ===
+    "You are not authorized to access this resource"
+  )
+    err = handleInvalidAuth(err);
 
-export const savePlatformInfo = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const platform = (req.query.platform as string) || 'web';
-    await redisClient.set('platform', platform);
-    next();
-  }
-);
+};
 
-export const isAdmin = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const currentUser = req.user as IUser;
-    if (!currentUser || !currentUser.isAdmin) {
-      return next(new AppError('You are not authorized to access this resource', 403));
-    }
-    next();
-  }
-);
-export const isActive = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const currentUser = req.user as IUser;
-    if (!currentUser || currentUser.accountStatus !== 'active') {
-      return next(new AppError('You are not active', 403));
-    }
-    next();
-  }
-);
+export default globalErrorHandler;
