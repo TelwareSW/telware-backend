@@ -7,6 +7,7 @@ import User from '@base/models/userModel';
 import IUser from '@base/types/user';
 import IChat from '@base/types/chat';
 import IGroupChannel from '@base/types/groupChannel';
+import IMessage from '@base/types/message';
 export const searchMessages = catchAsync(async (req: any, res: Response, next: NextFunction) => {
   try {
     let globalSearchResult: {
@@ -67,17 +68,37 @@ export const searchMessages = catchAsync(async (req: any, res: Response, next: N
 
     // Fetch messages and populate references
     const messages = await Message.find(finalSearchConditions)
-    .populate({
-      path: 'senderId',
-      select: 'username screenFirstName screenLastName phoneNumber photo bio accountStatus stories',
-    })
+    .populate('senderId', 'username')
     .populate({
       path: 'chatId',
       select: 'name type',
     })
     .limit(50);
   
-
+  let groups: string[] = []; // Explicitly typing as string array
+  messages.forEach((message: IMessage) => {
+    groups.push(message.chatId.name);
+    console.log(message.chatId.name);
+  });
+  
+  // Search for group channels by name in the groups array
+  const groupChannels = await GroupChannel.find({
+    name: { $in: groups },
+  })
+    .select('name type picture');
+  
+  // Now, populate the chatId with name, type, and picture
+  const updatedMessages = await Message.find(finalSearchConditions)
+    .populate({
+      path: 'chatId',
+      select: 'name type picture',
+      match: { name: { $in: groups } }, // Ensure the chatId matches the groups array
+    })
+    .limit(50);
+  
+  
+        
+        // This will print the 'name' from the chatId
     // Global Search for Groups, Channels, and Chats
     if (isGlobalSearch) {
       // Groups and Channels by name
@@ -113,7 +134,7 @@ export const searchMessages = catchAsync(async (req: any, res: Response, next: N
     res.status(200).json({
       success: true,
       data: {
-        searchResult: messages,
+        searchResult: updatedMessages,
         globalSearchResult: globalSearchResult,
       },
     });

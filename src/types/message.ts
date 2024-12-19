@@ -11,6 +11,8 @@ interface IMessage extends ICommunication {
   isAnnouncement: boolean;
   deliveredTo: Types.ObjectId[];
   readBy: Types.ObjectId[];
+  senderId: Types.ObjectId;
+  chatId: Types.groupChannel;
   parentMessageId: Types.ObjectId | undefined;
   threadMessages: Types.ObjectId[];
 }
