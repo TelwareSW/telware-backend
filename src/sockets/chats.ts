@@ -176,15 +176,14 @@ const handleCreatePrivateChat = async (
   await Promise.all([
     joinRoom(io, newChat._id as string, memberId),
     joinRoom(io, newChat._id as string, senderId),
+    informSessions(io, memberId, newChat, 'JOIN_PRIVATE_CHAT'),
+    informSessions(io, senderId, newChat, 'JOIN_PRIVATE_CHAT'),
     User.updateMany(
       { _id: { $in: [memberId, senderId] } },
       { $push: { chats: { chat: newChat._id } } },
       { new: true }
     ),
   ]);
-  socket
-    .to(newChat._id as string)
-    .emit('JOIN_PRIVATE_CHAT', { chatId: newChat._id as string });
 
   ack({
     success: true,
@@ -237,18 +236,16 @@ const handleCreateGroupChannel = async (
   });
   await newChat.save();
   await Promise.all([
-    allMembers.map(async (member) =>
-      joinRoom(io, newChat._id as string, member.user)
-    ),
+    allMembers.map(async (member) => {
+      joinRoom(io, newChat._id as string, member.user);
+      informSessions(io, member.user, newChat, 'JOIN_GROUP_CHANNEL');
+    }),
     User.updateMany(
       { _id: { $in: allMembers.map((member) => member.user) } },
       { $push: { chats: { chat: newChat._id } } },
       { new: true }
     ),
   ]);
-  socket
-    .to(newChat._id as string)
-    .emit('JOIN_GROUP_CHANNEL', { chatId: newChat._id as string });
 
   ack({
     success: true,
