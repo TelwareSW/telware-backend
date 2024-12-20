@@ -28,7 +28,7 @@
     "phoneNumber": "+201055445511",
     "password": "12345678",
     "passwordConfirm": "12345678",
-    "accountStatus": "deactivated"
+    "accountStatus": "active"
   },
   {
     "email": "front3@gmail.com",
@@ -48,7 +48,7 @@
     "phoneNumber": "+201050007611",
     "password": "12345678",
     "passwordConfirm": "12345678",
-    "accountStatus": "active"
+    "accountStatus": "deactivated"
   },
   {
     "email": "front5@gmail.com",
