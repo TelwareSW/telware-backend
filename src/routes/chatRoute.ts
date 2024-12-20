@@ -16,7 +16,7 @@ import {
   getVoiceCallsInChat,
   filterChatGroups
 } from '@base/controllers/chatController';
-import { protect } from '@base/middlewares/authMiddleware';
+import { protect , isAdmin } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
 import restrictTo from '@base/middlewares/chatMiddlewares';
 
@@ -46,6 +46,7 @@ router.get('/messages/:chatId', restrictTo(), getMessages);
 router.get('/members/:chatId', restrictTo(), getChatMembers);
 router.get('/:chatId', restrictTo(), getChat);
 
-router.patch('/groups/filter', restrictTo('admin'), filterChatGroups);
+router.patch('/groups/filter/:chatId', isAdmin, filterChatGroups);
+router.patch('/groups/unfilter/:chatId', isAdmin, unfilterChatGroups);
 
 export default router;
