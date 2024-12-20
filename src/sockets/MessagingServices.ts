@@ -1,9 +1,11 @@
-import { Socket } from 'socket.io';
-import { getChatIds } from '@services/chatService';
+import { Server, Socket } from 'socket.io';
 import { Types } from 'mongoose';
-import { getSocketsByUserId } from '@base/services/sessionService';
-import User from '@base/models/userModel';
-import GroupChannel from '@base/models/groupChannelModel';
+import { getChatIds } from '@services/chatService';
+import { getSocketsByUserId } from '@services/sessionService';
+import User from '@models/userModel';
+import GroupChannel from '@models/groupChannelModel';
+import Message from '@models/messageModel';
+import IMessage from '@base/types/message';
 
 export interface Member {
   user: Types.ObjectId;
@@ -57,7 +59,7 @@ export const check = async (
   if (sender.Role !== 'admin' && chat.type !== 'private') {
     const groupChannelChat = await GroupChannel.findById(chat._id);
 
-    if (!groupChannelChat.messagnigPermission)
+    if (!groupChannelChat.messagingPermission)
       return ack({
         success: false,
         message: 'only admins can post and reply to this chat',
@@ -68,10 +70,11 @@ export const check = async (
         message: 'only admins can post to this channel',
       });
   }
+  return true;
 };
 
 export const informSessions = async (
-  io: any,
+  io: Server,
   userId: string,
   data: any,
   event: string
@@ -86,31 +89,31 @@ export const informSessions = async (
 };
 
 export const joinRoom = async (
-  io: any,
+  io: Server,
   roomId: String,
   userId: Types.ObjectId
 ) => {
   const socketIds = await getSocketsByUserId(userId);
-  socketIds.forEach((socketId: string) => {
+  socketIds.forEach(async (socketId: string) => {
     const socket = io.sockets.sockets.get(socketId);
-    if (socket) socket.join(roomId);
+    if (socket) socket.join(roomId.toString());
   });
 };
 
 export const updateDraft = async (
-  io: any,
+  io: Server,
   senderId: string,
   chatId: string,
   content: string
 ) => {
-  await User.findByIdAndUpdate(
+  User.findByIdAndUpdate(
     senderId,
     { $set: { 'chats.$[chat].draft': content } },
     {
       arrayFilters: [{ 'chat.chat': chatId }],
     }
   );
-  await informSessions(
+  informSessions(
     io,
     senderId,
     { chatId, draft: content },
@@ -120,7 +123,36 @@ export const updateDraft = async (
 
 export const joinAllRooms = async (socket: Socket, userId: Types.ObjectId) => {
   const chatIds = await getChatIds(userId);
-  chatIds.forEach((chatId: Types.ObjectId) => {
+  chatIds.forEach(async (chatId: Types.ObjectId) => {
     socket.join(chatId.toString());
   });
+};
+
+export const deliverMessages = async (
+  io: Server,
+  socket: Socket,
+  userId: Types.ObjectId
+) => {
+  const user = await User.findById(userId);
+  if (!user) return;
+
+  const messages = await Message.find({
+    chatId: { $in: user.chats.map((chat: any) => chat.chat) },
+    senderId: { $ne: userId },
+    deliveredTo: { $nin: [userId] },
+    readBy: { $nin: [userId] },
+  });
+
+  Promise.all(
+    messages.map(async (message: IMessage) => {
+      message.deliveredTo.push(userId);
+      message.save();
+      informSessions(
+        io,
+        message.senderId.toString(),
+        message,
+        'MESSAGE_DELIVERED'
+      );
+    })
+  );
 };

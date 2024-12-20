@@ -30,6 +30,20 @@ const messageSchema = new mongoose.Schema<IMessage>({
     type: Boolean,
     default: false,
   },
+  deliveredTo: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',
+      default: [],
+    },
+  ],
+  readBy: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',
+      default: [],
+    },
+  ],
   parentMessageId: mongoose.Types.ObjectId,
   threadMessages: [
     {

@@ -14,37 +14,38 @@ import {
 
 const handleAddAdmins = async (
   io: any,
+  socket: Socket,
   data: any,
   ack: Function,
   senderId: any
 ) => {
   const { members, chatId } = data;
-  const forbiddenUsers: string[] = [];
+  const InvalidUsers: string[] = [];
 
   const chat = await Chat.findById(chatId);
   const func = await check(chat, ack, senderId, {
     chatType: ['group', 'channel'],
     checkAdmin: true,
   });
-  if (func) return func;
+  if (!func) return func;
 
   await Promise.all(
     members.map(async (memId: string) => {
       const user = await User.findById(memId);
 
       if (!user) {
-        forbiddenUsers.push(memId);
+        InvalidUsers.push(memId);
         return;
       }
 
       const isMemberOfChat = chat?.members.some((m) => m.user.equals(memId));
 
       if (!isMemberOfChat) {
-        forbiddenUsers.push(memId);
+        InvalidUsers.push(memId);
         return;
       }
 
-      await Chat.findByIdAndUpdate(
+      Chat.findByIdAndUpdate(
         chatId,
         { $set: { 'members.$[elem].Role': 'admin' } },
         {
@@ -52,16 +53,15 @@ const handleAddAdmins = async (
           arrayFilters: [{ 'elem.user': memId }],
         }
       );
-
-      await informSessions(io, memId, { chatId }, 'ADD_ADMINS_SERVER');
+      socket.to(chatId).emit('ADD_ADMINS_SERVER', { chatId, memId });
     })
   );
 
-  if (forbiddenUsers.length > 0) {
+  if (InvalidUsers.length > 0) {
     return ack({
       success: false,
       message: 'Some users could not be added as admins',
-      error: `Could not add users with IDs: ${forbiddenUsers.join(', ')}`,
+      error: `Could not add users with IDs: ${InvalidUsers.join(', ')}`,
     });
   }
 
@@ -74,59 +74,71 @@ const handleAddAdmins = async (
 
 const handleAddMembers = async (
   io: any,
+  socket: Socket,
   data: any,
   ack: Function,
   senderId: any
 ) => {
   const { chatId, users } = data;
-  const forbiddenUsers: string[] = [];
+  const invalidUsers: string[] = [];
 
   const chat = await Chat.findById(chatId);
   const func = await check(chat, ack, senderId, {
     chatType: ['group', 'channel'],
     checkAdmin: true,
   });
-  if (func) return func;
+  if (!func) return func;
+
+  if (
+    chat?.type === 'group' &&
+    chat.members.length + users.length >
+      parseInt(process.env.GROUP_SIZE ?? '10', 10)
+  )
+    return ack({
+      success: false,
+      message: 'Faild to create the chat',
+      error: `groups cannot have more than ${process.env.GROUP_SIZE ?? '10'} members`,
+    });
 
   await Promise.all(
     users.map(async (userId: any) => {
       const user = await User.findById(userId);
 
       if (!user) {
-        forbiddenUsers.push(userId);
+        invalidUsers.push(userId);
         return;
       }
 
       const isAlreadyMember = chat?.members.some((m: any) =>
         m.user.equals(userId)
       );
-      if (!isAlreadyMember)
-        chat?.members.push({ user: userId, Role: 'member' });
-      const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
-      if (!userWasMember) user.chats.push(chatId);
-      console.log(user.chats);
       if (isAlreadyMember) {
-        forbiddenUsers.push(userId);
+        invalidUsers.push(userId);
         return;
       }
 
-      await informSessions(io, userId, { chatId }, 'ADD_MEMBERS_SERVER');
+      chat?.members.push({ user: userId, Role: 'member' });
+      const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
+      if (!userWasMember)
+        User.findByIdAndUpdate(
+          userId,
+          { $push: { chats: { chat: chatId } } },
+          { new: true }
+        );
+
+      await joinRoom(io, chatId as string, userId);
+      socket.to(chatId).emit('ADD_MEMBERS_SERVER', { chatId, userId });
     })
   );
 
-  if (forbiddenUsers.length > 0) {
-    return ack({
-      success: false,
-      message: 'Some users could not be added',
-      error: `Could not add users with IDs: ${forbiddenUsers.join(', ')}`,
-    });
-  }
-
-  await chat?.save();
+  await chat?.save({ validateBeforeSave: false });
 
   ack({
     success: true,
-    message: 'Members added successfully',
+    message:
+      invalidUsers.length > 0
+        ? `Some users could not be added, IDs: ${invalidUsers.join(', ')}`
+        : 'Members added successfully',
     data: {},
   });
 };
@@ -164,15 +176,14 @@ const handleCreatePrivateChat = async (
   await Promise.all([
     joinRoom(io, newChat._id as string, memberId),
     joinRoom(io, newChat._id as string, senderId),
+    informSessions(io, memberId, newChat, 'JOIN_PRIVATE_CHAT'),
+    informSessions(io, senderId, newChat, 'JOIN_PRIVATE_CHAT'),
     User.updateMany(
       { _id: { $in: [memberId, senderId] } },
       { $push: { chats: { chat: newChat._id } } },
       { new: true }
     ),
   ]);
-  socket
-    .to(newChat._id as string)
-    .emit('JOIN_PRIVATE_CHAT', { chatId: newChat._id as string });
 
   ack({
     success: true,
@@ -197,18 +208,14 @@ const handleCreateGroupChannel = async (
       error: 'you need to login first',
     });
 
-  if (!process.env.GROUP_SIZE)
+  if (
+    type === 'group' &&
+    members.length > parseInt(process.env.GROUP_SIZE ?? '10', 10)
+  )
     return ack({
       success: false,
       message: 'Faild to create the chat',
-      error: 'define GROUP_SIZE in your .env file',
-    });
-
-  if (type === 'group' && members.length > process.env.GROUP_SIZE)
-    return ack({
-      success: false,
-      message: 'Faild to create the chat',
-      error: `groups cannot have more than ${process.env.GROUP_SIZE} members`,
+      error: `groups cannot have more than ${process.env.GROUP_SIZE ?? '10'} members`,
     });
 
   const membersWithRoles = members.map((id: Types.ObjectId) => ({
@@ -229,18 +236,16 @@ const handleCreateGroupChannel = async (
   });
   await newChat.save();
   await Promise.all([
-    allMembers.map((member) =>
-      joinRoom(io, newChat._id as string, member.user)
-    ),
+    allMembers.map(async (member) => {
+      joinRoom(io, newChat._id as string, member.user);
+      informSessions(io, member.user, newChat, 'JOIN_GROUP_CHANNEL');
+    }),
     User.updateMany(
       { _id: { $in: allMembers.map((member) => member.user) } },
       { $push: { chats: { chat: newChat._id } } },
       { new: true }
     ),
   ]);
-  socket
-    .to(newChat._id as string)
-    .emit('JOIN_GROUP_CHANNEL', { chatId: newChat._id as string });
 
   ack({
     success: true,
@@ -504,11 +509,11 @@ const registerChatHandlers = (io: Server, socket: Socket, userId: any) => {
   });
 
   socket.on('ADD_ADMINS_CLIENT', (data: any, ack: Function) => {
-    handleAddAdmins(io, data, ack, userId);
+    handleAddAdmins(io, socket, data, ack, userId);
   });
 
   socket.on('ADD_MEMBERS_CLIENT', (data: any, ack: Function) => {
-    handleAddMembers(io, data, ack, userId);
+    handleAddMembers(io, socket, data, ack, userId);
   });
 
   socket.on('REMOVE_MEMBERS_CLIENT', (data: any, ack: Function) => {
