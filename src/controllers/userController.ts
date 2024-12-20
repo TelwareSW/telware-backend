@@ -107,7 +107,7 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const users = await User.find(
     {},
-    'username screenFirstName screenLastName email photo status bio'
+    'username screenFirstName screenLastName email photo status bio accountStatus'
   );
 
   return res.status(200).json({
