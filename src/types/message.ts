@@ -12,9 +12,10 @@ interface IMessage extends ICommunication {
   deliveredTo: Types.ObjectId[];
   readBy: Types.ObjectId[];
   senderId: Types.ObjectId;
-  chatId: Types.groupChannel;
+  chatId: Types.ObjectId;
   parentMessageId: Types.ObjectId | undefined;
   threadMessages: Types.ObjectId[];
+  isAppropriate: boolean;
 }
 
 export default IMessage;

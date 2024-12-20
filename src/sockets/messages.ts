@@ -20,6 +20,7 @@ const handleMessaging = async (
 ) => {
   let { media, content, contentType, parentMessageId } = data;
   const { chatId, chatType, isReply, isForward } = data;
+
   if (
     (!isForward &&
       !content &&
@@ -62,6 +63,8 @@ const handleMessaging = async (
     }
   }
 
+  const isAppropriate = await detectInappropriateContent(content);
+
   const message = new Message({
     media,
     content,
@@ -70,8 +73,12 @@ const handleMessaging = async (
     senderId,
     chatId,
     parentMessageId,
+    isAppropriate, // Set the isAppropriate property based on the content check
   });
+  
+  console.log(message);
   await message.save();
+
   if (parentMessage && isReply && chatType === 'channel') {
     parentMessage.threadMessages.push(message._id as Types.ObjectId);
     await parentMessage.save();

@@ -33,7 +33,6 @@ import {
 } from '@controllers/storyController';
 import { protect,isAdmin,isActive } from '@middlewares/authMiddleware';
 
-
 const router = Router();
 
 router.use(protect);
@@ -69,5 +68,6 @@ router.get('/contacts/stories', getAllContactsStories);
 router.get('/:userId/stories', getStory);
 router.get('/:userId', getUser);
 router.get('/',isAdmin, getAllUsers);
+
 
 export default router;
