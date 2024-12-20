@@ -6,6 +6,7 @@ import User from '@models/userModel';
 import GroupChannel from '@models/groupChannelModel';
 import Message from '@models/messageModel';
 import IMessage from '@base/types/message';
+import detectInappropriateContent from '@base/services/googleAIService';
 
 export interface Member {
   user: Types.ObjectId;
@@ -18,7 +19,7 @@ export const check = async (
   senderId: any,
   additionalData?: any
 ) => {
-  const { chatType, checkAdmin, newMessageIsReply } = additionalData;
+  const { chatType, checkAdmin, newMessageIsReply, content } = additionalData;
 
   if (!chat || chat.isDeleted) {
     return ack({
@@ -64,6 +65,16 @@ export const check = async (
         success: false,
         message: 'only admins can post and reply to this chat',
       });
+    if (
+      chat?.type === 'group' &&
+      !chat.isFilterd &&
+      (await detectInappropriateContent(content))
+    ) {
+      return ack({
+        success: false,
+        message: 'inappropriate content',
+      });
+    }
     if (chat.type === 'channel' && !newMessageIsReply)
       return ack({
         success: false,

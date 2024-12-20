@@ -3,7 +3,6 @@ import { Server, Socket } from 'socket.io';
 import IMessage from '@base/types/message';
 import Message from '@models/messageModel';
 import { enableDestruction } from '@services/chatService';
-import { detectInappropriateContent } from '@services/googleAIService';
 import Chat from '@base/models/chatModel';
 import { check, informSessions, updateDraft } from './MessagingServices';
 
@@ -45,6 +44,7 @@ const handleMessaging = async (
   const chat = await Chat.findById(chatId);
   const func = await check(chat, ack, senderId, {
     newMessageIsReply: isReply,
+    content,
   });
   if (!func) return;
 
@@ -64,8 +64,6 @@ const handleMessaging = async (
     }
   }
 
-  const isAppropriate = await detectInappropriateContent(content);
-
   const message = new Message({
     media,
     content,
@@ -74,7 +72,6 @@ const handleMessaging = async (
     senderId,
     chatId,
     parentMessageId,
-    isAppropriate,
   });
 
   await message.save();
@@ -86,9 +83,12 @@ const handleMessaging = async (
 
   await updateDraft(io, senderId, chatId, '');
   socket.to(chatId).emit('RECEIVE_MESSAGE', message, async (res: any) => {
-    if (res.success) {
-      if (res.isRead) message.readBy.push(res.userId);
-      else message.deliveredTo.push(res.userId);
+    if (res.success && res.userId !== senderId) {
+      if (res.isRead && !message.readBy.includes(res.userId)) {
+        message.readBy.push(res.userId);
+      } else if (!message.deliveredTo.includes(res.userId)) {
+        message.deliveredTo.push(res.userId);
+      }
       message.save();
       informSessions(
         io,

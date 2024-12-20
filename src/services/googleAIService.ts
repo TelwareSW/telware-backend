@@ -4,7 +4,7 @@ const hf = new HfInference(process.env.HF_API_KEY);
 
 const modelName = 'unitary/toxic-bert';
 
-export async function detectInappropriateContent(text: string): Promise<boolean> {
+async function detectInappropriateContent(text: string): Promise<boolean> {
     try {
         const response = await hf.textClassification({
             model: modelName,
@@ -33,3 +33,5 @@ export async function detectInappropriateContent(text: string): Promise<boolean>
         throw new Error('Failed to detect inappropriate content');
     }
 }
+
+export default detectInappropriateContent;
