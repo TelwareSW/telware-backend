@@ -11,6 +11,11 @@ on:
       - main
       - develop
 
+  pull_request_target:
+    branches:
+      - main
+      - develop
+
 jobs: 
   check-code-compilation:
 
