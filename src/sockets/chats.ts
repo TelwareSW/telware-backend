@@ -467,7 +467,6 @@ const handleSetPermission = async (
   else if (type === 'download') chat.downloadingPermission = who === 'everyone';
   await chat.save();
   socket.to(chatId).emit('SET_PERMISSION_SERVER', { chatId, type, who });
-  console.log(chat);
   ack({
     success: true,
     message: 'permissions updated successfully',

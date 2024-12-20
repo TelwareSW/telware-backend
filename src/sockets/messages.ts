@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import IMessage from '@base/types/message';
 import Message from '@models/messageModel';
 import { enableDestruction } from '@services/chatService';
+import { detectInappropriateContent } from '@services/googleAIService';
 import Chat from '@base/models/chatModel';
 import { check, informSessions, updateDraft } from './MessagingServices';
 
@@ -73,10 +74,9 @@ const handleMessaging = async (
     senderId,
     chatId,
     parentMessageId,
-    isAppropriate, // Set the isAppropriate property based on the content check
+    isAppropriate,
   });
-  
-  console.log(message);
+
   await message.save();
 
   if (parentMessage && isReply && chatType === 'channel') {
