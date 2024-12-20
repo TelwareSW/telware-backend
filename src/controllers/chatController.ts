@@ -344,6 +344,7 @@ export const filterChatGroups = catchAsync(
     }
     
     groupChannel.isFilterd = true;
+    await groupChannel.save();
     res.status(200).json({
       status: 'success',
       message: 'isFiltered set to true successfully',
@@ -364,6 +365,7 @@ export const unfilterChatGroups = catchAsync(
       });
     }
     groupChannel.isFilterd = false;
+    await groupChannel.save();
 
     res.status(200).json({
       status: 'success',
