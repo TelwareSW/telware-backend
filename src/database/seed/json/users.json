@@ -1,5 +1,16 @@
 [
   {
+    "email": "admin@gmail.com",
+    "username": "Hamdy",
+    "screenFirstName": "Ahmed",
+    "screenLastName": "Hamdy",
+    "phoneNumber": "+201063360716",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active",
+    "isAdmin": true
+  },
+  {
     "email": "front1@gmail.com",
     "username": "Batman",
     "screenFirstName": "Bruce",
@@ -17,7 +28,7 @@
     "phoneNumber": "+201055445511",
     "password": "12345678",
     "passwordConfirm": "12345678",
-    "accountStatus": "active"
+    "accountStatus": "deactivated"
   },
   {
     "email": "front3@gmail.com",
@@ -27,7 +38,7 @@
     "phoneNumber": "+201055287611",
     "password": "12345678",
     "passwordConfirm": "12345678",
-    "accountStatus": "active"
+    "accountStatus": "banned"
   },
   {
     "email": "front4@gmail.com",
