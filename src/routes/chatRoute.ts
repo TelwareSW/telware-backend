@@ -14,7 +14,8 @@ import {
   invite,
   join,
   getVoiceCallsInChat,
-  filterChatGroups
+  filterChatGroups,
+  unfilterChatGroups
 } from '@base/controllers/chatController';
 import { protect , isAdmin } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
