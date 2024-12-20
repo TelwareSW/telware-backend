@@ -71,11 +71,21 @@ export const signup = catchAsync(
 export const login = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
+
     const user = await User.findOne({ email });
     if (!user)
       return next(
         new AppError('No user is found with this email address', 404)
       );
+
+    if (user.accountStatus !== 'active') {
+      return next(
+        new AppError(
+          'Your account is deactivated or banned.',
+          403
+        )
+      );
+    }
 
     const message: string = await validateBeforeLogin(email, password);
     if (message === 'please verify your email first to be able to login')
@@ -83,6 +93,7 @@ export const login = catchAsync(
     if (message !== 'validated') return next(new AppError(message, 400));
 
     await saveSession(user._id as ObjectId, req);
+
     res.status(200).json({
       status: 'success',
       message: 'logged in successfully',
@@ -368,6 +379,3 @@ export const getCurrentSession = catchAsync(
     });
   }
 );
-
-
-
