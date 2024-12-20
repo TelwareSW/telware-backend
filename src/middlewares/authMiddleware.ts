@@ -56,9 +56,8 @@ export const isAdmin = catchAsync(
 export const isActive = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const currentUser = req.user as IUser;
-    console.log(currentUser.accountStatus);
     if (!currentUser || currentUser.accountStatus !== 'active') {
-      return next(new AppError('You are not active', 400));
+      return next(new AppError('You are not active', 403));
     }
     next();
   }

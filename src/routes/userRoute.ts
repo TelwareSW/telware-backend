@@ -31,10 +31,7 @@ import {
   getStory,
   postStory,
 } from '@controllers/storyController';
-import { protect } from '@middlewares/authMiddleware';
-import { isAdmin } from '@middlewares/authMiddleware';
-import { isActive } from '@middlewares/authMiddleware';
-
+import { protect,isAdmin,isActive } from '@middlewares/authMiddleware';
 
 const router = Router();
 
@@ -55,7 +52,6 @@ router.patch('/activate/:userId',isAdmin,activateUser);
 router.patch('/deactivate/:userId',isAdmin,deactivateUser);
 router.patch('/ban/:userId',isAdmin,banUser);
 router.get('/all-groups',isAdmin,getAllGroups);
-router.get('/',isAdmin, getAllUsers);
 
 // User routes
 router.get('/me', getCurrentUser);
@@ -69,8 +65,9 @@ router.patch('/screen-name', updateScreenName);
 router.patch('/picture', upload.single('file'), updatePicture);
 router.delete('/picture', deletePicture);
 router.get('/contacts/stories', getAllContactsStories);
-router.get('/:userId', getUser);
 router.get('/:userId/stories', getStory);
+router.get('/:userId', getUser);
+router.get('/',isAdmin, getAllUsers);
 
 
 export default router;
