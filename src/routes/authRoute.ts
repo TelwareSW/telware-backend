@@ -13,8 +13,7 @@ import {
   getLogedInSessions,
   getCurrentSession,
 } from '@controllers/authController';
-import { protect } from '@middlewares/authMiddleware';
-import { isActive } from '@middlewares/authMiddleware';
+import { protect , isActive } from '@middlewares/authMiddleware';
 import oauthRouter from '@base/routes/oauthRoute';
 
 const router = Router();
