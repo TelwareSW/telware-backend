@@ -5,6 +5,7 @@ import {
   sendDevError,
   sendProdError,
   handleInvalidPrivacyOption,
+  handleInvalidAuth
 } from './errorHandlers';
 
 const globalErrorHandler = (
@@ -30,6 +31,12 @@ const globalErrorHandler = (
 
     sendProdError(err, res);
   }
+  if (
+    err.message ===
+    "You are not authorized to access this resource"
+  )
+    err = handleInvalidAuth(err);
+
 };
 
 export default globalErrorHandler;
