@@ -27,7 +27,7 @@ const handleAddAdmins = async (
     chatType: ['group', 'channel'],
     checkAdmin: true,
   });
-  if (func) return func;
+  if (!func) return func;
 
   await Promise.all(
     members.map(async (memId: string) => {
@@ -87,7 +87,7 @@ const handleAddMembers = async (
     chatType: ['group', 'channel'],
     checkAdmin: true,
   });
-  if (func) return func;
+  if (!func) return func;
 
   if (
     chat?.type === 'group' &&

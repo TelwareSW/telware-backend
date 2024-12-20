@@ -44,7 +44,7 @@ const handleMessaging = async (
   const func = await check(chat, ack, senderId, {
     newMessageIsReply: isReply,
   });
-  if (func) return func;
+  if (!func) return;
 
   let parentMessage;
   if (isForward || isReply) {
