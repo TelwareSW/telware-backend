@@ -79,12 +79,7 @@ export const login = catchAsync(
       );
 
     if (user.accountStatus !== 'active') {
-      return next(
-        new AppError(
-          'Your account is deactivated or banned.',
-          403
-        )
-      );
+      return next(new AppError('Your account is deactivated or banned.', 403));
     }
 
     const message: string = await validateBeforeLogin(email, password);
@@ -379,6 +374,3 @@ export const getCurrentSession = catchAsync(
     });
   }
 );
-
-
-
