@@ -333,13 +333,29 @@ export const getVoiceCallsInChat = catchAsync(
 );
 export const filterChatGroups = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { chatId } = req.params;
+    const chatId = req.params.chatId;
+    console.log(chatId);
+    const groupChannel = await GroupChannel.findById(chatId);
+    if (!groupChannel) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Group/Channel not found with the given chatId',
+      });
+    }
+    
+    groupChannel.isFilterd = true;
+    res.status(200).json({
+      status: 'success',
+      message: 'isFiltered set to true successfully',
+      data: groupChannel,
+    });
+  }
+);
+export const unfilterChatGroups = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const chatId = req.params.chatId;
 
-    const groupChannel = await GroupChannel.findOneAndUpdate(
-      { chatId },
-      { isFiltered: true },
-      { new: true }
-    );
+    const groupChannel = await GroupChannel.findById(chatId);
 
     if (!groupChannel) {
       return res.status(404).json({
@@ -347,6 +363,7 @@ export const filterChatGroups = catchAsync(
         message: 'GroupChannel not found with the given chatId',
       });
     }
+    groupChannel.isFilterd = false;
 
     res.status(200).json({
       status: 'success',
