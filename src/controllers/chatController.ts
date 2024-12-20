@@ -326,3 +326,27 @@ export const getVoiceCallsInChat = catchAsync(
     });
   }
 );
+export const filterChatGroups = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+
+    const groupChannel = await GroupChannel.findOneAndUpdate(
+      { chatId },
+      { isFiltered: true },
+      { new: true }
+    );
+
+    if (!groupChannel) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'GroupChannel not found with the given chatId',
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'isFiltered set to true successfully',
+      data: groupChannel,
+    });
+  }
+);

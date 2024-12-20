@@ -5,6 +5,7 @@ import {
   sendDevError,
   sendProdError,
   handleInvalidPrivacyOption,
+  handleInvalidAuth
 } from './errorHandlers';
 
 const globalErrorHandler = (
@@ -25,6 +26,11 @@ const globalErrorHandler = (
       'Validation failed: invitePermessionsPrivacy: `nobody` is not a valid enum value for path `invitePermessionsPrivacy`.'
     )
       err = handleInvalidPrivacyOption(err);
+    if (
+      err.message ===
+      "You are not authorized to access this resource"
+    )
+      err = handleInvalidAuth(err);
 
     if (err.name === 'ValidationError') err = handleDuplicateKeysError(err);
 

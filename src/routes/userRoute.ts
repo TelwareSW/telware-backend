@@ -19,6 +19,10 @@ import {
   updatePicture,
   updateScreenName,
   updateUsername,
+  getAllGroups,
+  activateUser,
+  deactivateUser,
+  banUser
 } from '@controllers/userController';
 import {
   deleteStory,
@@ -28,10 +32,14 @@ import {
   postStory,
 } from '@controllers/storyController';
 import { protect } from '@middlewares/authMiddleware';
+import { isAdmin } from '@middlewares/authMiddleware';
+import { isActive } from '@middlewares/authMiddleware';
+
 
 const router = Router();
 
 router.use(protect);
+router.use(isActive);
 router.use('/privacy', privacyRouter);
 router.get('/stories', getCurrentUserStory);
 router.post('/stories', upload.single('file'), postStory);
@@ -42,8 +50,14 @@ router.get('/block', getBlockedUsers);
 router.post('/block/:id', block);
 router.delete('/block/:id', unblock);
 
+// Admin routes
+router.patch('/activate/:userId',isAdmin,activateUser);
+router.patch('/deactivate/:userId',isAdmin,deactivateUser);
+router.patch('/ban/:userId',isAdmin,banUser);
+router.get('/all-groups',isAdmin,getAllGroups);
+router.get('/',isAdmin, getAllUsers);
+
 // User routes
-router.get('/', getAllUsers);
 router.get('/me', getCurrentUser);
 router.get('/username/check', getCheckUserName);
 router.patch('/me', updateCurrentUser);
@@ -57,5 +71,6 @@ router.delete('/picture', deletePicture);
 router.get('/contacts/stories', getAllContactsStories);
 router.get('/:userId', getUser);
 router.get('/:userId/stories', getStory);
+
 
 export default router;

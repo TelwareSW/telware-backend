@@ -5,7 +5,7 @@ import Message from '@models/messageModel';
 import { enableDestruction } from '@services/chatService';
 import Chat from '@base/models/chatModel';
 import { check, updateDraft } from './MessagingServices';
-
+import {detectInappropriateContent} from '@services/googleAIService';
 interface PinUnPinMessageData {
   chatId: string | Types.ObjectId;
   messageId: string | Types.ObjectId;
@@ -20,6 +20,7 @@ export const handleMessaging = async (
 ) => {
   let { media, content, contentType, parentMessageId } = data;
   const { chatId, chatType, isReply, isForward } = data;
+
   if (
     (!isForward &&
       !content &&
@@ -62,6 +63,8 @@ export const handleMessaging = async (
     }
   }
 
+  const isAppropriate = await detectInappropriateContent(content);
+
   const message = new Message({
     content,
     contentType,
@@ -69,8 +72,12 @@ export const handleMessaging = async (
     senderId,
     chatId,
     parentMessageId,
+    isAppropriate, // Set the isAppropriate property based on the content check
   });
+  
+  console.log(message);
   await message.save();
+
   if (parentMessage && isReply && chatType === 'channel') {
     parentMessage.threadMessages.push(message._id as Types.ObjectId);
     await parentMessage.save();

@@ -14,6 +14,7 @@ import {
   invite,
   join,
   getVoiceCallsInChat,
+  filterChatGroups
 } from '@base/controllers/chatController';
 import { protect } from '@base/middlewares/authMiddleware';
 import upload from '@base/config/fileUploads';
@@ -44,5 +45,7 @@ router.get('/voice-calls/:chatId', restrictTo(), getVoiceCallsInChat);
 router.get('/messages/:chatId', restrictTo(), getMessages);
 router.get('/members/:chatId', restrictTo(), getChatMembers);
 router.get('/:chatId', restrictTo(), getChat);
+
+router.patch('/groups/filter', restrictTo('admin'), filterChatGroups);
 
 export default router;

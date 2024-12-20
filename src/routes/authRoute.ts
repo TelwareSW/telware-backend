@@ -14,6 +14,7 @@ import {
   getCurrentSession,
 } from '@controllers/authController';
 import { protect } from '@middlewares/authMiddleware';
+import { isActive } from '@middlewares/authMiddleware';
 import oauthRouter from '@base/routes/oauthRoute';
 
 const router = Router();
@@ -27,10 +28,11 @@ router.post('/send-confirmation', sendConfirmationCode);
 router.post('/verify', verifyEmail);
 router.post('/password/forget', forgotPassword);
 router.patch('/password/reset/:token', resetPassword);
-router.patch('/password/change', protect, changePassword);
 
 router.use(protect);
+router.patch('/password/change', protect, changePassword);
 
+router.use(isActive);
 router.get('/me', getCurrentSession);
 router.get('/sessions', getLogedInSessions);
 router.post('/logout', logoutSession);

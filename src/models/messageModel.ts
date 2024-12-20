@@ -14,6 +14,10 @@ const messageSchema = new mongoose.Schema<IMessage>({
     type: Boolean,
     default: false,
   },
+  isAppropriate: {
+    type: Boolean,
+    default: false,
+  },
   isForward: {
     type: Boolean,
     default: false,
