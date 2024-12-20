@@ -70,5 +70,4 @@ router.get('/:userId/stories', getStory);
 router.get('/:userId', getUser);
 router.get('/',isAdmin, getAllUsers);
 
-
 export default router;
