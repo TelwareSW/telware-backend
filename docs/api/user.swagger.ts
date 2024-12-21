@@ -1416,3 +1416,71 @@
  *                     - Session not found, you are not allowed here!
  *                     - You are not authorized to view these stories
  */
+
+/**
+ * @swagger
+ * /users/fcm-token:
+ *   patch:
+ *     summary: Update the FCM token of the authenticated user
+ *     description: This endpoint allows an authenticated user to update their Firebase Cloud Messaging (FCM) token.
+ *     tags:
+ *       - User
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fcmToken:
+ *                 type: string
+ *                 description: The FCM token to be updated.
+ *                 example: "aslkdfadslfdaskf"
+ *             required:
+ *               - fcmToken
+ *     responses:
+ *       201:
+ *         description: FCM token updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "User fcm token updated successfully"
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       404:
+ *         description: No user exists with the given ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "No User exists with this ID"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "Internal Server Error"
+ */

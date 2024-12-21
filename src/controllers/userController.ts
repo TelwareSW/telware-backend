@@ -282,7 +282,8 @@ export const deletePicture = catchAsync(async (req: any, res: Response) => {
 });
 
 export const getAllGroups = catchAsync(async (req: Request, res: Response) => {
-  const groupsAndChannels = await GroupChannel.find();
+  const groupsAndChannels = await GroupChannel.find(); // Use `find()` in Mongoose to retrieve all documents
+
   return res.status(200).json({
     status: 'success',
     message: 'Groups and Channels retrieved successfully',
@@ -330,10 +331,10 @@ export const activateUser = catchAsync(async (req: Request, res: Response) => {
     message: 'User activated successfully',
   });
 });
+
 export const deactivateUser = catchAsync(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    console.log(req.params);
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -351,6 +352,7 @@ export const deactivateUser = catchAsync(
     });
   }
 );
+
 export const banUser = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
 
@@ -368,5 +370,26 @@ export const banUser = catchAsync(async (req: Request, res: Response) => {
   return res.status(200).json({
     status: 'success',
     message: 'User banned successfully',
+  });
+});
+
+export const updateFCMToken = catchAsync(async (req: any, res: Response) => {
+  const userId = req.user.id;
+  const { fcmToken } = req.body;
+
+  const user = await User.findOneAndUpdate(
+    { _id: userId },
+    { fcmToken },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  return res.status(201).json({
+    status: 'success',
+    message: 'User fcm token updated successfuly',
+    data: {},
   });
 });

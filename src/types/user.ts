@@ -7,6 +7,7 @@ interface IUser extends Document {
   screenFirstName: string;
   screenLastName: string;
   email: string;
+  fcmToken: string;
   phoneNumber: string | undefined;
   password: string | undefined;
   passwordConfirm: string | undefined;

@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema<IUser>(
         message: 'Username can contain only letters, numbers and underscore',
       },
     },
+    fcmToken: {
+      type: String,
+      default: '',
+    },
     screenFirstName: {
       type: String,
       default: '',
@@ -235,21 +239,21 @@ const userSchema = new mongoose.Schema<IUser>(
 
 userSchema.index({ email: 1 }, { background: true });
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function(next) {
   if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
   next();
 });
 
-userSchema.pre('save', function (next) {
+userSchema.pre('save', function(next) {
   if (this.provider === 'local') {
     this.providerId = this._id as string;
   }
   next();
 });
 
-userSchema.methods.isCorrectPassword = async function (
+userSchema.methods.isCorrectPassword = async function(
   candidatePass: string
 ): Promise<boolean> {
   const result = await bcrypt.compare(candidatePass, this.password);
@@ -257,7 +261,7 @@ userSchema.methods.isCorrectPassword = async function (
   return result;
 };
 
-userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
+userSchema.methods.passwordChanged = function(tokenIssuedAt: number): boolean {
   if (
     this.changedPasswordAt &&
     this.changedPasswordAt.getTime() / 1000 > tokenIssuedAt
@@ -266,7 +270,7 @@ userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
   return false;
 };
 
-userSchema.methods.generateSaveConfirmationCode = function (): string {
+userSchema.methods.generateSaveConfirmationCode = function(): string {
   const confirmationCode: string = generateConfirmationCode();
   this.emailVerificationCode = crypto
     .createHash('sha256')
@@ -277,7 +281,7 @@ userSchema.methods.generateSaveConfirmationCode = function (): string {
   return confirmationCode;
 };
 
-userSchema.methods.createResetPasswordToken = function (): string {
+userSchema.methods.createResetPasswordToken = function(): string {
   const resetPasswordToken = crypto.randomBytes(32).toString('hex');
 
   this.resetPasswordToken = crypto
