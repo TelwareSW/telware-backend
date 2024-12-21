@@ -45,6 +45,9 @@
  *               isForward:
  *                 type: boolean
  *                 description: Indicates if the message is forwarded.
+ *               isAnouncement:
+ *                 type: boolean
+ *                 description: Indicates if the message is an anouncement.
  *     responses:
  *       200:
  *         description: Message sent successfully.

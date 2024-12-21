@@ -124,6 +124,20 @@
  *                             items:
  *                               type: string
  *                               description: IDs of users blocked by this member.
+ *                     unreadMessages:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           chatId:
+ *                             type: string
+ *                             description: Unique identifier of the chat this message belongs to.
+ *                           unreadMessagesCount:
+ *                             type: string
+ *                             description: Number of unread messages in the chat.
+ *                           isMentioned:
+ *                             type: boolean
+ *                             description: Indicates if the user is mentioned in the chat.
  *                     lastMessages:
  *                       type: array
  *                       items:
@@ -171,12 +185,6 @@
  *                                 type: string
  *                                 format: date-time
  *                                 description: Timestamp when the message was sent.
- *                               __v:
- *                                 type: integer
- *                                 description: Version key.
- *                               id:
- *                                 type: string
- *                                 description: Alias for `_id`.
  *       401:
  *         description: User is not logged in or the request is invalid.
  *         content:

@@ -121,7 +121,7 @@ const handleAddMembers = async (
       chat?.members.push({ user: userId, Role: 'member' });
       const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
       if (!userWasMember)
-        User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
           userId,
           { $push: { chats: { chat: chatId } } },
           { new: true }
@@ -263,35 +263,20 @@ const handleDeleteGroupChannel = async (
   senderId: any
 ) => {
   const { chatId } = data;
-  const chat = await Chat.findById(chatId);
 
-  if (!chat || chat.isDeleted)
-    return ack({
-      success: false,
-      message: 'Could not delete the group',
-      error: 'no chat found with the provided id',
-    });
+  const chat = await GroupChannel.findById(chatId);
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+    checkAdmin: true,
+  });
+  if (!func) return func;
 
-  const chatMembers = chat.members;
-  const isCreator = chatMembers.some(
-    (member) => member.user.toString() === senderId && member.Role === 'admin'
+  await User.updateMany(
+    { _id: { $in: chat.members.map((m: any) => m.user) } },
+    { $pull: { chats: { chat: chatId } } }
   );
 
-  if (!isCreator)
-    return ack({
-      success: false,
-      message: 'Could not delete the group',
-      error: 'you are not authorized to delete the group',
-    });
-
-  chatMembers.map(async (member: any) => {
-    await informSessions(
-      io,
-      member.user,
-      { chatId },
-      'DELETE_GROUP_CHANNEL_SERVER'
-    );
-  });
+  socket.to(chatId).emit('DELETE_GROUP_CHANNEL_SERVER', { chatId });
 
   chat.members = [];
   chat.isDeleted = true;
