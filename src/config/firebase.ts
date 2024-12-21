@@ -8,4 +8,6 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
+export const messaging = admin.messaging();
+
 export default admin;
