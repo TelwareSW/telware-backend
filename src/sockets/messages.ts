@@ -107,11 +107,12 @@ const handleMessaging = async (
       );
     }
   });
-  const res = {
-    messageId: message._id,
-  };
   enableDestruction(socket, message, chatId);
-  ack({ success: true, message: 'Message sent successfully', res });
+  ack({
+    success: true,
+    message: 'Message sent successfully',
+    data: message,
+  });
 };
 
 const handleEditMessage = async (socket: Socket, data: any, ack: Function) => {
