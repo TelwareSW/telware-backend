@@ -25,17 +25,21 @@ export const getLastMessage = async (chats: any) => {
   return lastMessages;
 };
 
-export const getUnreadMessages = async (
-  chats: any,
-  userId: mongoose.Types.ObjectId
-) =>
+export const getUnreadMessages = async (chats: any, user: any) =>
   Promise.all(
     chats.map(async (chat: any) => ({
       chatId: chat.chat._id,
       unreadMessagesCount: await Message.countDocuments({
         chatId: chat.chat._id,
-        readBy: { $nin: [userId] },
+        readBy: { $nin: [user._id] },
       }),
+      isMentioned:
+        (await Message.exists({
+          chatId: chat.chat._id,
+          readBy: { $nin: [user._id] },
+          senderId: { $ne: user._id },
+          content: new RegExp(`@${user.username}`, 'i'),
+        })) !== null,
     }))
   );
 

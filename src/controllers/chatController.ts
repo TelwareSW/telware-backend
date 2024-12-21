@@ -45,7 +45,7 @@ export const getAllChats = catchAsync(
         'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
       ),
       getLastMessage(allChats),
-      getUnreadMessages(allChats, userId),
+      getUnreadMessages(allChats, user),
     ]);
 
     res.status(200).json({
