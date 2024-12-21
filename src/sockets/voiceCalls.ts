@@ -36,6 +36,7 @@ async function handleCreateCall(
     chatId = '123';
   }
 
+  console.log('User Started Call: ', userId);
   const voiceCall = await createVoiceCall(chatId, userId);
 
   io.to(chatId).emit('CALL-STARTED', {
@@ -52,7 +53,9 @@ async function handleJoinCall(
   userId: string
 ) {
   const { voiceCallId } = data;
-
+  console.log(
+    `Client Joined call, clientId: ${userId} , callId: ${voiceCallId}`
+  );
   await addClientToCall(socket, userId, voiceCallId);
 
   socket.join(voiceCallId);
@@ -71,6 +74,10 @@ async function handleSignal(
 ) {
   const { type, targetId, voiceCallId, data } = signalData;
 
+  console.log(
+    `Signal Sent, type: ${type}, senderId: ${userId}, targetId: ${targetId}, voiceCallId: ${voiceCallId}`
+  );
+
   const socketId = getClientSocketId(voiceCallId, targetId);
 
   io.to(socketId).emit('SIGNAL-CLIENT', {
@@ -88,6 +95,8 @@ async function handleLeaveCall(
   userId: string
 ) {
   const { voiceCallId } = data;
+
+  console.log(`Client Left, clientId: ${userId}, voiceCallId: ${voiceCallId}`);
 
   socket.leave(voiceCallId);
 

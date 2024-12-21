@@ -4,6 +4,7 @@ import catchAsync from '@base/utils/catchAsync';
 import { Request, Response } from 'express';
 import deletePictureFile from '@base/services/userService';
 import IUser from '@base/types/user';
+import GroupChannel from '@base/models/groupChannelModel';
 
 interface GetUser extends Request {
   params: {
@@ -106,7 +107,7 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const users = await User.find(
     {},
-    'username screenFirstName screenLastName email photo status bio'
+    'username screenFirstName screenLastName email photo status bio accountStatus'
   );
 
   return res.status(200).json({
@@ -260,5 +261,78 @@ export const deletePicture = catchAsync(async (req: any, res: Response) => {
     status: 'success',
     message: 'User profile picture deleted successfuly',
     data: {},
+  });
+});
+export const getAllGroups = catchAsync(async (req: Request, res: Response) => {
+  const groupsAndChannels = await GroupChannel.find();  // Use `find()` in Mongoose to retrieve all documents
+  console.log(groupsAndChannels)
+  return res.status(200).json({
+    status: 'success',
+    message: 'Groups and Channels retrieved successfully',
+    data: {
+      groupsAndChannels,
+    },
+  });
+});
+export const activateUser = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'User not found',
+    });
+  }
+if (user.accountStatus === 'banned') {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'User is Banned',
+    });
+  }
+  user.accountStatus = 'active';
+  await user.save();
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'User activated successfully',
+  });
+});
+export const deactivateUser = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  console.log(req.params)
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'User not found',
+    });
+  }
+
+  user.accountStatus = 'deactivated';
+  await user.save();
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'User deactivated successfully',
+  });
+});
+export const banUser = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'User not found',
+    });
+  }
+
+  user.accountStatus = 'banned';
+  await user.save();
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'User banned successfully',
   });
 });

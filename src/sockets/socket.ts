@@ -4,7 +4,7 @@ import corsOptions from '@base/config/cors';
 import registerChatHandlers from '@base/sockets/chats';
 import redisClient from '@base/config/redis';
 import { Types } from 'mongoose';
-import { joinAllRooms } from './MessagingServices';
+import { deliverMessages, joinAllRooms } from './MessagingServices';
 import registerMessagesHandlers from './messages';
 import { authorizeSocket, protectSocket } from './middlewares';
 import registerVoiceCallHandlers from './voiceCalls';
@@ -18,9 +18,10 @@ const socketSetup = (server: HTTPServer) => {
   io.use(protectSocket);
 
   io.on('connection', async (socket: any) => {
-    const userId = socket.request.session.user.id;
+    const userId = socket.request.session.user.id as string;
     console.log(`New client with userID ${userId} connected: ${socket.id}`);
-    await joinAllRooms(socket, new Types.ObjectId(userId as string));
+    await joinAllRooms(socket, new Types.ObjectId(userId));
+    deliverMessages(io, socket, new Types.ObjectId(userId));
 
     socket.on('error', (error: Error) => {
       console.error(`Socket error on ${socket.id}:`, error);
@@ -36,7 +37,7 @@ const socketSetup = (server: HTTPServer) => {
       socket.request.session.user.lastSeenTime = Date.now();
       socket.request.session.user.status = 'offline';
       socket.request.session.save();
-      await redisClient.sRem(`user:${userId}:sockets`, socket.id);
+      redisClient.sRem(`user:${userId}:sockets`, socket.id);
     });
 
     registerChatHandlers(io, socket, userId);

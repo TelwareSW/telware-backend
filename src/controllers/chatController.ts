@@ -1,13 +1,12 @@
 import AppError from '@base/errors/AppError';
 import Chat from '@base/models/chatModel';
 import Message from '@base/models/messageModel';
-import NormalChat from '@base/models/normalChatModel';
 import User from '@base/models/userModel';
 import {
   getChats,
   getLastMessage,
-  unmute,
   deleteChatPictureFile,
+  getUnreadMessages,
 } from '@base/services/chatService';
 import IUser from '@base/types/user';
 import catchAsync from '@base/utils/catchAsync';
@@ -39,16 +38,20 @@ export const getAllChats = catchAsync(
         )
       ),
     ];
-    const members = await User.find(
-      { _id: { $in: memberIds } },
-      'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
-    );
-    const lastMessages = await getLastMessage(allChats);
+
+    const [members, lastMessages, unreadMessages] = await Promise.all([
+      User.find(
+        { _id: { $in: memberIds } },
+        'username screenFirstName screenLastName phoneNumber photo status isAdmin stories blockedUsers'
+      ),
+      getLastMessage(allChats),
+      getUnreadMessages(allChats, userId),
+    ]);
 
     res.status(200).json({
       status: 'success',
       message: 'Chats retrieved successfuly',
-      data: { chats: allChats, members, lastMessages },
+      data: { chats: allChats, members, lastMessages, unreadMessages },
     });
   }
 );
@@ -60,11 +63,12 @@ export const getMessages = catchAsync(
     const pageByMsgId = req.query.page === '0' ? undefined : req.query.page;
     const limit: number = parseInt(req.query.limit as string, 10) || 20;
     const filter: any = { chatId };
-    if (pageByMsgId) {
-      filter._id = { $lt: pageByMsgId };
-    }
     if (req.query.timestamp) {
       filter.timestamp = { $gte: req.query.timestamp };
+    }
+    else if (pageByMsgId) {
+      const message = await Message.findById(pageByMsgId);
+      filter.timestamp = { $lt: message.timestamp };
     }
 
     const messages = await Message.find(filter)
@@ -99,41 +103,6 @@ export const postMediaFile = catchAsync(async (req: any, res: Response) => {
     },
   });
 });
-
-export const enableSelfDestructing = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { chatId } = req.params;
-    const { destructionDuration } = req.body;
-    const destructionTimestamp = Date.now();
-    if (!destructionDuration)
-      return next(new AppError('missing required fields', 400));
-    const chat = await NormalChat.findByIdAndUpdate(chatId, {
-      destructionDuration,
-      destructionTimestamp,
-    });
-
-    if (!chat) return next(new AppError('No chat with the provided id', 404));
-    res.status(200).json({
-      status: 'success',
-      message: 'Destruction time is enabled successfuly',
-    });
-  }
-);
-
-export const disableSelfDestructing = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { chatId } = req.params;
-    const chat = NormalChat.findByIdAndUpdate(chatId, {
-      destructionTimestamp: undefined,
-      destructionDuration: undefined,
-    });
-    if (!chat) return next(new AppError('No chat with the provided id', 404));
-    res.status(200).json({
-      status: 'success',
-      message: 'Destruction time is disabled successfuly',
-    });
-  }
-);
 
 export const getChat = catchAsync(async (req: Request, res: Response) => {
   const { chatId } = req.params;
@@ -185,49 +154,6 @@ export const getChatMembers = catchAsync(
       status: 'success',
       message: 'retrieved chats successfuly',
       data: { members: chat.members },
-    });
-  }
-);
-
-export const muteChat = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { chatId } = req.params;
-    const { muteDuration } = req.body;
-    const user: IUser = req.user as IUser;
-    if (!user) return next(new AppError('login first', 403));
-    if (!muteDuration)
-      return next(new AppError('missing required fields', 400));
-    user.chats.forEach((c: any) => {
-      if (c.chat.equals(chatId)) {
-        c.isMuted = true;
-        c.muteDuration = muteDuration;
-      }
-    });
-    await user.save({ validateBeforeSave: false });
-    unmute(user, chatId, muteDuration);
-    res.status(200).json({
-      status: 'success',
-      message: 'Chat muted successfully',
-    });
-  }
-);
-
-export const unmuteChat = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { chatId } = req.params;
-    const user: IUser = req.user as IUser;
-    if (!user) return next(new AppError('login first', 403));
-
-    user.chats.forEach((c: any) => {
-      if (c.chat.equals(chatId)) {
-        c.isMuted = false;
-        c.muteDuration = undefined;
-      }
-    });
-    await user.save({ validateBeforeSave: false });
-    res.status(200).json({
-      status: 'success',
-      message: 'Chat unmuted successfully',
     });
   }
 );
@@ -323,6 +249,48 @@ export const getVoiceCallsInChat = catchAsync(
       data: {
         voiceCalls,
       },
+    });
+  }
+);
+export const filterChatGroups = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+    const groupChannel = await GroupChannel.findById(chatId);
+    if (!groupChannel) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Group/Channel not found with the given chatId',
+      });
+    }
+
+    groupChannel.isFilterd = true;
+    await groupChannel.save();
+    res.status(200).json({
+      status: 'success',
+      message: 'isFiltered set to true successfully',
+      data: groupChannel,
+    });
+  }
+);
+export const unfilterChatGroups = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId } = req.params;
+
+    const groupChannel = await GroupChannel.findById(chatId);
+
+    if (!groupChannel) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'GroupChannel not found with the given chatId',
+      });
+    }
+    groupChannel.isFilterd = false;
+    await groupChannel.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'isFiltered set to true successfully',
+      data: groupChannel,
     });
   }
 );

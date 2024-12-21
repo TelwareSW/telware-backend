@@ -39,6 +39,8 @@ export async function createVoiceCall(chatId: string, userId: string) {
 
   await voiceCall.save();
 
+  console.log('Voice Call created: ', voiceCall._id);
+
   return voiceCall;
 }
 
@@ -71,6 +73,7 @@ export async function addClientToCall(
   // Add the client socket id into the map
   if (!clientSocketMap[voiceCallId]) clientSocketMap[voiceCallId] = {};
   clientSocketMap[voiceCallId][userId] = socket.id;
+  console.log('clientSocketMap: ', clientSocketMap[voiceCallId]);
 }
 
 export async function removeClientFromCall(
@@ -94,6 +97,8 @@ export async function removeClientFromCall(
   if (voiceCall.currentParticipants.length === 0) {
     await endVoiceCall(voiceCallId);
   }
+
+  console.log('clientSocketMap: ', clientSocketMap[voiceCallId]);
 }
 
 export function getClientSocketMap(): ClientSocketMap {

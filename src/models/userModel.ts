@@ -233,8 +233,6 @@ const userSchema = new mongoose.Schema<IUser>(
   }
 );
 
-//TODO: unreadMessages virtual property
-
 userSchema.index({ email: 1 }, { background: true });
 
 userSchema.pre('save', async function (next) {
@@ -266,13 +264,6 @@ userSchema.methods.passwordChanged = function (tokenIssuedAt: number): boolean {
   )
     return true;
   return false;
-};
-
-//FIX: fix this function
-userSchema.methods.selectFields = function (): void {
-  this.select(
-    '-__v -provider -providerId -password -isAdmin -stories -blockedUsers -contacts -chats -changedPasswordAt -emailVerificationCode -emailVerificationCodeExpires -resetPasswordToken -resetPasswordExpires'
-  );
 };
 
 userSchema.methods.generateSaveConfirmationCode = function (): string {
