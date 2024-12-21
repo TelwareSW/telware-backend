@@ -58,17 +58,11 @@ export const check = async (
       message: 'you do not have permission as you are not an admin',
     });
 
-  if (sendMessage && sender.Role !== 'admin' && chat.type !== 'private') {
+  if (sendMessage && chat.type !== 'private') {
     const groupChannelChat = await GroupChannel.findById(chat._id);
-
-    if (!groupChannelChat.messagingPermission)
-      return ack({
-        success: false,
-        message: 'only admins can post and reply to this chat',
-      });
     if (
       chat?.type === 'group' &&
-      !chat.isFilterd &&
+      chat.isFilterd &&
       (await detectInappropriateContent(content))
     ) {
       return ack({
@@ -76,11 +70,18 @@ export const check = async (
         message: 'inappropriate content',
       });
     }
-    if (chat.type === 'channel' && !newMessageIsReply)
-      return ack({
-        success: false,
-        message: 'only admins can post to this channel',
-      });
+    if (sender.Role !== 'admin') {
+      if (!groupChannelChat.messagingPermission)
+        return ack({
+          success: false,
+          message: 'only admins can post and reply to this chat',
+        });
+      if (chat.type === 'channel' && !newMessageIsReply)
+        return ack({
+          success: false,
+          message: 'only admins can post to this channel',
+        });
+    }
   }
   return true;
 };
