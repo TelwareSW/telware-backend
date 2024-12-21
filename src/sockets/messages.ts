@@ -19,7 +19,7 @@ const handleMessaging = async (
   senderId: string
 ) => {
   let { media, content, contentType, parentMessageId } = data;
-  const { chatId, chatType, isReply, isForward } = data;
+  const { chatId, chatType, isReply, isForward, isAnnouncement } = data;
 
   if (
     (!isForward &&
@@ -73,6 +73,7 @@ const handleMessaging = async (
     senderId,
     chatId,
     parentMessageId,
+    isAnnouncement,
   });
 
   await message.save();
