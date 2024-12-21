@@ -67,7 +67,7 @@ router.delete('/picture', deletePicture);
 router.get('/contacts/stories', getAllContactsStories);
 router.get('/:userId/stories', getStory);
 router.get('/:userId', getUser);
-router.get('/',isAdmin, getAllUsers);
+router.get('/', getAllUsers);
 
 
 export default router;
