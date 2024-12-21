@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 import NormalChat from '@base/models/normalChatModel';
 import Message from '@base/models/messageModel';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import User from '@base/models/userModel';
-import IUser from '@base/types/user';
 import AppError from '@base/errors/AppError';
 import GroupChannel from '@base/models/groupChannelModel';
 import deleteFile from '@base/utils/deleteFile';
+import { informSessions } from '@base/sockets/MessagingServices';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
@@ -76,20 +76,26 @@ export const enableDestruction = async (
   }
 };
 
-export const unmute = async (
-  user: IUser,
+export const muteUnmuteChat = async (
+  io: Server,
+  userId: string,
   chatId: string,
-  muteDuration: number
+  event: string,
+  muteDuration?: number
 ) => {
-  setTimeout(async () => {
-    user.chats.forEach((c: any) => {
-      if (c.chat.equals(chatId)) {
-        c.isMuted = false;
-        c.muteDuration = undefined;
-      }
-    });
-    await user.save({ validateBeforeSave: false });
-  }, muteDuration * 1000);
+  User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        'chats.$[elem].isMuted': muteDuration,
+        'chats.$[elem].muteDuration': muteDuration,
+      },
+    },
+    {
+      arrayFilters: [{ 'elem.chat': chatId }],
+    }
+  );
+  informSessions(io, userId, { chatId }, event);
 };
 
 export const deleteChatPictureFile = async (
