@@ -18,7 +18,8 @@ const handleMessaging = async (
   ack: Function,
   senderId: string
 ) => {
-  let { media, content, contentType, parentMessageId } = data;
+  let { media, mediaName, mediaSize, content, contentType, parentMessageId } =
+    data;
   const { chatId, chatType, isReply, isForward, isAnnouncement } = data;
 
   if (
@@ -42,12 +43,12 @@ const handleMessaging = async (
     });
 
   const chat = await Chat.findById(chatId);
-  const func = await check(chat, ack, senderId, {
+  const valid = await check(chat, ack, senderId, {
     newMessageIsReply: isReply,
     content,
     sendMessage: true,
   });
-  if (!func) return;
+  if (!valid) return;
 
   let parentMessage;
   if (isForward || isReply) {
@@ -60,13 +61,15 @@ const handleMessaging = async (
       });
 
     if (isForward) {
-      ({ content, contentType, media } = parentMessage);
+      ({ content, contentType, media, mediaName, mediaSize } = parentMessage);
       parentMessageId = undefined;
     }
   }
 
   const message = new Message({
     media,
+    mediaName,
+    mediaSize,
     content,
     contentType,
     isForward,
@@ -74,6 +77,7 @@ const handleMessaging = async (
     chatId,
     parentMessageId,
     isAnnouncement,
+    isAppropriate: valid === 'ok',
   });
 
   await message.save();
