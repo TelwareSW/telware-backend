@@ -11,6 +11,7 @@ interface PinUnPinMessageData {
   messageId: string | Types.ObjectId;
 }
 
+
 export const handleMessaging = async (
   io: any,
   socket: Socket,
@@ -20,6 +21,7 @@ export const handleMessaging = async (
 ) => {
   let { media, content, contentType, parentMessageId } = data;
   const { chatId, chatType, isReply, isForward } = data;
+
   if (
     (!isForward &&
       !content &&
@@ -61,7 +63,15 @@ export const handleMessaging = async (
       parentMessageId = undefined;
     }
   }
-
+  let isAppropriate = true;
+  console.log(chatType, chatId)
+  const g= await GroupChannel.findById(chatId);
+  console.log(g);
+  console.log(g.isFilterd);
+  if ((chatType === 'group' || chatType==='channel') && g.isFilterd===true) {
+    console.log("innnnnnnnnnnnnn")
+  isAppropriate = await detectInappropriateContent(content);
+  }
   const message = new Message({
     content,
     contentType,
@@ -69,8 +79,12 @@ export const handleMessaging = async (
     senderId,
     chatId,
     parentMessageId,
+    isAppropriate, 
   });
+  
+  console.log(message);
   await message.save();
+
   if (parentMessage && isReply && chatType === 'channel') {
     parentMessage.threadMessages.push(message._id as Types.ObjectId);
     await parentMessage.save();
@@ -84,6 +98,7 @@ export const handleMessaging = async (
   enableDestruction(socket, message, chatId);
   ack({ success: true, message: 'Message sent successfully', res });
 };
+
 
 export const handleEditMessage = async (
   socket: Socket,
