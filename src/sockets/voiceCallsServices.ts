@@ -97,6 +97,8 @@ export async function removeClientFromCall(
   if (voiceCall.currentParticipants.length === 0) {
     await endVoiceCall(voiceCallId);
   }
+
+  console.log('clientSocketMap: ', clientSocketMap[voiceCallId]);
 }
 
 export function getClientSocketMap(): ClientSocketMap {

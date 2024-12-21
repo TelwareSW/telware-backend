@@ -53,8 +53,9 @@ async function handleJoinCall(
   userId: string
 ) {
   const { voiceCallId } = data;
-  console.log('Client joined a call, CallId:', voiceCallId);
-  console.log('UserId: ', userId);
+  console.log(
+    `Client Joined call, clientId: ${userId} , callId: ${voiceCallId}`
+  );
   await addClientToCall(socket, userId, voiceCallId);
 
   socket.join(voiceCallId);
@@ -73,6 +74,10 @@ async function handleSignal(
 ) {
   const { type, targetId, voiceCallId, data } = signalData;
 
+  console.log(
+    `Signal Sent, type: ${type}, senderId: ${userId}, targetId: ${targetId}, voiceCallId: ${voiceCallId}`
+  );
+
   const socketId = getClientSocketId(voiceCallId, targetId);
 
   io.to(socketId).emit('SIGNAL-CLIENT', {
@@ -90,6 +95,8 @@ async function handleLeaveCall(
   userId: string
 ) {
   const { voiceCallId } = data;
+
+  console.log(`Client Left, clientId: ${userId}, voiceCallId: ${voiceCallId}`);
 
   socket.leave(voiceCallId);
 
