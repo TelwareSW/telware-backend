@@ -64,12 +64,8 @@ export const check = async (
       chat?.type === 'group' &&
       chat.isFilterd &&
       (await detectInappropriateContent(content))
-    ) {
-      return ack({
-        success: false,
-        message: 'inappropriate content',
-      });
-    }
+    )
+      return 'inappropriate';
     if (sender.Role !== 'admin') {
       if (!groupChannelChat.messagingPermission)
         return ack({
@@ -83,7 +79,7 @@ export const check = async (
         });
     }
   }
-  return true;
+  return 'ok';
 };
 
 export const informSessions = async (
