@@ -36,6 +36,7 @@ async function handleCreateCall(
     chatId = '123';
   }
 
+  console.log('User Started Call: ', userId);
   const voiceCall = await createVoiceCall(chatId, userId);
 
   io.to(chatId).emit('CALL-STARTED', {
@@ -52,7 +53,8 @@ async function handleJoinCall(
   userId: string
 ) {
   const { voiceCallId } = data;
-
+  console.log('Client joined a call, CallId:', voiceCallId);
+  console.log('UserId: ', userId);
   await addClientToCall(socket, userId, voiceCallId);
 
   socket.join(voiceCallId);
