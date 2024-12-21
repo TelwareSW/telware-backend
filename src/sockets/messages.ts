@@ -5,6 +5,7 @@ import Message from '@models/messageModel';
 import { enableDestruction } from '@services/chatService';
 import Chat from '@base/models/chatModel';
 import { check, informSessions, updateDraft } from './MessagingServices';
+import handleNotifications from './notifications';
 
 interface PinUnPinMessageData {
   chatId: string | Types.ObjectId;
@@ -81,6 +82,8 @@ const handleMessaging = async (
   });
 
   await message.save();
+
+  handleNotifications(message.id.toString());
 
   if (parentMessage && isReply && chatType === 'channel') {
     parentMessage.threadMessages.push(message._id as Types.ObjectId);
