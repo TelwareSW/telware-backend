@@ -19,7 +19,8 @@ export const check = async (
   senderId: any,
   additionalData?: any
 ) => {
-  const { chatType, checkAdmin, newMessageIsReply, content } = additionalData;
+  const { chatType, checkAdmin, newMessageIsReply, content, sendMessage } =
+    additionalData;
 
   if (!chat || chat.isDeleted) {
     return ack({
@@ -57,7 +58,7 @@ export const check = async (
       message: 'you do not have permission as you are not an admin',
     });
 
-  if (sender.Role !== 'admin' && chat.type !== 'private') {
+  if (sendMessage && sender.Role !== 'admin' && chat.type !== 'private') {
     const groupChannelChat = await GroupChannel.findById(chat._id);
 
     if (!groupChannelChat.messagingPermission)

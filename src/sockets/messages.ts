@@ -45,6 +45,7 @@ const handleMessaging = async (
   const func = await check(chat, ack, senderId, {
     newMessageIsReply: isReply,
     content,
+    sendMessage: true,
   });
   if (!func) return;
 

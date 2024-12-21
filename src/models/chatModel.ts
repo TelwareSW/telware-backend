@@ -62,5 +62,14 @@ chatSchema.virtual('numberOfMembers').get(function () {
   return Array.isArray(this.members) ? this.members.length : 0;
 });
 
+chatSchema.pre('save', function (next) {
+  if (!this.isModified('members')) return next();
+  const uniqueUsers = new Set(this.members.map((m) => m.user.toString()));
+  if (uniqueUsers.size !== this.members.length) {
+    return next(new Error('Members must have unique users.'));
+  }
+  next();
+});
+
 const Chat = mongoose.model<IChat>('Chat', chatSchema);
 export default Chat;
