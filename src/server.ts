@@ -1,6 +1,7 @@
 import http from 'http';
 import '@config/env';
 import '@config/passport';
+import '@config/firebase';
 import mongoDBConnection from '@config/mongoDB';
 import app from '@base/app';
 import socketSetup from './sockets/socket';

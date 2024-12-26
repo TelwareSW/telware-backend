@@ -5,6 +5,8 @@ import Communication from './communicationModel';
 const messageSchema = new mongoose.Schema<IMessage>({
   content: String,
   media: String,
+  mediaName: String,
+  mediaSize: Number,
   contentType: {
     type: String,
     enum: ['text', 'image', 'GIF', 'sticker', 'audio', 'video', 'file', 'link'],
@@ -16,7 +18,7 @@ const messageSchema = new mongoose.Schema<IMessage>({
   },
   isAppropriate: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   isForward: {
     type: Boolean,

@@ -3,9 +3,9 @@ import { Server, Socket } from 'socket.io';
 import IMessage from '@base/types/message';
 import Message from '@models/messageModel';
 import { enableDestruction } from '@services/chatService';
-import { detectInappropriateContent } from '@services/googleAIService';
 import Chat from '@base/models/chatModel';
 import { check, informSessions, updateDraft } from './MessagingServices';
+import handleNotifications from './notifications';
 
 interface PinUnPinMessageData {
   chatId: string | Types.ObjectId;
@@ -19,8 +19,9 @@ const handleMessaging = async (
   ack: Function,
   senderId: string
 ) => {
-  let { media, content, contentType, parentMessageId } = data;
-  const { chatId, chatType, isReply, isForward } = data;
+  let { media, mediaName, mediaSize, content, contentType, parentMessageId } =
+    data;
+  const { chatId, chatType, isReply, isForward, isAnnouncement } = data;
 
   if (
     (!isForward &&
@@ -43,10 +44,12 @@ const handleMessaging = async (
     });
 
   const chat = await Chat.findById(chatId);
-  const func = await check(chat, ack, senderId, {
+  const valid = await check(chat, ack, senderId, {
     newMessageIsReply: isReply,
+    content,
+    sendMessage: true,
   });
-  if (!func) return;
+  if (!valid) return;
 
   let parentMessage;
   if (isForward || isReply) {
@@ -59,25 +62,28 @@ const handleMessaging = async (
       });
 
     if (isForward) {
-      ({ content, contentType, media } = parentMessage);
+      ({ content, contentType, media, mediaName, mediaSize } = parentMessage);
       parentMessageId = undefined;
     }
   }
 
-  const isAppropriate = await detectInappropriateContent(content);
-
   const message = new Message({
     media,
+    mediaName,
+    mediaSize,
     content,
     contentType,
     isForward,
     senderId,
     chatId,
     parentMessageId,
-    isAppropriate,
+    isAnnouncement,
+    isAppropriate: valid === 'ok',
   });
 
   await message.save();
+
+  handleNotifications(message.id.toString());
 
   if (parentMessage && isReply && chatType === 'channel') {
     parentMessage.threadMessages.push(message._id as Types.ObjectId);
@@ -86,9 +92,12 @@ const handleMessaging = async (
 
   await updateDraft(io, senderId, chatId, '');
   socket.to(chatId).emit('RECEIVE_MESSAGE', message, async (res: any) => {
-    if (res.success) {
-      if (res.isRead) message.readBy.push(res.userId);
-      else message.deliveredTo.push(res.userId);
+    if (res.success && res.userId !== senderId) {
+      if (res.isRead && !message.readBy.includes(res.userId)) {
+        message.readBy.push(res.userId);
+      } else if (!message.deliveredTo.includes(res.userId)) {
+        message.deliveredTo.push(res.userId);
+      }
       message.save();
       informSessions(
         io,
@@ -98,11 +107,12 @@ const handleMessaging = async (
       );
     }
   });
-  const res = {
-    messageId: message._id,
-  };
   enableDestruction(socket, message, chatId);
-  ack({ success: true, message: 'Message sent successfully', res });
+  ack({
+    success: true,
+    message: 'Message sent successfully',
+    data: message,
+  });
 };
 
 const handleEditMessage = async (socket: Socket, data: any, ack: Function) => {

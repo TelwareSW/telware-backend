@@ -14,22 +14,24 @@ interface GetUser extends Request {
   //TODO: add a user here that would contain the user data.
 }
 
-export const getCurrentUser = catchAsync(async (req: GetUser, res: Response) => {
-  const userId = req.user.id;
+export const getCurrentUser = catchAsync(
+  async (req: GetUser, res: Response) => {
+    const userId = req.user.id;
 
-  const user = await User.findById(userId);
+    const user = await User.findById(userId);
 
-  if (!user) {
-    throw new AppError('No User exists with this ID', 404);
+    if (!user) {
+      throw new AppError('No User exists with this ID', 404);
+    }
+    return res.status(200).json({
+      status: 'success',
+      message: 'User retrieved successfuly',
+      data: {
+        user,
+      },
+    });
   }
-  return res.status(200).json({
-    status: 'success',
-    message: 'User retrieved successfuly',
-    data: {
-      user,
-    },
-  });
-});
+);
 
 export const updateCurrentUser = catchAsync(async (req: any, res: Response) => {
   const userData = req.body;
@@ -84,7 +86,14 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
     throw new AppError('No User exists with this ID', 404);
   }
 
-  const fieldsToGet = ['username', 'screenFirstName', 'screenLastName', 'email', 'status', 'bio'];
+  const fieldsToGet = [
+    'username',
+    'screenFirstName',
+    'screenLastName',
+    'email',
+    'status',
+    'bio',
+  ];
 
   if (
     user.picturePrivacy === 'everyone' ||
@@ -107,7 +116,7 @@ export const getUser = catchAsync(async (req: GetUser, res: Response) => {
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const users = await User.find(
     {},
-    'username screenFirstName screenLastName email photo status bio'
+    'username screenFirstName screenLastName email photo status bio accountStatus'
   );
 
   return res.status(200).json({
@@ -123,7 +132,11 @@ export const updateBio = catchAsync(async (req: any, res: Response) => {
   const { bio } = req.body;
   const userId = req.user.id;
 
-  const user = await User.findByIdAndUpdate(userId, { bio }, { new: true, runValidators: true });
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { bio },
+    { new: true, runValidators: true }
+  );
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
@@ -161,7 +174,11 @@ export const updateEmail = catchAsync(async (req: any, res: Response) => {
   const { email } = req.body;
   const userId = req.user.id;
 
-  const user = await User.findByIdAndUpdate(userId, { email }, { new: true, runValidators: true });
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { email },
+    { new: true, runValidators: true }
+  );
 
   if (!user) {
     throw new AppError('No User exists with this ID', 404);
@@ -263,9 +280,10 @@ export const deletePicture = catchAsync(async (req: any, res: Response) => {
     data: {},
   });
 });
+
 export const getAllGroups = catchAsync(async (req: Request, res: Response) => {
-  const groupsAndChannels = await GroupChannel.find();  // Use `find()` in Mongoose to retrieve all documents
-  console.log(groupsAndChannels)
+  const groupsAndChannels = await GroupChannel.find(); // Use `find()` in Mongoose to retrieve all documents
+
   return res.status(200).json({
     status: 'success',
     message: 'Groups and Channels retrieved successfully',
@@ -274,8 +292,23 @@ export const getAllGroups = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
+
+export const toggleAutomaticDownload = catchAsync(
+  async (req: any, res: Response) => {
+    const userId = req.user.id;
+    const { enabled } = req.body;
+
+    User.findByIdAndUpdate(userId, { automaticDownloadEnable: enabled });
+    return res.status(200).json({
+      status: 'success',
+      message: 'Automatic download settings updated successfully',
+      data: {},
+    });
+  }
+);
+
 export const activateUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.userId;
+  const { userId } = req.params;
 
   const user = await User.findById(userId);
   if (!user) {
@@ -284,7 +317,7 @@ export const activateUser = catchAsync(async (req: Request, res: Response) => {
       message: 'User not found',
     });
   }
-if (user.accountStatus === 'banned') {
+  if (user.accountStatus === 'banned') {
     return res.status(400).json({
       status: 'fail',
       message: 'User is Banned',
@@ -298,27 +331,30 @@ if (user.accountStatus === 'banned') {
     message: 'User activated successfully',
   });
 });
-export const deactivateUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.userId;
-  console.log(req.params)
-  const user = await User.findById(userId);
-  if (!user) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'User not found',
+
+export const deactivateUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found',
+      });
+    }
+
+    user.accountStatus = 'deactivated';
+    await user.save();
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User deactivated successfully',
     });
   }
+);
 
-  user.accountStatus = 'deactivated';
-  await user.save();
-
-  return res.status(200).json({
-    status: 'success',
-    message: 'User deactivated successfully',
-  });
-});
 export const banUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.userId;
+  const { userId } = req.params;
 
   const user = await User.findById(userId);
   if (!user) {
@@ -334,5 +370,26 @@ export const banUser = catchAsync(async (req: Request, res: Response) => {
   return res.status(200).json({
     status: 'success',
     message: 'User banned successfully',
+  });
+});
+
+export const updateFCMToken = catchAsync(async (req: any, res: Response) => {
+  const userId = req.user.id;
+  const { fcmToken } = req.body;
+
+  const user = await User.findOneAndUpdate(
+    { _id: userId },
+    { fcmToken },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('No User exists with this ID', 404);
+  }
+
+  return res.status(201).json({
+    status: 'success',
+    message: 'User fcm token updated successfuly',
+    data: {},
   });
 });

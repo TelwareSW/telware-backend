@@ -6,6 +6,7 @@ import User from '@models/userModel';
 import GroupChannel from '@models/groupChannelModel';
 import Message from '@models/messageModel';
 import IMessage from '@base/types/message';
+import detectInappropriateContent from '@base/services/googleAIService';
 
 export interface Member {
   user: Types.ObjectId;
@@ -18,7 +19,8 @@ export const check = async (
   senderId: any,
   additionalData?: any
 ) => {
-  const { chatType, checkAdmin, newMessageIsReply } = additionalData;
+  const { chatType, checkAdmin, newMessageIsReply, content, sendMessage } =
+    additionalData;
 
   if (!chat || chat.isDeleted) {
     return ack({
@@ -56,21 +58,28 @@ export const check = async (
       message: 'you do not have permission as you are not an admin',
     });
 
-  if (sender.Role !== 'admin' && chat.type !== 'private') {
+  if (sendMessage && chat.type !== 'private') {
     const groupChannelChat = await GroupChannel.findById(chat._id);
-
-    if (!groupChannelChat.messagingPermission)
-      return ack({
-        success: false,
-        message: 'only admins can post and reply to this chat',
-      });
-    if (chat.type === 'channel' && !newMessageIsReply)
-      return ack({
-        success: false,
-        message: 'only admins can post to this channel',
-      });
+    if (
+      chat?.type === 'group' &&
+      chat.isFilterd &&
+      (await detectInappropriateContent(content))
+    )
+      return 'inappropriate';
+    if (sender.Role !== 'admin') {
+      if (!groupChannelChat.messagingPermission)
+        return ack({
+          success: false,
+          message: 'only admins can post and reply to this chat',
+        });
+      if (chat.type === 'channel' && !newMessageIsReply)
+        return ack({
+          success: false,
+          message: 'only admins can post to this channel',
+        });
+    }
   }
-  return true;
+  return 'ok';
 };
 
 export const informSessions = async (

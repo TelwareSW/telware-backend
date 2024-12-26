@@ -4,11 +4,12 @@ import User from '@models/userModel';
 import Chat from '@models/chatModel';
 import GroupChannel from '@models/groupChannelModel';
 import NormalChat from '@base/models/normalChatModel';
+import { muteUnmuteChat } from '@base/services/chatService';
+import IUser from '@base/types/user';
 import {
   check,
   informSessions,
   joinRoom,
-  Member,
   updateDraft,
 } from './MessagingServices';
 
@@ -45,7 +46,7 @@ const handleAddAdmins = async (
         return;
       }
 
-      Chat.findByIdAndUpdate(
+      await Chat.findByIdAndUpdate(
         chatId,
         { $set: { 'members.$[elem].Role': 'admin' } },
         {
@@ -120,7 +121,7 @@ const handleAddMembers = async (
       chat?.members.push({ user: userId, Role: 'member' });
       const userWasMember = user.chats.some((c: any) => c.chat.equals(chatId));
       if (!userWasMember)
-        User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
           userId,
           { $push: { chats: { chat: chatId } } },
           { new: true }
@@ -262,35 +263,20 @@ const handleDeleteGroupChannel = async (
   senderId: any
 ) => {
   const { chatId } = data;
-  const chat = await Chat.findById(chatId);
 
-  if (!chat || chat.isDeleted)
-    return ack({
-      success: false,
-      message: 'Could not delete the group',
-      error: 'no chat found with the provided id',
-    });
+  const chat = await GroupChannel.findById(chatId);
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+    checkAdmin: true,
+  });
+  if (!func) return func;
 
-  const chatMembers = chat.members;
-  const isCreator = chatMembers.some(
-    (member) => member.user.toString() === senderId && member.Role === 'admin'
+  await User.updateMany(
+    { _id: { $in: chat.members.map((m: any) => m.user) } },
+    { $pull: { chats: { chat: chatId } } }
   );
 
-  if (!isCreator)
-    return ack({
-      success: false,
-      message: 'Could not delete the group',
-      error: 'you are not authorized to delete the group',
-    });
-
-  chatMembers.map(async (member: any) => {
-    await informSessions(
-      io,
-      member.user,
-      { chatId },
-      'DELETE_GROUP_CHANNEL_SERVER'
-    );
-  });
+  socket.to(chatId).emit('DELETE_GROUP_CHANNEL_SERVER', { chatId });
 
   chat.members = [];
   chat.isDeleted = true;
@@ -311,27 +297,20 @@ const handleLeaveGroupChannel = async (
   senderId: any
 ) => {
   const { chatId } = data;
-  const chat = await Chat.findById(chatId);
-  if (!chat || chat.isDeleted)
-    return ack({
-      success: false,
-      message: 'could not leave the group',
-      error: 'this chat does no longer exist',
-    });
-  const isMember = chat.members.some(
-    (member: any) => member.user.toString() === senderId.toString()
-  );
-  if (!isMember)
-    return ack({
-      success: false,
-      message: 'could not leave the group',
-      error: 'you are not a member of this chat',
-    });
+  const chat = await GroupChannel.findById(chatId);
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+  });
+  if (!func) return func;
 
-  await Chat.updateOne(
-    { _id: chatId },
-    { $pull: { members: { user: senderId } } }
-  );
+  await Promise.all([
+    GroupChannel.findByIdAndUpdate(chatId, {
+      $pull: { members: { user: senderId } },
+    }),
+    User.findByIdAndUpdate(senderId, {
+      $pull: { chats: { chat: chatId } },
+    }),
+  ]);
 
   socket
     .to(chatId)
@@ -351,65 +330,51 @@ const handleRemoveMembers = async (
   senderId: any
 ) => {
   const { chatId, members } = data;
-  const forbiddenUsers: string[] = [];
+  const invalidUsers: string[] = [];
 
-  const chat = await Chat.findById(chatId);
-  if (!chat || chat.isDeleted)
-    return ack({
-      success: false,
-      message: 'could not remove members from the group',
-      error: 'this chat does no longer exist',
-    });
+  const chat = await GroupChannel.findById(chatId);
 
-  const admin: Member = chat.members.find((m) =>
-    m.user.equals(senderId)
-  ) as unknown as Member;
-
-  if (!admin)
-    return ack({
-      success: false,
-      message: 'could not remove members from the group',
-      error: 'you are no longer a member of this group',
-    });
-
-  if (admin.Role === 'member')
-    return ack({
-      success: false,
-      message: 'could not remove members from the group',
-      error: 'you do not have permission',
-    });
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+    checkAdmin: true,
+  });
+  if (!func) return func;
 
   await Promise.all(
     members.map(async (memberId: any) => {
       const user = await User.findById(memberId);
       if (!user) {
-        forbiddenUsers.push(memberId);
+        invalidUsers.push(memberId);
         return;
       }
 
       const isMember = chat.members.some((m: any) => m.user.equals(memberId));
       if (!isMember) {
-        forbiddenUsers.push(memberId);
+        invalidUsers.push(memberId);
         return;
       }
 
-      await Chat.updateOne(
-        { _id: chatId },
-        { $pull: { members: { user: memberId } } }
-      );
-
-      await informSessions(io, memberId, { chatId }, 'REMOVE_MEMBERS_SERVER');
+      await Promise.all([
+        GroupChannel.findByIdAndUpdate(chatId, {
+          $pull: { members: { user: memberId } },
+        }),
+        User.findByIdAndUpdate(memberId, {
+          $pull: { chats: { chat: chatId } },
+        }),
+      ]);
     })
   );
-  if (forbiddenUsers.length > 0)
-    return ack({
-      success: false,
-      message: 'Some users could not be added',
-      error: `Could not remove users with IDs: ${forbiddenUsers.join(', ')}`,
-    });
+
+  socket
+    .to(chatId)
+    .emit('REMOVE_MEMBERS_SERVER', { chatId, memberId: senderId });
+
   ack({
     success: true,
-    message: 'Members removed successfully',
+    message:
+      invalidUsers.length > 0
+        ? `Some users could not be removed, IDs: ${invalidUsers.join(', ')}`
+        : 'Members removed successfully',
     data: {},
   });
 };
@@ -431,37 +396,11 @@ const handleSetPermission = async (
     });
 
   const chat = await GroupChannel.findById(chatId);
-  if (!chat || chat.isDeleted)
-    return ack({
-      success: false,
-      message: 'could not update permissions',
-      error: 'this chat does no longer exist',
-    });
-
-  if (chat.type === 'private')
-    return ack({
-      success: false,
-      message: 'could not update permissions',
-      error: 'cannot change permissions for private chats',
-    });
-
-  const admin: Member = chat.members.find((m: Member) =>
-    m.user.equals(senderId)
-  ) as unknown as Member;
-
-  if (!admin)
-    return ack({
-      success: false,
-      message: 'could not update permissions',
-      error: 'you are no longer a member of this group',
-    });
-
-  if (admin.Role === 'member')
-    return ack({
-      success: false,
-      message: 'could not change group permissions',
-      error: 'you do not have permission',
-    });
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+    checkAdmin: true,
+  });
+  if (!func) return func;
 
   if (type === 'post') chat.messagingPermission = who === 'everyone';
   else if (type === 'download') chat.downloadingPermission = who === 'everyone';
@@ -472,6 +411,106 @@ const handleSetPermission = async (
     message: 'permissions updated successfully',
     data: {},
   });
+};
+
+const handleSetPrivacy = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId, privacy } = data;
+
+  const chat = await GroupChannel.findById(chatId);
+  const func = await check(chat, ack, senderId, {
+    chatType: ['group', 'channel'],
+    checkAdmin: true,
+  });
+  if (!func) return func;
+
+  chat.privacy = privacy;
+  await chat.save();
+  socket.to(chatId).emit('SET_PRIVACY_SERVER', { chatId, privacy });
+  ack({
+    success: true,
+    message: 'privacy updated successfully',
+    data: {},
+  });
+};
+
+const handleMuteChat = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { muteDuration, chatId } = data;
+  const userId = ((await User.findById(senderId)) as IUser)
+    ._id as Types.ObjectId;
+
+  await muteUnmuteChat(
+    io,
+    userId.toString(),
+    chatId,
+    'MUTE_CHAT',
+    muteDuration
+  );
+  if (muteDuration !== -1) {
+    setTimeout(async () => {
+      muteUnmuteChat(io, userId.toString(), chatId, 'UNMUTE_CHAT');
+    }, muteDuration * 1000);
+  }
+
+  ack({ success: true, message: 'Chat muted successfully' });
+};
+
+const handleUnMuteChat = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId } = data;
+  const userId = ((await User.findById(senderId)) as IUser)
+    ._id as Types.ObjectId;
+  await muteUnmuteChat(io, userId.toString(), chatId, 'UNMUTE_CHAT');
+  ack({ success: true, message: 'Chat unmuted successfully' });
+};
+
+const handleEnableDestruction = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { destructionDuration, chatId } = data;
+  const destructionTimestamp = Date.now();
+  await NormalChat.findByIdAndUpdate(chatId, {
+    destructionDuration,
+    destructionTimestamp,
+  });
+  await informSessions(io, senderId, { chatId }, 'ENABLE_DESTRUCTION_SERVER');
+  ack({ success: true, message: 'Chat enabled destruction successfully' });
+};
+
+const handleDisableDestruction = async (
+  io: any,
+  socket: Socket,
+  data: any,
+  ack: Function,
+  senderId: any
+) => {
+  const { chatId } = data;
+  await NormalChat.findByIdAndUpdate(chatId, {
+    destructionTimestamp: undefined,
+    destructionDuration: undefined,
+  });
+  await informSessions(io, senderId, { chatId }, 'ENABLE_DESTRUCTION_SERVER');
+  ack({ success: true, message: 'Chat disabled destruction successfully' });
 };
 
 const handleDraftMessage = async (
@@ -507,6 +546,10 @@ const registerChatHandlers = (io: Server, socket: Socket, userId: any) => {
     handleSetPermission(io, socket, data, ack, userId);
   });
 
+  socket.on('SET_PRIVACY_CLIENT', (data: any, ack: Function) => {
+    handleSetPrivacy(io, socket, data, ack, userId);
+  });
+
   socket.on('ADD_ADMINS_CLIENT', (data: any, ack: Function) => {
     handleAddAdmins(io, socket, data, ack, userId);
   });
@@ -517,6 +560,22 @@ const registerChatHandlers = (io: Server, socket: Socket, userId: any) => {
 
   socket.on('REMOVE_MEMBERS_CLIENT', (data: any, ack: Function) => {
     handleRemoveMembers(io, socket, data, ack, userId);
+  });
+
+  socket.on('MUTE_CHAT_CLIENT', (data: any, ack: Function) => {
+    handleMuteChat(io, socket, data, ack, userId);
+  });
+
+  socket.on('UNMUTE_CHAT_CLIENT', (data: any, ack: Function) => {
+    handleUnMuteChat(io, socket, data, ack, userId);
+  });
+
+  socket.on('ENABLE_DESTRUCTION_CLIENT', (data: any, ack: Function) => {
+    handleEnableDestruction(io, socket, data, ack, userId);
+  });
+
+  socket.on('DISABLE_DESTRUCTION_CLIENT', (data: any, ack: Function) => {
+    handleDisableDestruction(io, socket, data, ack, userId);
   });
 
   socket.on('UPDATE_DRAFT_CLIENT', (data: any, ack: Function) =>

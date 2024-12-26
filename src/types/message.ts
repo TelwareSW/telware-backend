@@ -2,8 +2,10 @@ import { Types } from 'mongoose';
 import ICommunication from './communication';
 
 interface IMessage extends ICommunication {
-  media: string;
   content: string;
+  media: string;
+  mediaName: string;
+  mediaSize: number;
   contentType: string;
   isPinned: boolean;
   isForward: boolean;

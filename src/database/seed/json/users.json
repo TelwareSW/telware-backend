@@ -28,7 +28,7 @@
     "phoneNumber": "+201055445511",
     "password": "12345678",
     "passwordConfirm": "12345678",
-    "accountStatus": "deactivated"
+    "accountStatus": "active"
   },
   {
     "email": "front3@gmail.com",
@@ -38,7 +38,7 @@
     "phoneNumber": "+201055287611",
     "password": "12345678",
     "passwordConfirm": "12345678",
-    "accountStatus": "banned"
+    "accountStatus": "active"
   },
   {
     "email": "front4@gmail.com",
@@ -109,5 +109,25 @@
     "password": "12345678",
     "passwordConfirm": "12345678",
     "accountStatus": "active"
+  },
+  {
+    "email": "banned@gmail.com",
+    "username": "Forever_Banned",
+    "screenFirstName": "Lonely",
+    "screenLastName": "Soul",
+    "phoneNumber": "+201055900090",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "banned"
+  },
+  {
+    "email": "deactivated@gmail.com",
+    "username": "I_HOPE_I_RETURN",
+    "screenFirstName": "Stolen",
+    "screenLastName": "Soul",
+    "phoneNumber": "+201055900090",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "deactivated"
   }
 ]
