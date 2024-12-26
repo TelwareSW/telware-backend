@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /SEND-FORWARD-REPLY:
+ * SEND_MESSAGE:
  *   post:
  *     summary: Handle messaging functionality, including creating chats, replying, and forwarding messages.
  *     tags:
@@ -39,19 +39,15 @@
  *                 type: string
  *                 nullable: true
  *                 description: ID of the parent message for reply or forward.
- *               isFirstTime:
- *                 type: boolean
- *                 description: Indicates whether the chat is being initiated for the first time.
- *               chatType:
- *                 type: string
- *                 enum: [group, direct, channel]
- *                 description: Type of the chat.
  *               isReply:
  *                 type: boolean
  *                 description: Indicates if the message is a reply.
  *               isForward:
  *                 type: boolean
  *                 description: Indicates if the message is forwarded.
+ *               isAnouncement:
+ *                 type: boolean
+ *                 description: Indicates if the message is an anouncement.
  *     responses:
  *       200:
  *         description: Message sent successfully.
@@ -124,7 +120,7 @@
 
 /**
  * @swagger
- * /EDIT_MESSAGE:
+ * EDIT_MESSAGE_CLIENT:
  *   patch:
  *     summary: Edits an existing message in the chat.
  *     description: Edits an existing message in the chat. It is not possible to edit forwarded messages.
@@ -249,7 +245,7 @@
 
 /**
  * @swagger
- * /DELETE_MESSAGE:
+ * DELETE_MESSAGE_CLIENT:
  *   delete:
  *     summary: Deletes a Message.
  *     description: Deletes a message from the chat based on the provided message ID. If the message is found, it is deleted from the chat.
@@ -324,7 +320,58 @@
 
 /**
  * @swagger
- * /UPDATE_DRAFT_CLIENT:
+ * HANDLE_READ_MESSAGE:
+ *   post:
+ *     summary: Marks messages as read
+ *     description: Updates the status of unread messages in a chat for the user. Marks them as read and notifies the sender.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chatId
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique ID of the chat whose messages need to be marked as read.
+ *     responses:
+ *       200:
+ *         description: Messages marked as read successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the result.
+ *       400:
+ *         description: Missing required fields or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates if the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: An error message describing the problem.
+ *                 error:
+ *                   type: string
+ *                   description: Details about the error (e.g., missing fields).
+ */
+
+/**
+ * @swagger
+ * UPDATE_DRAFT_CLIENT:
  *   post:
  *     summary: Updates a draft message
  *     description: Updates an existing draft message with new content. The updated draft is saved and the client is notified of the update.
@@ -379,30 +426,28 @@
 
 /**
  * @swagger
- * /UPDATE_DRAFT_SERVER:
+ * CREATE_PRIVATE_CHAT:
  *   post:
- *     summary: Emits an event to update a draft message on the server
- *     description: Emits an event to update an existing draft message with new content on the server. The server processes the update and notifies the client of the status.
- *     tags: [Sockets]
+ *     summary: "Create a new private chat"
+ *     description: "This socket event allows a user to create a new private chat. It validates the user's existence and establishes a one-to-one chat."
+ *     tags:
+ *       - Sockets
+ *     operationId: "createPrivateChat"
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - chatId
- *               - draft
  *             properties:
- *               chatId:
+ *               memberId:
  *                 type: string
- *                 description: The unique ID of the chat whose draft is being updated.
- *               draft:
- *                 type: string
- *                 description: The new content of the draft message.
+ *                 description: "ID of the user to be added as the other member of the private chat."
+ *             required:
+ *               - memberId
  *     responses:
  *       200:
- *         description: Draft update event emitted successfully.
+ *         description: "Private chat created successfully."
  *         content:
  *           application/json:
  *             schema:
@@ -410,12 +455,29 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   description: Indicates if the event was successfully emitted.
+ *                   example: true
  *                 message:
  *                   type: string
- *                   description: A message describing the result.
+ *                   example: "Chat created successfully."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: "ID of the newly created private chat."
+ *                     members:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: string
+ *                             description: "ID of the user."
+ *                           Role:
+ *                             type: string
+ *                             description: "Role of the user in the private chat (e.g., 'member')."
  *       400:
- *         description: Missing required fields or invalid input.
+ *         description: "Invalid input or constraints violated."
  *         content:
  *           application/json:
  *             schema:
@@ -423,34 +485,18 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   description: Indicates if the operation was successful.
+ *                   example: false
  *                 message:
  *                   type: string
- *                   description: An error message describing the problem.
+ *                   example: "Failed to create the chat."
  *                 error:
  *                   type: string
- *                   description: Details about the error (e.g., invalid input).
- *       500:
- *         description: Internal server error occurred while emitting the event.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   description: Indicates if the operation was successful.
- *                 message:
- *                   type: string
- *                   description: An error message describing the result.
- *                 error:
- *                   type: string
- *                   description: Details about the server error.
+ *                   description: "Error message describing the issue."
  */
 
 /**
  * @swagger
- * /CREATE_GROUP_CHANNEL:
+ * CREATE_GROUP_CHANNEL:
  *   post:
  *     summary: "Create a new group channel"
  *     description: "This socket event allows a user to create a new group channel. It validates the user's login status, group size, and adds members with roles."
@@ -537,7 +583,7 @@
 
 /**
  * @swagger
- * /DELETE_GROUP_CHANNEL_CLIENT:
+ * DELETE_GROUP_CHANNEL_CLIENT:
  *   delete:
  *     summary: "Delete a group or channel"
  *     description: "This socket event allows the admin of a group channel to delete the group. All members will be informed about the deletion."
@@ -593,7 +639,7 @@
 
 /**
  * @swagger
- * /LEAVE_GROUP_CHANNEL_CLIENT:
+ * LEAVE_GROUP_CHANNEL_CLIENT:
  *   delete:
  *     summary: "Leave a group channel"
  *     description: "Allows a user to leave a group channel. Other members in the group will be notified of the member's departure."
@@ -911,4 +957,90 @@
  *                 error:
  *                   type: string
  *                   example: This chat does not exist or has been deleted
+ */
+
+/**
+ * @swagger
+ * CREATE-CALL:
+ *   post:
+ *     summary: Initiates a new voice call.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 description: The unique ID of the chat where the voice call is started.
+ *               targetId:
+ *                 type: string
+ *                 description: Used to when there is no chat between the two users.
+ *                 example: "98765"
+ */
+
+/**
+ * @swagger
+ * JOIN-CALL:
+ *   post:
+ *     summary: Joins an existing voice call.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               voiceCallId:
+ *                 type: string
+ *                 description: The ID of the voice call to join.
+ */
+
+/**
+ * @swagger
+ * SIGNAL-SERVER:
+ *   post:
+ *     summary: Sends signaling data to a specific client.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [ICE, OFFER, ANSWER]
+ *                 description: The type of signaling message.
+ *               targetId:
+ *                 type: string
+ *                 description: The ID of the target client.
+ *               voiceCallId:
+ *                 type: string
+ *                 description: The ID of the voice call.
+ *               data:
+ *                 type: object
+ *                 description: The actual signaling data.
+ */
+
+/**
+ * @swagger
+ * LEAVE:
+ *   post:
+ *     summary: Leaves a voice call.
+ *     tags: [Sockets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               voiceCallId:
+ *                 type: string
+ *                 description: The ID of the voice call to leave.
  */

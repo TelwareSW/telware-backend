@@ -36,11 +36,11 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:3000/api/v1/',
-        description: 'Local server',
+        url: `${process.env.SERVER_URL}/api/v1`,
+        description: 'HTTP server',
       },
       {
-        url: 'ws://localhost:3000',
+        url: process.env.WEBSOCKET_URL,
         description: 'WebSocket server',
       },
     ],

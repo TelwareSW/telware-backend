@@ -3,14 +3,19 @@ import mongoose from 'mongoose';
 import Communication from './communicationModel';
 
 const voiceCallSchema = new mongoose.Schema<IVoiceCall>({
-  duration: {
-    type: Number,
-    default: 0,
+  timestamp: { type: Date, default: Date.now },
+  duration: { type: Number, default: -1 },
+  callType: { type: String, enum: ['group', 'private'], required: true },
+  status: { type: String, enum: ['ongoing', 'finished'], default: 'ongoing' },
+  senderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
   },
-  status: {
-    type: String,
-    enum: ['declined', 'answered'],
-  },
+  currentParticipants: [
+    { type: mongoose.Types.ObjectId, ref: 'User', default: [] },
+  ],
+  chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat', required: true },
 });
 
 const VoiceCall = Communication.discriminator('VoiceCall', voiceCallSchema);

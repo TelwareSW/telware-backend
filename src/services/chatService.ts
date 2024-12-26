@@ -1,19 +1,21 @@
 import mongoose from 'mongoose';
 import NormalChat from '@base/models/normalChatModel';
 import Message from '@base/models/messageModel';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import User from '@base/models/userModel';
-import IUser from '@base/types/user';
 import AppError from '@base/errors/AppError';
 import GroupChannel from '@base/models/groupChannelModel';
 import deleteFile from '@base/utils/deleteFile';
+import { informSessions } from '@base/sockets/MessagingServices';
 
 export const getLastMessage = async (chats: any) => {
   const lastMessages = await Promise.all(
     chats.map(async (chat: any) => {
-      const lastMessage = await Message.findOne({ chatId: chat.chat }).sort({
-        timestamp: -1,
-      });
+      const lastMessage = await Message.findOne({ chatId: chat.chat._id }).sort(
+        {
+          timestamp: -1,
+        }
+      );
       return {
         chatId: chat.chat._id,
         lastMessage,
@@ -21,6 +23,27 @@ export const getLastMessage = async (chats: any) => {
     })
   );
   return lastMessages;
+};
+
+export const getUnreadMessages = async (chats: any, user: any) => {
+  const mentionRegex = /@[[^]]+](([^)]+))/g;
+  return Promise.all(
+    chats.map(async (chat: any) => {
+      const unreadMessages = await Message.find({
+        chatId: chat.chat._id,
+        senderId: { $ne: user._id },
+        readBy: { $nin: [user._id] },
+      });
+      return {
+        chatId: chat.chat._id,
+        unreadMessagesCount: unreadMessages.length,
+        isMentioned:
+          unreadMessages.filter((message: any) =>
+            mentionRegex.test(message.content)
+          ).length > 0,
+      };
+    })
+  );
 };
 
 export const getChats = async (
@@ -55,25 +78,31 @@ export const enableDestruction = async (
   if (chat && chat.destructionDuration) {
     setTimeout(async () => {
       await Message.findByIdAndDelete(messageId);
-      socket.to(chatId).emit('DESTRUCT_MESSAGE', messageId);
+      socket.to(chatId).emit('DELETE_MESSAGE_SERVER', messageId);
     }, chat.destructionDuration * 1000);
   }
 };
 
-export const unmute = async (
-  user: IUser,
+export const muteUnmuteChat = async (
+  io: Server,
+  userId: string,
   chatId: string,
-  muteDuration: number
+  event: string,
+  muteDuration?: number
 ) => {
-  setTimeout(async () => {
-    user.chats.forEach((c: any) => {
-      if (c.chat.equals(chatId)) {
-        c.isMuted = false;
-        c.muteDuration = undefined;
-      }
-    });
-    await user.save({ validateBeforeSave: false });
-  }, muteDuration * 1000);
+  User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        'chats.$[elem].isMuted': muteDuration,
+        'chats.$[elem].muteDuration': muteDuration,
+      },
+    },
+    {
+      arrayFilters: [{ 'elem.chat': chatId }],
+    }
+  );
+  informSessions(io, userId, { chatId }, event);
 };
 
 export const deleteChatPictureFile = async (

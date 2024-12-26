@@ -1,5 +1,16 @@
 [
   {
+    "email": "admin@gmail.com",
+    "username": "Hamdy",
+    "screenFirstName": "Ahmed",
+    "screenLastName": "Hamdy",
+    "phoneNumber": "+201063360716",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "active",
+    "isAdmin": true
+  },
+  {
     "email": "front1@gmail.com",
     "username": "Batman",
     "screenFirstName": "Bruce",
@@ -98,5 +109,25 @@
     "password": "12345678",
     "passwordConfirm": "12345678",
     "accountStatus": "active"
+  },
+  {
+    "email": "banned@gmail.com",
+    "username": "Forever_Banned",
+    "screenFirstName": "Lonely",
+    "screenLastName": "Soul",
+    "phoneNumber": "+201055900090",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "banned"
+  },
+  {
+    "email": "deactivated@gmail.com",
+    "username": "I_HOPE_I_RETURN",
+    "screenFirstName": "Stolen",
+    "screenLastName": "Soul",
+    "phoneNumber": "+201055900090",
+    "password": "12345678",
+    "passwordConfirm": "12345678",
+    "accountStatus": "deactivated"
   }
 ]

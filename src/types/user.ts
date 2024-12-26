@@ -7,6 +7,7 @@ interface IUser extends Document {
   screenFirstName: string;
   screenLastName: string;
   email: string;
+  fcmToken: string;
   phoneNumber: string | undefined;
   password: string | undefined;
   passwordConfirm: string | undefined;
@@ -43,7 +44,6 @@ interface IUser extends Document {
   isCorrectPassword: (_candidatePass: string) => Promise<boolean>;
   passwordChanged: (_tokenIssuedAt: number) => boolean;
   createResetPasswordToken: () => string;
-  selectFields: () => void;
 }
 
 export default IUser;

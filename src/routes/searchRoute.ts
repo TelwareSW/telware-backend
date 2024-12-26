@@ -7,6 +7,6 @@ import restrictTo from '@base/middlewares/chatMiddlewares';
 
 const router = Router();
 router.use(protect);
-router.get('/search-request',searchMessages);
+router.post('/search-request',searchMessages);
 
 export default router;

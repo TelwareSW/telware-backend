@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import IChat from '@base/types/chat';
+import { decryptKey } from '@base/utils/encryption';
 
 const chatSchema = new mongoose.Schema<IChat>(
   {
@@ -41,6 +42,15 @@ const chatSchema = new mongoose.Schema<IChat>(
             delete member._id;
           });
         }
+        if (ret.encryptionKey) {
+          ret.encryptionKey = decryptKey(ret.encryptionKey, ret.keyAuthTag);
+          ret.initializationVector = decryptKey(
+            ret.initializationVector,
+            ret.vectorAuthTag
+          );
+          delete ret.keyAuthTag;
+          delete ret.vectorAuthTag;
+        }
         return ret;
       },
     },
@@ -50,6 +60,15 @@ const chatSchema = new mongoose.Schema<IChat>(
 
 chatSchema.virtual('numberOfMembers').get(function () {
   return Array.isArray(this.members) ? this.members.length : 0;
+});
+
+chatSchema.pre('save', function (next) {
+  if (!this.isModified('members')) return next();
+  const uniqueUsers = new Set(this.members.map((m) => m.user.toString()));
+  if (uniqueUsers.size !== this.members.length) {
+    return next(new Error('Members must have unique users.'));
+  }
+  next();
 });
 
 const Chat = mongoose.model<IChat>('Chat', chatSchema);

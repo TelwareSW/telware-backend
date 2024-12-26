@@ -1,7 +1,10 @@
+import { Types } from 'mongoose';
 import ICommunication from './communication';
 
 interface IVoiceCall extends ICommunication {
-  duration: number;
+  callType: String;
+  currentParticipants: Types.ObjectId[];
+  duration: Number;
   status: String;
 }
 

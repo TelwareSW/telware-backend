@@ -79,7 +79,9 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
-    "axios": "^1.7.7",
+    "@google/generative-ai": "^0.21.0",
+    "@huggingface/inference": "^2.8.1",
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "connect-redis": "^7.1.1",
@@ -90,6 +92,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.4.1",
     "express-session": "^1.18.1",
+    "firebase-admin": "^13.0.2",
     "helmet": "^8.0.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
